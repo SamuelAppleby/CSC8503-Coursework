@@ -7,7 +7,6 @@ using namespace CSC8503;
 PhysicsObject::PhysicsObject(Transform* parentTransform, const CollisionVolume* parentVolume)	{
 	transform	= parentTransform;
 	volume		= parentVolume;
-
 	inverseMass = 1.0f;
 	elasticity	= 0.8f;
 	friction	= 0.8f;
@@ -34,9 +33,13 @@ void PhysicsObject::AddForce(const Vector3& addedForce) {
 
 void PhysicsObject::AddForceAtPosition(const Vector3& addedForce, const Vector3& position) {
 	Vector3 localPos = position - transform->GetPosition();
-
 	force  += addedForce;
 	torque += Vector3::Cross(localPos, addedForce);
+}
+
+void PhysicsObject::AddForceAtLocalPosition(const Vector3& addedForce, const Vector3& position) {
+	force += addedForce;
+	torque += Vector3::Cross(position, addedForce);
 }
 
 void PhysicsObject::AddTorque(const Vector3& addedTorque) {

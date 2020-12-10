@@ -15,6 +15,13 @@ namespace NCL {
 			PhysicsObject(Transform* parentTransform, const CollisionVolume* parentVolume);
 			~PhysicsObject();
 
+			void SetElasticity(float val) {
+				elasticity = val;
+			}
+
+			float GetElasticity() const {
+				return elasticity;
+			}
 			Vector3 GetLinearVelocity() const {
 				return linearVelocity;
 			}
@@ -45,6 +52,7 @@ namespace NCL {
 			void AddForce(const Vector3& force);
 
 			void AddForceAtPosition(const Vector3& force, const Vector3& position);
+			void AddForceAtLocalPosition(const Vector3& force, const Vector3& position);
 
 			void AddTorque(const Vector3& torque);
 

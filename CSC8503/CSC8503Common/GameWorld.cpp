@@ -68,7 +68,18 @@ void GameWorld::UpdateWorld(float dt) {
 	if (shuffleConstraints) {
 		std::random_shuffle(constraints.begin(), constraints.end());
 	}
+}
+
+void GameWorld::ShowFacing() {
 	for (auto& i : gameObjects) {
+		if (i->GetName() == "Enemy") {
+			Ray ray(i->GetTransform().GetPosition(), i->GetTransform().GetOrientation() * Vector3(0, 0, -1));
+			RayCollision closestCollision;
+			if (Raycast(ray, closestCollision, i, true)) 
+				Debug::DrawLine(ray.GetPosition(), closestCollision.collidedAt, Debug::RED);
+			else 
+				Debug::DrawLine(ray.GetPosition(), ray.GetPosition() + (ray.GetDirection() * 500), Debug::RED);
+		}
 		Matrix4 local = i->GetTransform().GetMatrix();
 		local.SetPositionVector({ 0, 0, 0 });
 		Vector3 fwd = local * Vector4(0, 0, -1, 1.0f);
@@ -77,7 +88,7 @@ void GameWorld::UpdateWorld(float dt) {
 	}
 }
 
-bool GameWorld::Raycast(Ray& r, RayCollision& closestCollision, bool closestObject) const {
+bool GameWorld::Raycast(Ray& r, RayCollision& closestCollision, GameObject* current, bool closestObject) const {
 	//The simplest raycast just goes through each object and sees if there's a collision
 	RayCollision collision;
 	for (auto& i : gameObjects) {
@@ -85,11 +96,10 @@ bool GameWorld::Raycast(Ray& r, RayCollision& closestCollision, bool closestObje
 			continue;
 		}
 		RayCollision thisCollision;
-		if (CollisionDetection::RayIntersection(r, *i, thisCollision)) {
+		if (CollisionDetection::RayIntersection(r, *i, thisCollision) && i != current) {
 			if (!closestObject) {	
 				closestCollision		= collision;
 				closestCollision.node = i;
-				Debug::DrawLine(r.GetPosition(), closestCollision.collidedAt, Debug::RED, 10.0f);
 				return true;
 			}
 			else {
@@ -103,13 +113,10 @@ bool GameWorld::Raycast(Ray& r, RayCollision& closestCollision, bool closestObje
 	if (collision.node) {
 		closestCollision		= collision;
 		closestCollision.node	= collision.node;
-		Debug::DrawLine(r.GetPosition(), closestCollision.collidedAt, Debug::RED, 10.0f);
 		return true;
 	}
-	Debug::DrawLine(r.GetPosition(), r.GetPosition() + (r.GetDirection() * 500), Debug::RED, 10.0f);
 	return false;
 }
-
 
 /*
 Constraint Tutorial Stuff
