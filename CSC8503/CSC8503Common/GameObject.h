@@ -17,6 +17,10 @@ namespace NCL {
 			GameObject(string name = "");
 			~GameObject();
 
+			void SetName(string val) {
+				name = val;
+			}
+
 			void SetBoundingVolume(CollisionVolume* vol) {
 				boundingVolume = vol;
 			}

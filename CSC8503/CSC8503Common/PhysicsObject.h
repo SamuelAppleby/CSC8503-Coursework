@@ -22,6 +22,15 @@ namespace NCL {
 			float GetElasticity() const {
 				return elasticity;
 			}
+
+			void SetFriction(float val) {
+				friction = val;
+			}
+
+			float GetFriction() const {
+				return friction;
+			}
+
 			Vector3 GetLinearVelocity() const {
 				return linearVelocity;
 			}
@@ -55,7 +64,6 @@ namespace NCL {
 			void AddForceAtLocalPosition(const Vector3& force, const Vector3& position);
 
 			void AddTorque(const Vector3& torque);
-
 
 			void ClearForces();
 

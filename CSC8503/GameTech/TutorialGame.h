@@ -20,23 +20,27 @@ namespace NCL {
 			void InitWorld();
 
 			void InitGameExamples();
-
+			void InitGameObstacles();
 			void InitSphereGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, float radius);
 			void InitMixedGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing);
 			void InitCubeGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, const Vector3& cubeDims);
-			void InitDefaultFloor();
+			void InitFloors();
 			void BridgeConstraintTest();
-	
+			
+			void FireObjects();
 			bool SelectObject();
 			void MoveSelectedObject();
 			void DebugObjectMovement();
 			void LockedObjectMovement();
 
-			GameObject* AddFloorToWorld(const Vector3& position);
-			GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f);
-			GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f);
-			
-			GameObject* AddCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass = 10.0f);
+			GameObject* AddFloorToWorld(OGLTexture* texture, const Vector3& position, const Vector3& size,
+				float elasticity = 0.2f, float friction = 0.8f);
+			GameObject* AddSphereToWorld(OGLTexture* texture, const Vector3& position, float radius, 
+				float inverseMass = 10.0f, float elasticity = 0.2f, float friction = 0.8f);
+			GameObject* AddCubeToWorld(OGLTexture* texture, const Vector3& position, Vector3 dimensions, 
+				float inverseMass = 10.0f, float elasticity = 0.2f, float friction = 0.8f);
+			GameObject* AddCapsuleToWorld(OGLTexture* texture, const Vector3& position, float halfHeight,
+				float radius, float inverseMass = 10.0f, float elasticity = 0.2f, float friction = 0.8f);
 
 			GameObject* AddPlayerToWorld(const Vector3& position);
 			GameObject* AddEnemyToWorld(const Vector3& position);
@@ -50,13 +54,18 @@ namespace NCL {
 			bool inSelectionMode;
 
 			float		forceMagnitude;
-
+			float sceneTime;
 			GameObject* selectionObject = nullptr;
 
 			OGLMesh*	capsuleMesh = nullptr;
 			OGLMesh*	cubeMesh	= nullptr;
 			OGLMesh*	sphereMesh	= nullptr;
 			OGLTexture* basicTex	= nullptr;
+			OGLTexture* floorTex = nullptr;
+			OGLTexture* lavaTex = nullptr;
+			OGLTexture* iceTex = nullptr;
+			OGLTexture* trampolineTex = nullptr;
+			OGLTexture* obstacleTex = nullptr;
 			OGLShader*	basicShader = nullptr;
 
 			//Coursework Meshes
@@ -71,7 +80,8 @@ namespace NCL {
 			void LockCameraToObject(GameObject* o) {
 				lockedObject = o;
 			}
-
+			Vector3 stationaryCameraPos;
+			bool camSet = false;
 		};
 	}
 }

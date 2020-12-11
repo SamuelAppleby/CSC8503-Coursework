@@ -18,9 +18,10 @@ void Camera::UpdateCamera(float dt) {
 	pitch = std::min(pitch, 90.0f);
 	pitch = std::max(pitch, -90.0f);
 
-	if (yaw <0) {
+	if (yaw < 0) {
 		yaw += 360.0f;
 	}
+
 	if (yaw > 360.0f) {
 		yaw -= 360.0f;
 	}
@@ -30,6 +31,7 @@ void Camera::UpdateCamera(float dt) {
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::W)) {
 		position += Matrix4::Rotation(yaw, Vector3(0, 1, 0)) * Vector3(0, 0, -1) * frameSpeed;
 	}
+
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::S)) {
 		position -= Matrix4::Rotation(yaw, Vector3(0, 1, 0)) * Vector3(0, 0, -1) * frameSpeed;
 	}

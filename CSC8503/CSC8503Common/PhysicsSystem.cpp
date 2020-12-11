@@ -202,8 +202,15 @@ void PhysicsSystem::BasicCollisionDetection() {
 			}
 			CollisionDetection::CollisionInfo info;
 			if (CollisionDetection::ObjectIntersection(*i, *j, info)) {
-				std::cout << "Collision between" << (*i)->GetName() << " and " << (*j)->GetName() << std::endl;
-				ResolveSpringCollision(*info.a, *info.b, info.point);
+				std::cout << "Collision between " << (*i)->GetName() << " and " << (*j)->GetName() << std::endl;
+				if ((*i)->GetName() == "Lava" || (*j)->GetName() == "Lava") {
+					if((*i)->GetName() == "Lava")
+						gameWorld.RemoveGameObject(*j, true);
+					if ((*j)->GetName() == "Lava")
+						gameWorld.RemoveGameObject(*i, true);
+					return;
+				}
+				ImpulseResolveCollision(*info.a, *info.b, info.point);
 				info.framesLeft = numCollisionFrames;
 				allCollisions.insert(info);
 			}
@@ -354,10 +361,15 @@ void PhysicsSystem::IntegrateVelocity(float dt) {
 
 		// Orientation Stuff
 		Quaternion orientation = transform.GetOrientation();
-		Vector3 angVel = object->GetAngularVelocity();
+		Vector3 angVel;
+		if ((*i)->GetName() == "RotateObject") 
+			angVel = Vector3(0, 1, 0);
+		else 
+			angVel = object->GetAngularVelocity();
 		orientation = orientation + (Quaternion(angVel * dt * 0.5f, 0.0f) * orientation);
 		orientation.Normalise();
 		transform.SetOrientation(orientation);
+
 		// Damp the angular velocity too
 		float frameAngularDamping = 1.0f - (dampingFactor * dt);
 		angVel = angVel * frameAngularDamping;

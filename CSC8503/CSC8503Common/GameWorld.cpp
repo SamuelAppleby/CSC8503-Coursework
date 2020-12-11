@@ -46,10 +46,7 @@ void GameWorld::RemoveGameObject(GameObject* o, bool andDelete) {
 	}
 }
 
-void GameWorld::GetObjectIterators(
-	GameObjectIterator& first,
-	GameObjectIterator& last) const {
-
+void GameWorld::GetObjectIterators(GameObjectIterator& first, GameObjectIterator& last) const {
 	first	= gameObjects.begin();
 	last	= gameObjects.end();
 }
@@ -121,7 +118,6 @@ bool GameWorld::Raycast(Ray& r, RayCollision& closestCollision, GameObject* curr
 /*
 Constraint Tutorial Stuff
 */
-
 void GameWorld::AddConstraint(Constraint* c) {
 	constraints.emplace_back(c);
 }
@@ -133,9 +129,7 @@ void GameWorld::RemoveConstraint(Constraint* c, bool andDelete) {
 	}
 }
 
-void GameWorld::GetConstraintIterators(
-	std::vector<Constraint*>::const_iterator& first,
-	std::vector<Constraint*>::const_iterator& last) const {
+void GameWorld::GetConstraintIterators(std::vector<Constraint*>::const_iterator& first, std::vector<Constraint*>::const_iterator& last) const {
 	first	= constraints.begin();
 	last	= constraints.end();
 }
