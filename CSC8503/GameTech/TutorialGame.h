@@ -38,7 +38,7 @@ namespace NCL {
 			GameObject* AddSphereToWorld(OGLTexture* texture, const Vector3& position, float radius, 
 				float inverseMass = 10.0f, float elasticity = 0.2f, float friction = 0.8f);
 			GameObject* AddCubeToWorld(OGLTexture* texture, const Vector3& position, Vector3 dimensions, 
-				float inverseMass = 10.0f, float elasticity = 0.2f, float friction = 0.8f);
+				float inverseMass = 10.0f, float elasticity = 0.2f, float friction = 0.8f, bool rotate = false, bool spring = false);
 			GameObject* AddCapsuleToWorld(OGLTexture* texture, const Vector3& position, float halfHeight,
 				float radius, float inverseMass = 10.0f, float elasticity = 0.2f, float friction = 0.8f);
 

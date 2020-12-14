@@ -316,10 +316,18 @@ bool CollisionDetection::ObjectIntersection(GameObject* a, GameObject* b, Collis
 		return AABBSphereIntersection((AABBVolume&)*volB, transformB, (SphereVolume&)*volA, transformA, collisionInfo);
 	}
 
-	if (volA->type == VolumeType::OBB && volB->type == VolumeType::Sphere) {
+	if (volA->type == VolumeType::AABB && volB->type == VolumeType::OBB) {
+		return AABBOBBIntersection((AABBVolume&)*volA, transformA, (OBBVolume&)*volB, transformB, collisionInfo);
+	}
+
+	if (volA->type == VolumeType::OBB && volB->type == VolumeType::AABB) {
 		collisionInfo.a = b;
 		collisionInfo.b = a;
-		return OBBSphereIntersection((OBBVolume&)*volA, transformB, (SphereVolume&)*volB, transformA, collisionInfo);
+		return AABBOBBIntersection((AABBVolume&)*volB, transformB, (OBBVolume&)*volA, transformA, collisionInfo);
+	}
+
+	if (volA->type == VolumeType::OBB && volB->type == VolumeType::Sphere) {
+		return OBBSphereIntersection((OBBVolume&)*volA, transformA, (SphereVolume&)*volB, transformB, collisionInfo);
 	}
 
 	if (volA->type == VolumeType::Sphere && volB->type == VolumeType::OBB) {
@@ -331,6 +339,7 @@ bool CollisionDetection::ObjectIntersection(GameObject* a, GameObject* b, Collis
 	if (volA->type == VolumeType::Capsule && volB->type == VolumeType::Sphere) {
 		return SphereCapsuleIntersection((CapsuleVolume&)*volA, transformA, (SphereVolume&)*volB, transformB, collisionInfo);
 	}
+
 	if (volA->type == VolumeType::Sphere && volB->type == VolumeType::Capsule) {
 		collisionInfo.a = b;
 		collisionInfo.b = a;
@@ -449,11 +458,11 @@ bool CollisionDetection::OBBSphereIntersection(const OBBVolume& volumeA, const T
 	Vector3 closestPointOnBox = Maths::Clamp(delta, -boxSize, boxSize);
 	Vector3 localPoint = delta - closestPointOnBox;
 	float distance = localPoint.Length();
-	if (distance < volumeB.GetRadius()) {
-		localPoint = (spherePosition - OBBposition) - closestPointOnBox;
+	if (distance < volumeB.GetRadius()) {	
+		localPoint = (Matrix3(OBBorientation) * localPoint);
 		Vector3 collisionNormal = localPoint.Normalised();
 		float penetration = (volumeB.GetRadius() - distance);
-		Vector3 localA = Vector3();
+		Vector3 localA = OBBorientation * closestPointOnBox;
 		Vector3 localB = -collisionNormal * volumeB.GetRadius();
 		collisionInfo.AddContactPoint(localA, localB, collisionNormal, penetration);
 		return true;

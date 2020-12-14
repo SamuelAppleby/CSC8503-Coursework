@@ -11,7 +11,15 @@ using std::vector;
 
 namespace NCL {
 	namespace CSC8503 {
-
+		enum class ObjectType {
+			Regular = 1,
+			Player = 2,
+			Enemy = 4,
+			Death = 8,
+			Rotating = 16,
+			Spring = 32,
+			Bonus = 64
+		};
 		class GameObject	{
 		public:
 			GameObject(string name = "");
@@ -59,10 +67,18 @@ namespace NCL {
 
 			virtual void OnCollisionBegin(GameObject* otherObject) {
 				//std::cout << "OnCollisionBegin event occured!\n";
+				if (objectType == ObjectType::Player) 
+					canJump = true;
+				if (otherObject->objectType == ObjectType::Player)
+					canJump = true;
 			}
 
 			virtual void OnCollisionEnd(GameObject* otherObject) {
 				//std::cout << "OnCollisionEnd event occured!\n";
+				if (objectType == ObjectType::Player)
+					canJump = false;
+				if (otherObject->objectType == ObjectType::Player)
+					canJump = false;
 			}
 
 			bool GetBroadphaseAABB(Vector3&outsize) const;
@@ -77,6 +93,25 @@ namespace NCL {
 				return worldID;
 			}
 
+			void Jump() {
+				if(canJump)
+					physicsObject->ApplyLinearImpulse(Vector3(0, 30, 0));
+			}
+
+			bool GetCanJump() {
+				return canJump;
+			}
+
+			Vector3 GetRestPosition() const {
+				return restPosition;
+			}
+
+			void SetRestPosition(Vector3 val) {
+				restPosition = val;
+			}
+
+			ObjectType objectType;
+
 		protected:
 			Transform			transform;
 
@@ -89,6 +124,9 @@ namespace NCL {
 			string	name;
 
 			Vector3 broadphaseAABB;
+
+			bool canJump;
+			Vector3 restPosition;
 		};
 	}
 }

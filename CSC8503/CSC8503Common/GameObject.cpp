@@ -10,6 +10,9 @@ GameObject::GameObject(string objectName)	{
 	boundingVolume	= nullptr;
 	physicsObject	= nullptr;
 	renderObject	= nullptr;
+	canJump = false;
+	objectType = ObjectType::Regular;
+	restPosition = Vector3();
 }
 
 GameObject::~GameObject()	{

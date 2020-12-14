@@ -172,8 +172,7 @@ void PhysicsSystem::UpdateCollisionList() {
 }
 
 void PhysicsSystem::UpdateObjectAABBs() {
-	gameWorld.OperateOnContents(
-		[](GameObject* g) {
+	gameWorld.OperateOnContents([](GameObject* g) {
 			g->UpdateBroadphaseAABB();
 		}
 	);
@@ -201,16 +200,25 @@ void PhysicsSystem::BasicCollisionDetection() {
 				continue;
 			}
 			CollisionDetection::CollisionInfo info;
+			if ((*i)->objectType == ObjectType::Spring || (*j)->objectType == ObjectType::Spring) {
+				if ((*i)->objectType == ObjectType::Spring) {
+					SpringOnPoint(*i, (*i)->GetRestPosition());
+				}
+				if ((*j)->objectType == ObjectType::Spring) {
+					SpringOnPoint(*j, (*j)->GetRestPosition());
+				}
+			}
 			if (CollisionDetection::ObjectIntersection(*i, *j, info)) {
-				std::cout << "Collision between " << (*i)->GetName() << " and " << (*j)->GetName() << std::endl;
-				if ((*i)->GetName() == "Lava" || (*j)->GetName() == "Lava") {
-					if((*i)->GetName() == "Lava")
+				//std::cout << "Collision between " << (*i)->GetName() << " and " << (*j)->GetName() << std::endl;
+				if ((*i)->objectType == ObjectType::Death || (*j)->objectType == ObjectType::Death) {
+					if((*i)->objectType == ObjectType::Death)
 						gameWorld.RemoveGameObject(*j, true);
-					if ((*j)->GetName() == "Lava")
+					if ((*j)->objectType == ObjectType::Death)
 						gameWorld.RemoveGameObject(*i, true);
 					return;
 				}
 				ImpulseResolveCollision(*info.a, *info.b, info.point);
+				ResolveSpringCollision(*info.a, *info.b, info.point);
 				info.framesLeft = numCollisionFrames;
 				allCollisions.insert(info);
 			}
@@ -274,6 +282,13 @@ void PhysicsSystem::ResolveSpringCollision(GameObject& a, GameObject& b, Collisi
 	physB->AddForceAtLocalPosition(p.normal * force, p.localB);
 }
 
+void PhysicsSystem::SpringOnPoint(GameObject* a, Vector3 rest) const {
+	float k = 0.001;
+	Vector3 extension = a->GetTransform().GetPosition() - rest;
+	Vector3 force = extension * -k;
+	a->GetPhysicsObject()->ApplyLinearImpulse(force);
+}
+
 /*
 
 Later, we replace the BasicCollisionDetection method with a broadphase
@@ -328,6 +343,7 @@ void PhysicsSystem::IntegrateAccel(float dt) {
 		Vector3 torque = object->GetTorque();
 		Vector3 angVel = object->GetAngularVelocity();
 		object->UpdateInertiaTensor(); // update tensor vs orientation
+
 		Vector3 angAccel = object->GetInertiaTensor() * torque;
 		angVel += angAccel * dt; // integrate angular accel !
 		object->SetAngularVelocity(angVel);
@@ -362,7 +378,7 @@ void PhysicsSystem::IntegrateVelocity(float dt) {
 		// Orientation Stuff
 		Quaternion orientation = transform.GetOrientation();
 		Vector3 angVel;
-		if ((*i)->GetName() == "RotateObject") 
+		if ((*i)->objectType == ObjectType::Rotating) 
 			angVel = Vector3(0, 1, 0);
 		else 
 			angVel = object->GetAngularVelocity();

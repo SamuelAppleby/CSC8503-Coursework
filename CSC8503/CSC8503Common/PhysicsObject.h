@@ -87,7 +87,6 @@ namespace NCL {
 		protected:
 			const CollisionVolume* volume;
 			Transform*		transform;
-
 			float inverseMass;
 			float elasticity;
 			float friction;
@@ -102,6 +101,7 @@ namespace NCL {
 			Vector3 torque;
 			Vector3 inverseInertia;
 			Matrix3 inverseInteriaTensor;
+
 		};
 	}
 }

@@ -69,7 +69,7 @@ void GameWorld::UpdateWorld(float dt) {
 
 void GameWorld::ShowFacing() {
 	for (auto& i : gameObjects) {
-		if (i->GetName() == "Enemy") {
+		if (i->objectType == ObjectType::Enemy) {
 			Ray ray(i->GetTransform().GetPosition(), i->GetTransform().GetOrientation() * Vector3(0, 0, -1));
 			RayCollision closestCollision;
 			if (Raycast(ray, closestCollision, i, true)) 
