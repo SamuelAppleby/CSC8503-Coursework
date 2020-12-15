@@ -82,6 +82,7 @@ namespace NCL {
 			}
 			Vector3 stationaryCameraPos;
 			bool camSet = false;
+
 		};
 	}
 }

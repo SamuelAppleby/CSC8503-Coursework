@@ -49,6 +49,8 @@ namespace NCL {
 
 			void SetInverseMass(float invMass) {
 				inverseMass = invMass;
+				if (inverseMass == 0.0)
+					isStatic = true;
 			}
 
 			float GetInverseMass() const {
@@ -84,6 +86,17 @@ namespace NCL {
 				return inverseInteriaTensor;
 			}
 
+			bool GetIsStatic() const {
+				return isStatic;
+			}
+
+			void SetIsAsleep(bool val) {
+				isAsleep = val;
+			}
+
+			bool GetIsAsleep() const {
+				return isAsleep;
+			}
 		protected:
 			const CollisionVolume* volume;
 			Transform*		transform;
@@ -102,6 +115,8 @@ namespace NCL {
 			Vector3 inverseInertia;
 			Matrix3 inverseInteriaTensor;
 
+			bool isStatic;
+			bool isAsleep;
 		};
 	}
 }

@@ -21,7 +21,9 @@ namespace NCL {
 				globalDamping = d;
 			}
 
-			void SetGravity(const Vector3& g);
+			void SetGravity(const Vector3& g) {
+				gravity = g;
+			}
 
 			float GetDampingFactor() const {
 				return dampingFactor;
@@ -29,6 +31,14 @@ namespace NCL {
 
 			void SetDampingFactor(float val) {
 				dampingFactor = val;
+			}
+
+			bool GetBroadPhase() const {
+				return useBroadPhase;
+			}
+
+			void SetBroadPhase(bool val) {
+				useBroadPhase = val;
 			}
 		protected:
 			void BasicCollisionDetection();
@@ -57,8 +67,8 @@ namespace NCL {
 			float	globalDamping;
 			float	dampingFactor;
 			std::set<CollisionDetection::CollisionInfo> allCollisions;
-
-			bool useBroadPhase		= true;
+			std::set<CollisionDetection::CollisionInfo> broadphaseCollisions;
+			bool useBroadPhase;
 			int numCollisionFrames	= 5;
 		};
 	}

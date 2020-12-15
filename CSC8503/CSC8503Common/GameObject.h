@@ -75,10 +75,10 @@ namespace NCL {
 
 			virtual void OnCollisionEnd(GameObject* otherObject) {
 				//std::cout << "OnCollisionEnd event occured!\n";
-				if (objectType == ObjectType::Player)
+				/*if (objectType == ObjectType::Player)
 					canJump = false;
 				if (otherObject->objectType == ObjectType::Player)
-					canJump = false;
+					canJump = false;*/
 			}
 
 			bool GetBroadphaseAABB(Vector3&outsize) const;

@@ -4,6 +4,7 @@
 #include "../../Plugins/OpenGLRendering/OGLShader.h"
 #include "../../Plugins/OpenGLRendering/OGLTexture.h"
 #include "../../Common/TextureLoader.h"
+#include "../CSC8503Common/PositionConstraint.h"
 
 using namespace NCL;
 using namespace CSC8503;
@@ -82,10 +83,16 @@ void TutorialGame::UpdateGame(float dt) {
 	UpdateKeys();
 
 	if (useGravity) {
-		Debug::Print("(G)ravity on", Vector2(5, 95));
+		Debug::Print("(G)ravity on", Vector2(0, 95));
 	}
 	else {
-		Debug::Print("(G)ravity off", Vector2(5, 95));
+		Debug::Print("(G)ravity off", Vector2(0, 95));
+	}
+	if (physics->GetBroadPhase()) {
+		Debug::Print("QuadTree on (B)", Vector2(0, 10));
+	}
+	else {
+		Debug::Print("QuadTree off (B)", Vector2(0, 10));
 	}
 	sceneTime += dt;
 	if (sceneTime > 2.0f)
@@ -190,8 +197,16 @@ void TutorialGame::LockedObjectMovement() {
 
 	float force = 20.0f;
 
+	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::W)) {
+		lockedObject->GetPhysicsObject()->AddForce(fwdAxis * force);
+	}
+
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::A)) {
 		lockedObject->GetPhysicsObject()->AddForce(-rightAxis * force);
+	}
+
+	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::S)) {
+		lockedObject->GetPhysicsObject()->AddForce(-fwdAxis * force);
 	}
 
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::D)) {
@@ -199,13 +214,6 @@ void TutorialGame::LockedObjectMovement() {
 		lockedObject->GetPhysicsObject()->AddForce(rightAxis * force);
 	}
 
-	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::W)) {
-		lockedObject->GetPhysicsObject()->AddForce(fwdAxis * force);
-	}
-
-	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::S)) {
-		lockedObject->GetPhysicsObject()->AddForce(-fwdAxis * force);
-	}
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::SPACE)) {
 		lockedObject->Jump();
 	}
@@ -231,13 +239,14 @@ void TutorialGame::DebugObjectMovement() {
 			selectionObject->GetPhysicsObject()->AddTorque(Vector3(0, 0, 10));
 		}
 
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::NUM2)) {
+			selectionObject->GetPhysicsObject()->AddTorque(Vector3(0, -10, 0));
+		}
+
 		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::NUM8)) {
 			selectionObject->GetPhysicsObject()->AddTorque(Vector3(0, 10, 0));
 		}
 
-		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::NUM2)) {
-			selectionObject->GetPhysicsObject()->AddTorque(Vector3(0, -10, 0));
-		}
 	}
 }
 
@@ -254,13 +263,32 @@ void TutorialGame::InitWorld() {
 	world->ClearAndErase();
 	physics->Clear();
 	InitFloors();
+	BridgeConstraintTest();
 	InitGameExamples();
 	InitGameObstacles();
 }
 
 void TutorialGame::BridgeConstraintTest() {
+	Vector3 cubeSize(5, 1, 1);
+	Vector3 baseSize(5, 1, 5);
 
+	float invCubeMass = 5; // how heavy the middle pieces are
+	int numLinks = 20;
+	float maxDistance = 5; // constraint distance
+	float cubeDistance = 5; // distance between links
 
+	Vector3 startPos = Vector3(0, 50, 0);
+	GameObject* start = AddCubeToWorld(obstacleTex, startPos + Vector3(0, 0, 0), baseSize, 0.0f);
+	GameObject* end = AddCubeToWorld(obstacleTex, startPos + Vector3(0, 0, (numLinks + 2) * cubeDistance), baseSize, 0.0f);
+	GameObject* previous = start;
+	for (int i = 0; i < numLinks; ++i) {
+		GameObject * block = AddCubeToWorld(obstacleTex, startPos + Vector3(0, 0, (i + 1) * cubeDistance), cubeSize, invCubeMass);
+		PositionConstraint* constraint = new PositionConstraint(previous, block, maxDistance);
+		world->AddConstraint(constraint);
+		previous = block;
+	}
+	PositionConstraint* constraint = new PositionConstraint(previous, end, maxDistance);
+	world->AddConstraint(constraint);
 }
 
 /*
@@ -463,7 +491,7 @@ void TutorialGame::InitFloors() {
 }
 
 void TutorialGame::InitGameExamples() {
-	AddPlayerToWorld(Vector3(0, 10, -855));
+	AddPlayerToWorld(Vector3(0, 10, -30));
 	AddEnemyToWorld(Vector3(5, 10, -5));
 	AddBonusToWorld(Vector3(10, 10, -5));
 }
@@ -607,8 +635,8 @@ bool TutorialGame::SelectObject() {
 	}
 	if (inSelectionMode) {
 		if(selectionObject)
-			renderer->DrawString(selectionObject->GetName(), Vector2(5, 75));
-		renderer->DrawString("Press Q to change to camera mode!", Vector2(5, 85));
+			Debug::Print(selectionObject->GetName(), Vector2(0, 80));
+		Debug::Print("Press Q to change to camera mode!", Vector2(0, 90));
 		if (Window::GetMouse()->ButtonDown(NCL::MouseButtons::LEFT)) {
 			if (selectionObject) {	//set colour to deselected;
 				selectionObject->GetRenderObject()->SetColour(Vector4(1, 1, 1, 1));
@@ -628,15 +656,15 @@ bool TutorialGame::SelectObject() {
 		}
 	}
 	else {
-		renderer->DrawString("Press Q to change to select mode!", Vector2(5, 85));
+		Debug::Print("Press Q to change to select mode!", Vector2(0, 90));
 	}
 
 	if (lockedObject) {
-		renderer->DrawString("Press L to unlock object!", Vector2(5, 80));
+		Debug::Print("Press L to unlock object!", Vector2(0, 80));
 	}
 
-	else if(selectionObject){
-		renderer->DrawString("Press L to lock selected object object!", Vector2(5, 80));
+	else if(selectionObject) {
+		Debug::Print("Press L to lock selected object object!", Vector2(0, 85));
 	}
 
 	if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::L)) {
@@ -659,7 +687,7 @@ added linear motion into our physics system. After the second tutorial, objects 
 line - after the third, they'll be able to twist under torque aswell.
 */
 void TutorialGame::MoveSelectedObject() {
-	renderer->DrawString("Click Force: " + std::to_string(forceMagnitude), Vector2(5, 10)); // Draw debug text at 10 ,20
+	Debug::Print("Click Force: " + std::to_string(forceMagnitude), Vector2(0, 5)); // Draw debug text at 10 ,20
 	forceMagnitude += Window::GetMouse()->GetWheelMovement() * 10.0f;
 	if (!selectionObject) {
 		return;// we haven ’t selected anything !
@@ -673,24 +701,5 @@ void TutorialGame::MoveSelectedObject() {
 				selectionObject->GetPhysicsObject()->AddForceAtPosition(ray.GetDirection() * forceMagnitude, closestCollision.collidedAt);
 			}
 		}
-	}
-	Matrix4 view = world->GetMainCamera()->BuildViewMatrix();
-	Matrix4 camWorld = view.Inverse();
-	Vector3 rightAxis = Vector3(camWorld.GetColumn(0)); //view is inverse of model!
-	Vector3 fwdAxis = Vector3::Cross(Vector3(0, 1, 0), rightAxis);
-	fwdAxis.y = 0.0f;
-	fwdAxis.Normalise();
-	float force = 10.0f;
-	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::A)) {
-		selectionObject->GetPhysicsObject()->AddForce(-rightAxis * force);
-	}
-	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::D)) {
-		selectionObject->GetPhysicsObject()->AddForce(rightAxis * force);
-	}
-	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::W)) {
-		selectionObject->GetPhysicsObject()->AddForce(fwdAxis * force);
-	}
-	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::S)) {
-		selectionObject->GetPhysicsObject()->AddForce(-fwdAxis * force);
 	}
 }

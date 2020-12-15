@@ -21,7 +21,7 @@ and the forces that are added to objects to change those positions
 
 PhysicsSystem::PhysicsSystem(GameWorld& g) : gameWorld(g)	{
 	applyGravity	= false;
-	useBroadPhase	= false;	
+	useBroadPhase	= true;	
 	dTOffset		= 0.0f;
 	globalDamping	= 0.995f;
 	dampingFactor = 0.4;
@@ -29,10 +29,6 @@ PhysicsSystem::PhysicsSystem(GameWorld& g) : gameWorld(g)	{
 }
 
 PhysicsSystem::~PhysicsSystem()	{
-}
-
-void PhysicsSystem::SetGravity(const Vector3& g) {
-	gravity = g;
 }
 
 /*
@@ -72,7 +68,6 @@ float realDT	= idealDT;
 void PhysicsSystem::Update(float dt) {	
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::B)) {
 		useBroadPhase = !useBroadPhase;
-		std::cout << "Setting broadphase to " << useBroadPhase << std::endl;
 	}
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::I)) {
 		constraintIterationCount--;
@@ -200,14 +195,6 @@ void PhysicsSystem::BasicCollisionDetection() {
 				continue;
 			}
 			CollisionDetection::CollisionInfo info;
-			if ((*i)->objectType == ObjectType::Spring || (*j)->objectType == ObjectType::Spring) {
-				if ((*i)->objectType == ObjectType::Spring) {
-					SpringOnPoint(*i, (*i)->GetRestPosition());
-				}
-				if ((*j)->objectType == ObjectType::Spring) {
-					SpringOnPoint(*j, (*j)->GetRestPosition());
-				}
-			}
 			if (CollisionDetection::ObjectIntersection(*i, *j, info)) {
 				//std::cout << "Collision between " << (*i)->GetName() << " and " << (*j)->GetName() << std::endl;
 				if ((*i)->objectType == ObjectType::Death || (*j)->objectType == ObjectType::Death) {
@@ -283,7 +270,7 @@ void PhysicsSystem::ResolveSpringCollision(GameObject& a, GameObject& b, Collisi
 }
 
 void PhysicsSystem::SpringOnPoint(GameObject* a, Vector3 rest) const {
-	float k = 0.001;
+	float k = 0.04;
 	Vector3 extension = a->GetTransform().GetPosition() - rest;
 	Vector3 force = extension * -k;
 	a->GetPhysicsObject()->ApplyLinearImpulse(force);
@@ -299,16 +286,57 @@ compare the collisions that we absolutely need to.
 */
 
 void PhysicsSystem::BroadPhase() {
-
+	broadphaseCollisions.clear();
+	QuadTree<GameObject*> tree(Vector2(1024, 1024), 7, 6);
+	std::vector<GameObject*>::const_iterator first;
+	std::vector<GameObject*>::const_iterator last;
+	gameWorld.GetObjectIterators(first, last);
+	for (auto i = first; i != last; ++i) {
+		Vector3 halfSizes;
+		if (!(*i)->GetBroadphaseAABB(halfSizes)) {
+			continue;
+		}
+		Vector3 pos = (*i)->GetTransform().GetPosition();
+		tree.Insert(*i, pos, halfSizes);
+	}
+	tree.OperateOnContents([&](std::list<QuadTreeEntry<GameObject*>>& data) {
+		CollisionDetection::CollisionInfo info;
+		for (auto i = data.begin(); i != data.end(); ++i) {
+			for (auto j = std::next(i); j != data.end(); ++j) {
+				if (!((*i).object->GetPhysicsObject()->GetIsStatic() && (*j).object->GetPhysicsObject()->GetIsStatic())
+					&& !((*i).object->GetPhysicsObject()->GetIsAsleep() && (*j).object->GetPhysicsObject()->GetIsAsleep())) {
+					// is this pair of items already in the collision set - if the same pair is in another quadtree node together etc
+					info.a = min((*i).object, (*j).object);
+					info.b = max((*i).object, (*j).object);
+					broadphaseCollisions.insert(info);
+				}
+			}
+		}
+	});
 }
 
 /*
-
 The broadphase will now only give us likely collisions, so we can now go through them,
 and work out if they are truly colliding, and if so, add them into the main collision list
 */
 void PhysicsSystem::NarrowPhase() {
-
+	for (std::set<CollisionDetection::CollisionInfo>::iterator i = broadphaseCollisions.begin(); i != broadphaseCollisions.end(); ++i) {
+		CollisionDetection::CollisionInfo info = *i;
+		if (CollisionDetection::ObjectIntersection(info.a, info.b, info)) {
+			//std::cout << "Collision between " << (*i).a->GetName() << " and " << (*i).b->GetName() << std::endl;
+			if ((*i).a->objectType == ObjectType::Death || (*i).b->objectType == ObjectType::Death) {
+				if ((*i).a->objectType == ObjectType::Death)
+					gameWorld.RemoveGameObject((*i).b, true);
+				if ((*i).b->objectType == ObjectType::Death)
+					gameWorld.RemoveGameObject((*i).a, true);
+				return;
+			}
+			info.framesLeft = numCollisionFrames;
+			ImpulseResolveCollision(*info.a, *info.b, info.point);
+			ResolveSpringCollision(*info.a, *info.b, info.point);
+			allCollisions.insert(info);
+		}
+	}
 }
 
 /*
@@ -390,6 +418,16 @@ void PhysicsSystem::IntegrateVelocity(float dt) {
 		float frameAngularDamping = 1.0f - (dampingFactor * dt);
 		angVel = angVel * frameAngularDamping;
 		object->SetAngularVelocity(angVel);
+
+		/* Any object with any velocity is not asleep */
+		if (linearVel.Length() != 0.0 || angVel.Length() != 0.0)
+			object->SetIsAsleep(false);
+		else
+			object->SetIsAsleep(true);
+
+		/* Spring objects should have some force added towards their resting position */
+		if ((*i)->objectType == ObjectType::Spring)
+			SpringOnPoint((*i), (*i)->GetRestPosition());
 	}
 }
 
