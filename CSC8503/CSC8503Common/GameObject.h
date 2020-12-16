@@ -1,26 +1,15 @@
 #pragma once
+#include <vector>
 #include "Transform.h"
 #include "CollisionVolume.h"
-
 #include "PhysicsObject.h"
 #include "RenderObject.h"
-
-#include <vector>
 
 using std::vector;
 
 namespace NCL {
 	namespace CSC8503 {
-		enum class ObjectType {
-			Regular = 1,
-			Player = 2,
-			Enemy = 4,
-			Death = 8,
-			Rotating = 16,
-			Spring = 32,
-			Bonus = 64
-		};
-		class GameObject	{
+		class GameObject {
 		public:
 			GameObject(string name = "");
 			~GameObject();
@@ -53,11 +42,11 @@ namespace NCL {
 				return physicsObject;
 			}
 
-			void SetRenderObject(RenderObject* newObject) {
+			virtual void SetRenderObject(RenderObject* newObject) {
 				renderObject = newObject;
 			}
 
-			void SetPhysicsObject(PhysicsObject* newObject) {
+			virtual void SetPhysicsObject(PhysicsObject* newObject) {
 				physicsObject = newObject;
 			}
 
@@ -65,21 +54,9 @@ namespace NCL {
 				return name;
 			}
 
-			virtual void OnCollisionBegin(GameObject* otherObject) {
-				//std::cout << "OnCollisionBegin event occured!\n";
-				if (objectType == ObjectType::Player) 
-					canJump = true;
-				if (otherObject->objectType == ObjectType::Player)
-					canJump = true;
-			}
-
-			virtual void OnCollisionEnd(GameObject* otherObject) {
-				//std::cout << "OnCollisionEnd event occured!\n";
-				/*if (objectType == ObjectType::Player)
-					canJump = false;
-				if (otherObject->objectType == ObjectType::Player)
-					canJump = false;*/
-			}
+			virtual void OnCollisionBegin(GameObject* otherObject){}
+			
+			virtual void OnCollisionEnd(GameObject* otherObject) {}
 
 			bool GetBroadphaseAABB(Vector3&outsize) const;
 
@@ -89,29 +66,13 @@ namespace NCL {
 				worldID = newID;
 			}
 
-			int		GetWorldID() const {
+			int GetWorldID() const {
 				return worldID;
 			}
 
-			void Jump() {
-				if(canJump)
-					physicsObject->ApplyLinearImpulse(Vector3(0, 30, 0));
+			void SetIsActive(bool val) {
+				isActive = val;
 			}
-
-			bool GetCanJump() {
-				return canJump;
-			}
-
-			Vector3 GetRestPosition() const {
-				return restPosition;
-			}
-
-			void SetRestPosition(Vector3 val) {
-				restPosition = val;
-			}
-
-			ObjectType objectType;
-
 		protected:
 			Transform			transform;
 
@@ -124,9 +85,6 @@ namespace NCL {
 			string	name;
 
 			Vector3 broadphaseAABB;
-
-			bool canJump;
-			Vector3 restPosition;
 		};
 	}
 }

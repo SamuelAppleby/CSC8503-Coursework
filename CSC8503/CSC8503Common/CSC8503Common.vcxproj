@@ -133,13 +133,26 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AABBVolume.h" />
+    <ClInclude Include="BonusObject.h" />
+    <ClInclude Include="CapsuleObject.h" />
     <ClInclude Include="CapsuleVolume.h" />
+    <ClInclude Include="CubeObject.h" />
+    <ClInclude Include="EnemyObject.h" />
+    <ClInclude Include="FloorObject.h" />
+    <ClInclude Include="IceObject.h" />
+    <ClInclude Include="LavaObject.h" />
     <ClInclude Include="NavigationGrid.h" />
     <ClInclude Include="NavigationMap.h" />
     <ClInclude Include="NavigationMesh.h" />
     <ClInclude Include="NavigationPath.h" />
     <ClInclude Include="OBBVolume.h" />
+    <ClInclude Include="PlatformCubeObject.h" />
+    <ClInclude Include="PlayerObject.h" />
     <ClInclude Include="PositionConstraint.h" />
+    <ClInclude Include="ProjectileCubeObject.h" />
+    <ClInclude Include="ProjectileSphereObject.h" />
+    <ClInclude Include="RotatingCubeObject.h" />
+    <ClInclude Include="SphereObject.h" />
     <ClInclude Include="SphereVolume.h" />
     <ClInclude Include="CollisionVolume.h" />
     <ClInclude Include="CollisionDetection.h" />
@@ -154,9 +167,11 @@
     <ClInclude Include="QuadTree.h" />
     <ClInclude Include="Ray.h" />
     <ClInclude Include="RenderObject.h" />
+    <ClInclude Include="SpringCubeObject.h" />
     <ClInclude Include="State.h" />
     <ClInclude Include="StateMachine.h" />
     <ClInclude Include="StateTransition.h" />
+    <ClInclude Include="TrampolineObject.h" />
     <ClInclude Include="Transform.h" />
   </ItemGroup>
   <ItemGroup>

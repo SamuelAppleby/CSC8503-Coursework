@@ -10,7 +10,7 @@ namespace NCL {
 			~PhysicsSystem();
 
 			void Clear();
-
+			void ClearDeletedCollisions();
 			void Update(float dt);
 
 			void UseGravity(bool state) {
@@ -40,6 +40,10 @@ namespace NCL {
 			void SetBroadPhase(bool val) {
 				useBroadPhase = val;
 			}
+
+			int GetConstraintIterationCount() const {
+				return constraintIterationCount;
+			}
 		protected:
 			void BasicCollisionDetection();
 			void BroadPhase();
@@ -56,7 +60,7 @@ namespace NCL {
 			void UpdateObjectAABBs();
 
 			void ImpulseResolveCollision(GameObject& a , GameObject&b, CollisionDetection::ContactPoint& p) const;
-			void ResolveSpringCollision(GameObject& a, GameObject& b, CollisionDetection::ContactPoint& p) const;
+			void SpringResolveCollision(GameObject& a, GameObject& b, CollisionDetection::ContactPoint& p) const;
 			void SpringOnPoint(GameObject* a, Vector3 rest) const;
 
 			GameWorld& gameWorld;
@@ -70,6 +74,7 @@ namespace NCL {
 			std::set<CollisionDetection::CollisionInfo> broadphaseCollisions;
 			bool useBroadPhase;
 			int numCollisionFrames	= 5;
+			int constraintIterationCount = 10;
 		};
 	}
 }

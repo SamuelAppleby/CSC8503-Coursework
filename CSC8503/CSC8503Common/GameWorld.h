@@ -44,15 +44,15 @@ namespace NCL {
 
 			virtual void UpdateWorld(float dt);
 
+			void RemoveDeletedObjects();
+
 			void OperateOnContents(GameObjectFunc f);
 
-			void GetObjectIterators(
-				GameObjectIterator& first,
-				GameObjectIterator& last) const;
+			void GetObjectIterators(GameObjectIterator& first, GameObjectIterator& last) const;
 
-			void GetConstraintIterators(
-				std::vector<Constraint*>::const_iterator& first,
-				std::vector<Constraint*>::const_iterator& last) const;
+			void GetConstraintIterators(std::vector<Constraint*>::const_iterator& first, std::vector<Constraint*>::const_iterator& last) const;
+
+			void AddDeletedGameObject(GameObject* o);
 
 		protected:
 			std::vector<GameObject*> gameObjects;
@@ -63,6 +63,8 @@ namespace NCL {
 			bool	shuffleConstraints;
 			bool	shuffleObjects;
 			int		worldIDCounter;
+
+			std::vector<GameObject*> deleteGameObjects;
 		};
 	}
 }

@@ -9,6 +9,9 @@
 #include "Debug.h"
 
 #include <functional>
+#include "SpringCubeObject.h"
+#include "RotatingCubeObject.h"
+#include "LavaObject.h"
 using namespace NCL;
 using namespace CSC8503;
 
@@ -45,12 +48,14 @@ void PhysicsSystem::Clear() {
 	allCollisions.clear();
 }
 
-/*
-
-This is the core of the physics engine update
-
-*/
-int constraintIterationCount = 10;
+void PhysicsSystem::ClearDeletedCollisions() {
+	for (std::set<CollisionDetection::CollisionInfo>::iterator i = allCollisions.begin(); i != allCollisions.end();) {
+		if (!i->a->IsActive() || !i->b->IsActive())
+			i = allCollisions.erase(i);
+		else
+			++i;
+	}
+}
 
 //This is the fixed timestep we'd LIKE to have
 const int   idealHZ = 120;
@@ -197,15 +202,8 @@ void PhysicsSystem::BasicCollisionDetection() {
 			CollisionDetection::CollisionInfo info;
 			if (CollisionDetection::ObjectIntersection(*i, *j, info)) {
 				//std::cout << "Collision between " << (*i)->GetName() << " and " << (*j)->GetName() << std::endl;
-				if ((*i)->objectType == ObjectType::Death || (*j)->objectType == ObjectType::Death) {
-					if((*i)->objectType == ObjectType::Death)
-						gameWorld.RemoveGameObject(*j, true);
-					if ((*j)->objectType == ObjectType::Death)
-						gameWorld.RemoveGameObject(*i, true);
-					return;
-				}
 				ImpulseResolveCollision(*info.a, *info.b, info.point);
-				ResolveSpringCollision(*info.a, *info.b, info.point);
+				SpringResolveCollision(*info.a, *info.b, info.point);
 				info.framesLeft = numCollisionFrames;
 				allCollisions.insert(info);
 			}
@@ -253,7 +251,7 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 	physB->ApplyAngularImpulse(Vector3::Cross(relativeB, fullImpulse));
 }
 
-void PhysicsSystem::ResolveSpringCollision(GameObject& a, GameObject& b, CollisionDetection::ContactPoint& p) const {
+void PhysicsSystem::SpringResolveCollision(GameObject& a, GameObject& b, CollisionDetection::ContactPoint& p) const {
 	PhysicsObject* physA = a.GetPhysicsObject();
 	PhysicsObject* physB = b.GetPhysicsObject();
 	Transform& transformA = a.GetTransform();
@@ -324,16 +322,9 @@ void PhysicsSystem::NarrowPhase() {
 		CollisionDetection::CollisionInfo info = *i;
 		if (CollisionDetection::ObjectIntersection(info.a, info.b, info)) {
 			//std::cout << "Collision between " << (*i).a->GetName() << " and " << (*i).b->GetName() << std::endl;
-			if ((*i).a->objectType == ObjectType::Death || (*i).b->objectType == ObjectType::Death) {
-				if ((*i).a->objectType == ObjectType::Death)
-					gameWorld.RemoveGameObject((*i).b, true);
-				if ((*i).b->objectType == ObjectType::Death)
-					gameWorld.RemoveGameObject((*i).a, true);
-				return;
-			}
 			info.framesLeft = numCollisionFrames;
 			ImpulseResolveCollision(*info.a, *info.b, info.point);
-			ResolveSpringCollision(*info.a, *info.b, info.point);
+			SpringResolveCollision(*info.a, *info.b, info.point);
 			allCollisions.insert(info);
 		}
 	}
@@ -406,7 +397,7 @@ void PhysicsSystem::IntegrateVelocity(float dt) {
 		// Orientation Stuff
 		Quaternion orientation = transform.GetOrientation();
 		Vector3 angVel;
-		if ((*i)->objectType == ObjectType::Rotating) 
+		if (dynamic_cast<RotatingCubeObject*>((*i)))
 			angVel = Vector3(0, 1, 0);
 		else 
 			angVel = object->GetAngularVelocity();
@@ -426,8 +417,8 @@ void PhysicsSystem::IntegrateVelocity(float dt) {
 			object->SetIsAsleep(true);
 
 		/* Spring objects should have some force added towards their resting position */
-		if ((*i)->objectType == ObjectType::Spring)
-			SpringOnPoint((*i), (*i)->GetRestPosition());
+		if (dynamic_cast<SpringCubeObject*>((*i))) 
+			SpringOnPoint((*i), ((SpringCubeObject*)(*i))->GetRestPosition());
 	}
 }
 

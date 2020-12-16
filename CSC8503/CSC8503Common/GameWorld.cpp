@@ -67,9 +67,16 @@ void GameWorld::UpdateWorld(float dt) {
 	}
 }
 
+void GameWorld::RemoveDeletedObjects() {
+	for (auto& i : gameObjects) {
+		if (!i->IsActive())
+			RemoveGameObject(i, true);
+	}
+}
+
 void GameWorld::ShowFacing() {
 	for (auto& i : gameObjects) {
-		if (i->objectType == ObjectType::Enemy) {
+		if (i->GetName() == "Enemy") {
 			Ray ray(i->GetTransform().GetPosition(), i->GetTransform().GetOrientation() * Vector3(0, 0, -1));
 			RayCollision closestCollision;
 			if (Raycast(ray, closestCollision, i, true)) 
@@ -132,4 +139,8 @@ void GameWorld::RemoveConstraint(Constraint* c, bool andDelete) {
 void GameWorld::GetConstraintIterators(std::vector<Constraint*>::const_iterator& first, std::vector<Constraint*>::const_iterator& last) const {
 	first	= constraints.begin();
 	last	= constraints.end();
+}
+
+void GameWorld::AddDeletedGameObject(GameObject* o) {
+	deleteGameObjects.emplace_back(o);
 }

@@ -4,7 +4,8 @@
 
 namespace NCL {
 	namespace CSC8503 {
-		class TutorialGame		{
+		class PlayerObject;
+		class TutorialGame {
 		public:
 			TutorialGame();
 			~TutorialGame();
@@ -33,16 +34,15 @@ namespace NCL {
 			void DebugObjectMovement();
 			void LockedObjectMovement();
 
-			GameObject* AddFloorToWorld(OGLTexture* texture, const Vector3& position, const Vector3& size,
-				float elasticity = 0.2f, float friction = 0.8f);
-			GameObject* AddSphereToWorld(OGLTexture* texture, const Vector3& position, float radius, 
-				float inverseMass = 10.0f, float elasticity = 0.2f, float friction = 0.8f);
-			GameObject* AddCubeToWorld(OGLTexture* texture, const Vector3& position, Vector3 dimensions, 
-				float inverseMass = 10.0f, float elasticity = 0.2f, float friction = 0.8f, bool rotate = false, bool spring = false);
-			GameObject* AddCapsuleToWorld(OGLTexture* texture, const Vector3& position, float halfHeight,
-				float radius, float inverseMass = 10.0f, float elasticity = 0.2f, float friction = 0.8f);
+			GameObject* AddFloorToWorld(GameObject* floor, const Vector3& position, const Vector3& size);
 
-			GameObject* AddPlayerToWorld(const Vector3& position);
+			GameObject* AddSphereToWorld(GameObject* sphere, const Vector3& position, float radius);
+
+			GameObject* AddCubeToWorld(GameObject* cube, const Vector3& position, Vector3 dimensions);
+
+			GameObject* AddCapsuleToWorld(GameObject* cube, const Vector3& position, float halfHeight, float radius);
+
+			PlayerObject* AddPlayerToWorld(const Vector3& position);
 			GameObject* AddEnemyToWorld(const Vector3& position);
 			GameObject* AddBonusToWorld(const Vector3& position);
 
@@ -83,6 +83,7 @@ namespace NCL {
 			Vector3 stationaryCameraPos;
 			bool camSet = false;
 
+			PlayerObject* player;
 		};
 	}
 }
