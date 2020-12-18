@@ -132,9 +132,6 @@
     <ClInclude Include="SpringCubeObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PlatformCubeObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ProjectileCubeObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -148,6 +145,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CapsuleObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MovingFloorObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WoodenCubeObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OrientedFloorObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

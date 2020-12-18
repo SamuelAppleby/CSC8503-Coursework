@@ -5,7 +5,7 @@ namespace NCL {
 		class ProjectileCubeObject : public CubeObject {
 		public:
 			ProjectileCubeObject() {
-				invMass = 2.0f;
+				invMass = 0.5f;
 				name = "ProjectileCube";
 			}
 		};

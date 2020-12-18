@@ -6,7 +6,7 @@ namespace NCL {
 		public:
 			BonusObject() {
 				name = "Bonus";
-				invMass = 10000.0f;
+				invMass = 1000.0f;
 				elasticity = 0.2;
 				friction = 0.8;
 			}

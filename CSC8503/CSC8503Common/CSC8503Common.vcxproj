@@ -141,12 +141,13 @@
     <ClInclude Include="FloorObject.h" />
     <ClInclude Include="IceObject.h" />
     <ClInclude Include="LavaObject.h" />
+    <ClInclude Include="MovingFloorObject.h" />
     <ClInclude Include="NavigationGrid.h" />
     <ClInclude Include="NavigationMap.h" />
     <ClInclude Include="NavigationMesh.h" />
     <ClInclude Include="NavigationPath.h" />
     <ClInclude Include="OBBVolume.h" />
-    <ClInclude Include="PlatformCubeObject.h" />
+    <ClInclude Include="OrientedFloorObject.h" />
     <ClInclude Include="PlayerObject.h" />
     <ClInclude Include="PositionConstraint.h" />
     <ClInclude Include="ProjectileCubeObject.h" />
@@ -173,6 +174,7 @@
     <ClInclude Include="StateTransition.h" />
     <ClInclude Include="TrampolineObject.h" />
     <ClInclude Include="Transform.h" />
+    <ClInclude Include="WoodenCubeObject.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CollisionDetection.cpp" />

@@ -1,6 +1,7 @@
 #pragma once
 #include "GameTechRenderer.h"
 #include "../CSC8503Common/PhysicsSystem.h"
+#include "../CSC8503Common/MovingFloorObject.h"
 
 namespace NCL {
 	namespace CSC8503 {
@@ -26,9 +27,10 @@ namespace NCL {
 			void InitMixedGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing);
 			void InitCubeGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, const Vector3& cubeDims);
 			void InitFloors();
-			void BridgeConstraintTest();
+			void BridgeConstraintTest(Vector3 startPos);
 			
 			void FireObjects();
+			void MovePlatforms();
 			bool SelectObject();
 			void MoveSelectedObject();
 			void DebugObjectMovement();
@@ -66,6 +68,7 @@ namespace NCL {
 			OGLTexture* iceTex = nullptr;
 			OGLTexture* trampolineTex = nullptr;
 			OGLTexture* obstacleTex = nullptr;
+			OGLTexture* woodenTex = nullptr;
 			OGLShader*	basicShader = nullptr;
 
 			//Coursework Meshes
@@ -76,14 +79,12 @@ namespace NCL {
 
 			//Coursework Additional functionality	
 			GameObject* lockedObject	= nullptr;
-			Vector3 lockedOffset		= Vector3(0, 14, 20);
 			void LockCameraToObject(GameObject* o) {
 				lockedObject = o;
 			}
-			Vector3 stationaryCameraPos;
-			bool camSet = false;
-
 			PlayerObject* player;
+
+			vector<MovingFloorObject*> movingPlatforms;
 		};
 	}
 }

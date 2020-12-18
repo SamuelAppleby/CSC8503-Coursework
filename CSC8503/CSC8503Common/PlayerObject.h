@@ -34,11 +34,11 @@ namespace NCL {
 				canJump = true;
 			}
 			void OnCollisionEnd(GameObject* otherObject) override {
-				canJump = false;
+				//canJump = false;
 			}
 			void Jump() {
 				if (canJump)
-					physicsObject->ApplyLinearImpulse(Vector3(0, 50, 0));
+					physicsObject->ApplyLinearImpulse(Vector3(0, 70, 0));
 			}
 			int GetScore() const {
 				return score;

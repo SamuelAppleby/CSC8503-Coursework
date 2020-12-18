@@ -51,6 +51,58 @@ void Camera::UpdateCamera(float dt) {
 	}
 }
 
+void Camera::UpdateCameraWithObject(float dt, Camera* cam, Vector3 position) {
+	pitch -= (Window::GetMouse()->GetRelativePosition().y);
+	yaw -= (Window::GetMouse()->GetRelativePosition().x);
+
+	pitch = std::min(pitch, 90.0f);
+	pitch = std::max(pitch, -90.0f);
+
+	if (yaw < 0) 
+		yaw += 360.0f;
+	
+	if (yaw > 360.0f) 
+		yaw -= 360.0f;
+
+	float radius = 24;
+	float scale = (radius * radius) / 90;
+	float xPos = (scale * yaw) / radius;
+	xPos = fmod(xPos, radius);
+	if (yaw < 90) {
+		lockedOffset.x = xPos;
+		lockedOffset.z = radius - xPos;
+	}
+	else if (yaw < 180) {
+		lockedOffset.x = radius - xPos;
+		lockedOffset.z = -xPos;
+	}
+	else if (yaw < 270) {
+		lockedOffset.x = -xPos;
+		lockedOffset.z = -radius + xPos;
+	}
+	else {
+		lockedOffset.x = -radius + xPos;
+		lockedOffset.z = xPos;
+	}
+
+	float yPos = pitch * (radius / 90);
+	if (pitch > 0) 
+		lockedOffset.z += yPos;
+	else 
+		lockedOffset.z += yPos;
+
+	if (lockedOffset.z > radius)
+		lockedOffset.z = radius;
+	else if (lockedOffset.z < -radius)
+		lockedOffset.z = -radius;
+
+	lockedOffset.y = -yPos;
+	Vector3 camPos = position + lockedOffset;
+	cam->SetPosition(camPos);
+	cam->SetPitch(pitch);
+	cam->SetYaw(yaw);
+}
+
 /*
 Generates a view matrix for the camera's viewpoint. This matrix can be sent
 straight to the shader...it's already an 'inverse camera' matrix.

@@ -16,10 +16,8 @@ using namespace NCL;
 using namespace CSC8503;
 
 /*
-
 These two variables help define the relationship between positions
 and the forces that are added to objects to change those positions
-
 */
 
 PhysicsSystem::PhysicsSystem(GameWorld& g) : gameWorld(g)	{
@@ -35,14 +33,12 @@ PhysicsSystem::~PhysicsSystem()	{
 }
 
 /*
-
 If the 'game' is ever reset, the PhysicsSystem must be
 'cleared' to remove any old collisions that might still
 be hanging around in the collision list. If your engine
 is expanded to allow objects to be removed from the world,
 you'll need to iterate through this collisions list to remove
 any collisions they are in.
-
 */
 void PhysicsSystem::Clear() {
 	allCollisions.clear();
@@ -285,11 +281,16 @@ compare the collisions that we absolutely need to.
 
 void PhysicsSystem::BroadPhase() {
 	broadphaseCollisions.clear();
-	QuadTree<GameObject*> tree(Vector2(1024, 1024), 7, 6);
+	QuadTree<GameObject*> tree(Vector2(2048, 2048), 7, 6);
 	std::vector<GameObject*>::const_iterator first;
 	std::vector<GameObject*>::const_iterator last;
 	gameWorld.GetObjectIterators(first, last);
 	for (auto i = first; i != last; ++i) {
+		/* Any object with any velocity is not asleep */
+		if ((*i)->GetPhysicsObject()->GetLinearVelocity().Length() != 0.0 || (*i)->GetPhysicsObject()->GetAngularVelocity().Length() != 0.0)
+			(*i)->GetPhysicsObject()->SetIsAsleep(false);
+		else
+			(*i)->GetPhysicsObject()->SetIsAsleep(true);
 		Vector3 halfSizes;
 		if (!(*i)->GetBroadphaseAABB(halfSizes)) {
 			continue;
@@ -398,7 +399,7 @@ void PhysicsSystem::IntegrateVelocity(float dt) {
 		Quaternion orientation = transform.GetOrientation();
 		Vector3 angVel;
 		if (dynamic_cast<RotatingCubeObject*>((*i)))
-			angVel = Vector3(0, 1, 0);
+			angVel = Vector3(0, 2, 0);
 		else 
 			angVel = object->GetAngularVelocity();
 		orientation = orientation + (Quaternion(angVel * dt * 0.5f, 0.0f) * orientation);
@@ -409,12 +410,6 @@ void PhysicsSystem::IntegrateVelocity(float dt) {
 		float frameAngularDamping = 1.0f - (dampingFactor * dt);
 		angVel = angVel * frameAngularDamping;
 		object->SetAngularVelocity(angVel);
-
-		/* Any object with any velocity is not asleep */
-		if (linearVel.Length() != 0.0 || angVel.Length() != 0.0)
-			object->SetIsAsleep(false);
-		else
-			object->SetIsAsleep(true);
 
 		/* Spring objects should have some force added towards their resting position */
 		if (dynamic_cast<SpringCubeObject*>((*i))) 
