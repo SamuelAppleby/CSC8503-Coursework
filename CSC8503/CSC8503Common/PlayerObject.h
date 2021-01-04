@@ -1,16 +1,14 @@
 #pragma once
 #include "GameObject.h"
-#include "LavaObject.h"
-#include "BonusObject.h"
 namespace NCL {
 	namespace CSC8503 {
 		class PlayerObject : public GameObject {
 		public:
 			PlayerObject() {
 				name = "Player";
-				invMass = 0.5f;
+				invMass = 5.0f;
 				elasticity = 0.2;
-				friction = 0.8;
+				friction = 0.5;
 				canJump = false;
 				score = 1000;
 			}
@@ -21,16 +19,6 @@ namespace NCL {
 				physicsObject->SetFriction(friction);
 			}
 			void OnCollisionBegin(GameObject* otherObject) override {
-				if (dynamic_cast<LavaObject*>(otherObject)) {
-					physicsObject->ClearForces();
-					physicsObject->SetLinearVelocity(Vector3(0, 0, 0));
-					physicsObject->SetAngularVelocity(Vector3(0, 0, 0));
-					transform.SetPosition(Vector3(0, 10, 0));
-				}
-				if (dynamic_cast<BonusObject*>(otherObject)) {
-					score += 25;
-					otherObject->SetIsActive(false);
-				}
 				canJump = true;
 			}
 			void OnCollisionEnd(GameObject* otherObject) override {
@@ -38,10 +26,13 @@ namespace NCL {
 			}
 			void Jump() {
 				if (canJump)
-					physicsObject->ApplyLinearImpulse(Vector3(0, 70, 0));
+					physicsObject->ApplyLinearImpulse(Vector3(0, 5, 0));
 			}
 			int GetScore() const {
 				return score;
+			}
+			void BonusAcquired() {
+				score += 25;
 			}
 			void DecreaseScore(float dt) {
 				score -= (10 * dt);
@@ -50,7 +41,6 @@ namespace NCL {
 			float invMass;
 			float elasticity;
 			float friction;
-
 			bool canJump;
 			float score;
 		};

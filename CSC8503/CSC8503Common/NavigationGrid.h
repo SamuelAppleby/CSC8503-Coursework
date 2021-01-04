@@ -26,7 +26,7 @@ namespace NCL {
 				type = 0;
 				parent = nullptr;
 			}
-			~GridNode() {	}
+			~GridNode() {}
 		};
 
 		class NavigationGrid : public NavigationMap	{

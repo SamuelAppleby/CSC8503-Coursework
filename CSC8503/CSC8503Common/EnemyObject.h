@@ -1,14 +1,12 @@
 #pragma once
 #include "GameObject.h"
-#include "LavaObject.h"
-#include "BonusObject.h"
 namespace NCL {
 	namespace CSC8503 {
 		class EnemyObject : public GameObject {
 		public:
 			EnemyObject() {
 				name = "Enemy";
-				invMass = 0.5f;
+				invMass = 5.0f;
 				elasticity = 0.2;
 				friction = 0.8;
 			}

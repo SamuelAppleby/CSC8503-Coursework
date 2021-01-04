@@ -1,39 +1,34 @@
 #include "StateMachine.h"
-#include "State.h"
-#include "StateTransition.h"
-
 using namespace NCL::CSC8503;
-
-StateMachine::StateMachine()
-{
+StateMachine::StateMachine() {
 	activeState = nullptr;
 }
-
-StateMachine::~StateMachine()
-{
+StateMachine ::~StateMachine() {
+	for (auto& i : allStates) {
+		delete i;
+	}
+	for (auto& i : allTransitions) {
+		delete i.second;
+	}
 }
-
 void StateMachine::AddState(State* s) {
 	allStates.emplace_back(s);
 	if (activeState == nullptr) {
-		activeState = s;
+		activeState = s; // make this the default entry state !
 	}
 }
-
-void StateMachine::AddTransition(StateTransition* t) {
+void StateMachine::AddTransition(StateTransition * t) {
 	allTransitions.insert(std::make_pair(t->GetSourceState(), t));
 }
-
-void StateMachine::Update() {
+void StateMachine::Update(float dt) {
 	if (activeState) {
-		activeState->Update();
-	
-		//Get the transition set starting from this state node;
+		activeState->Update(dt);
+		// Get the transition set starting from this state node ;
 		std::pair<TransitionIterator, TransitionIterator> range = allTransitions.equal_range(activeState);
-
+		// Iterate through them all
 		for (auto& i = range.first; i != range.second; ++i) {
-			if (i->second->CanTransition()) {
-				State* newState = i->second->GetDestinationState();
+			if (i->second->CanTransition()) { // some transition is true !
+				State * newState = i->second->GetDestinationState();
 				activeState = newState;
 			}
 		}

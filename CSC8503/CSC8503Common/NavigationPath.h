@@ -5,18 +5,17 @@
 namespace NCL {
 	using namespace NCL::Maths;
 	namespace CSC8503 {
-		class NavigationPath		{
+		class NavigationPath {
 		public:
 			NavigationPath() {}
 			~NavigationPath() {}
-
-			void	Clear() {
+			void Clear() {
 				waypoints.clear();
 			}
-			void	PushWaypoint(const Vector3& wp) {
+			void PushWaypoint(const Vector3& wp) {
 				waypoints.emplace_back(wp);
 			}
-			bool	PopWaypoint(Vector3& waypoint) {
+			bool PopWaypoint(Vector3& waypoint) {
 				if (waypoints.empty()) {
 					return false;
 				}
@@ -24,10 +23,8 @@ namespace NCL {
 				waypoints.pop_back();
 				return true;
 			}
-
 		protected:
-
-			std::vector <Vector3> waypoints;
+			std::vector<Vector3> waypoints;
 		};
 	}
 }

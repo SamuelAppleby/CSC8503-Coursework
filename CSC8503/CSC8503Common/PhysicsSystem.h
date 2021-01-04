@@ -1,6 +1,7 @@
 #pragma once
 #include "../CSC8503Common/GameWorld.h"
 #include <set>
+#include "SpringObject.h"
 
 namespace NCL {
 	namespace CSC8503 {
@@ -60,8 +61,7 @@ namespace NCL {
 			void UpdateObjectAABBs();
 
 			void ImpulseResolveCollision(GameObject& a , GameObject&b, CollisionDetection::ContactPoint& p) const;
-			void SpringResolveCollision(GameObject& a, GameObject& b, CollisionDetection::ContactPoint& p) const;
-			void SpringOnPoint(GameObject* a, Vector3 rest) const;
+			void SpringOnPoint(SpringObject* a) const;
 
 			GameWorld& gameWorld;
 

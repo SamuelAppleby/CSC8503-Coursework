@@ -3,13 +3,10 @@
 #include "GameObject.h"
 #include "CollisionDetection.h"
 #include "../../Common/Quaternion.h"
-
 #include "Constraint.h"
-
 #include "Debug.h"
-
 #include <functional>
-#include "SpringCubeObject.h"
+#include "SpringObject.h"
 #include "RotatingCubeObject.h"
 #include "LavaObject.h"
 using namespace NCL;
@@ -19,7 +16,6 @@ using namespace CSC8503;
 These two variables help define the relationship between positions
 and the forces that are added to objects to change those positions
 */
-
 PhysicsSystem::PhysicsSystem(GameWorld& g) : gameWorld(g)	{
 	applyGravity	= false;
 	useBroadPhase	= true;	
@@ -175,7 +171,6 @@ void PhysicsSystem::UpdateObjectAABBs() {
 }
 
 /*
-
 This is how we'll be doing collision detection in tutorial 4.
 We step thorugh every pair of objects once (the inner for loop offset 
 ensures this), and determine whether they collide, and if so, add them
@@ -199,7 +194,6 @@ void PhysicsSystem::BasicCollisionDetection() {
 			if (CollisionDetection::ObjectIntersection(*i, *j, info)) {
 				//std::cout << "Collision between " << (*i)->GetName() << " and " << (*j)->GetName() << std::endl;
 				ImpulseResolveCollision(*info.a, *info.b, info.point);
-				SpringResolveCollision(*info.a, *info.b, info.point);
 				info.framesLeft = numCollisionFrames;
 				allCollisions.insert(info);
 			}
@@ -208,10 +202,8 @@ void PhysicsSystem::BasicCollisionDetection() {
 }
 
 /*
-
 In tutorial 5, we start determining the correct response to a collision,
 so that objects separate back out. 
-
 */
 void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, CollisionDetection::ContactPoint& p) const {
 	PhysicsObject* physA = a.GetPhysicsObject();
@@ -222,10 +214,11 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 	if (totalMass == 0) {
 		return; // two static objects ??
 	}
-	// Separate them out using projection
+	/* Separate Using Projection */
 	transformA.SetPosition(transformA.GetPosition() - (p.normal * p.penetration * (physA->GetInverseMass() / totalMass)));
 	transformB.SetPosition(transformB.GetPosition() + (p.normal * p.penetration * (physB->GetInverseMass() / totalMass)));
-
+	
+	/* Separate Using Impulse */
 	Vector3 relativeA = p.localA;
 	Vector3 relativeB = p.localB;
 	Vector3 angVelocityA = Vector3::Cross(physA->GetAngularVelocity(), relativeA);
@@ -245,40 +238,45 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 	physB->ApplyLinearImpulse(fullImpulse);
 	physA->ApplyAngularImpulse(Vector3::Cross(relativeA, -fullImpulse));
 	physB->ApplyAngularImpulse(Vector3::Cross(relativeB, fullImpulse));
-}
 
-void PhysicsSystem::SpringResolveCollision(GameObject& a, GameObject& b, CollisionDetection::ContactPoint& p) const {
-	PhysicsObject* physA = a.GetPhysicsObject();
-	PhysicsObject* physB = b.GetPhysicsObject();
-	Transform& transformA = a.GetTransform();
-	Transform& transformB = b.GetTransform();
-	float totalMass = physA->GetInverseMass() + physB->GetInverseMass();
-	if (totalMass == 0) {
-		return; 
-	}
-	float k = 100;
+	/* Separate Using Friction */
+	Vector3 t = contactVelocity - (p.normal * impulseForce);
+	t.Normalise();
+	float fricForce = Vector3::Dot(contactVelocity, t);
+	Vector3 fricInertiaA = Vector3::Cross(physA->GetInertiaTensor() * Vector3::Cross(relativeA, t), relativeA);
+	Vector3 fricInertiaB = Vector3::Cross(physB->GetInertiaTensor() * Vector3::Cross(relativeB, t), relativeB);
+	float fricEffect = Vector3::Dot(fricInertiaA + fricInertiaB, t);
+	float fricCoef = physA->GetFriction() * physB->GetFriction();
+	float jT = -(fricCoef * fricForce) / (totalMass + fricEffect);
+	Vector3 fricImpulse = t * jT;
+	/* Frictional effects */
+	physA->ApplyLinearImpulse(-fricImpulse);
+	physB->ApplyLinearImpulse(fricImpulse);		
+	physA->ApplyAngularImpulse(Vector3::Cross(relativeA, -fricImpulse));
+	physB->ApplyAngularImpulse(Vector3::Cross(relativeB, fricImpulse));
+
+	/* Separate Using Penalty */
+	float k = 10;
 	float extension = 0 - p.penetration;
 	float force = -k * extension;
 	physA->AddForceAtLocalPosition(p.normal * -force, p.localA);
 	physB->AddForceAtLocalPosition(p.normal * force, p.localB);
 }
 
-void PhysicsSystem::SpringOnPoint(GameObject* a, Vector3 rest) const {
-	float k = 0.04;
-	Vector3 extension = a->GetTransform().GetPosition() - rest;
+/* Directly apply spring forces to object */
+void PhysicsSystem::SpringOnPoint(SpringObject* a) const {
+	float k = 0.005;
+	Vector3 extension = a->GetTransform().GetPosition() - a->GetRestPosition();
 	Vector3 force = extension * -k;
 	a->GetPhysicsObject()->ApplyLinearImpulse(force);
 }
 
 /*
-
 Later, we replace the BasicCollisionDetection method with a broadphase
 and a narrowphase collision detection method. In the broad phase, we
 split the world up using an acceleration structure, so that we can only
 compare the collisions that we absolutely need to. 
-
 */
-
 void PhysicsSystem::BroadPhase() {
 	broadphaseCollisions.clear();
 	QuadTree<GameObject*> tree(Vector2(2048, 2048), 7, 6);
@@ -286,7 +284,7 @@ void PhysicsSystem::BroadPhase() {
 	std::vector<GameObject*>::const_iterator last;
 	gameWorld.GetObjectIterators(first, last);
 	for (auto i = first; i != last; ++i) {
-		/* Any object with any velocity is not asleep */
+		/* Any object with a velocity is not asleep */
 		if ((*i)->GetPhysicsObject()->GetLinearVelocity().Length() != 0.0 || (*i)->GetPhysicsObject()->GetAngularVelocity().Length() != 0.0)
 			(*i)->GetPhysicsObject()->SetIsAsleep(false);
 		else
@@ -325,7 +323,6 @@ void PhysicsSystem::NarrowPhase() {
 			//std::cout << "Collision between " << (*i).a->GetName() << " and " << (*i).b->GetName() << std::endl;
 			info.framesLeft = numCollisionFrames;
 			ImpulseResolveCollision(*info.a, *info.b, info.point);
-			SpringResolveCollision(*info.a, *info.b, info.point);
 			allCollisions.insert(info);
 		}
 	}
@@ -354,7 +351,7 @@ void PhysicsSystem::IntegrateAccel(float dt) {
 		Vector3 force = object->GetForce();
 		Vector3 accel = force * inverseMass;
 		if (applyGravity && inverseMass > 0) {
-			accel += gravity; // don ’t move infinitely heavy things
+			accel += gravity * 3; // don ’t move infinitely heavy things
 		}
 		linearVel += accel * dt; // integrate accel !
 		object->SetLinearVelocity(linearVel);
@@ -369,6 +366,7 @@ void PhysicsSystem::IntegrateAccel(float dt) {
 		object->SetAngularVelocity(angVel);
 	}
 }
+
 /*
 This function integrates linear and angular velocity into
 position and orientation. It may be called multiple times
@@ -412,8 +410,8 @@ void PhysicsSystem::IntegrateVelocity(float dt) {
 		object->SetAngularVelocity(angVel);
 
 		/* Spring objects should have some force added towards their resting position */
-		if (dynamic_cast<SpringCubeObject*>((*i))) 
-			SpringOnPoint((*i), ((SpringCubeObject*)(*i))->GetRestPosition());
+		if (SpringObject* s = dynamic_cast<SpringObject*>((*i))) 
+			SpringOnPoint(s);
 	}
 }
 
@@ -432,17 +430,14 @@ void PhysicsSystem::ClearForces() {
 
 
 /*
-
 As part of the final physics tutorials, we add in the ability
 to constrain objects based on some extra calculation, allowing
 us to model springs and ropes etc. 
-
 */
 void PhysicsSystem::UpdateConstraints(float dt) {
 	std::vector<Constraint*>::const_iterator first;
 	std::vector<Constraint*>::const_iterator last;
 	gameWorld.GetConstraintIterators(first, last);
-
 	for (auto i = first; i != last; ++i) {
 		(*i)->UpdateConstraint(dt);
 	}

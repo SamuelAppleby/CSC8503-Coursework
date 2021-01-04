@@ -48,15 +48,6 @@
     <ClInclude Include="Ray.h">
       <Filter>CollisionDetection</Filter>
     </ClInclude>
-    <ClInclude Include="StateMachine.h">
-      <Filter>AI</Filter>
-    </ClInclude>
-    <ClInclude Include="StateTransition.h">
-      <Filter>AI</Filter>
-    </ClInclude>
-    <ClInclude Include="State.h">
-      <Filter>AI</Filter>
-    </ClInclude>
     <ClInclude Include="PushdownState.h">
       <Filter>AI</Filter>
     </ClInclude>
@@ -120,25 +111,13 @@
     <ClInclude Include="SphereObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ProjectileSphereObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="CubeObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RotatingCubeObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SpringCubeObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ProjectileCubeObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="BonusObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PlayerObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="EnemyObject.h">
@@ -150,10 +129,31 @@
     <ClInclude Include="MovingFloorObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="WoodenCubeObject.h">
+    <ClInclude Include="OrientedFloorObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="OrientedFloorObject.h">
+    <ClInclude Include="StateMachine.h">
+      <Filter>AI</Filter>
+    </ClInclude>
+    <ClInclude Include="StateTransition.h">
+      <Filter>AI</Filter>
+    </ClInclude>
+    <ClInclude Include="State.h">
+      <Filter>AI</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StateGameObject.h">
+      <Filter>AI</Filter>
+    </ClInclude>
+    <ClInclude Include="OscillateStateGameObject.h">
+      <Filter>AI</Filter>
+    </ClInclude>
+    <ClInclude Include="PatrolStateGameObject.h">
+      <Filter>AI</Filter>
+    </ClInclude>
+    <ClInclude Include="SpringObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -175,12 +175,6 @@
     </ClCompile>
     <ClCompile Include="RenderObject.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="StateMachine.cpp">
-      <Filter>AI</Filter>
-    </ClCompile>
-    <ClCompile Include="StateTransition.cpp">
-      <Filter>AI</Filter>
     </ClCompile>
     <ClCompile Include="PushdownState.cpp">
       <Filter>AI</Filter>
@@ -205,6 +199,18 @@
     </ClCompile>
     <ClCompile Include="PositionConstraint.cpp">
       <Filter>Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="StateMachine.cpp">
+      <Filter>AI</Filter>
+    </ClCompile>
+    <ClCompile Include="StateGameObject.cpp">
+      <Filter>AI</Filter>
+    </ClCompile>
+    <ClCompile Include="OscillateStateGameObject.cpp">
+      <Filter>AI</Filter>
+    </ClCompile>
+    <ClCompile Include="PatrolStateGameObject.cpp">
+      <Filter>AI</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

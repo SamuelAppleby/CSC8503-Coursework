@@ -4,9 +4,7 @@
 #include "CollisionVolume.h"
 #include "PhysicsObject.h"
 #include "RenderObject.h"
-
 using std::vector;
-
 namespace NCL {
 	namespace CSC8503 {
 		class GameObject {

@@ -6,7 +6,7 @@ namespace NCL {
 		class TrampolineObject : public FloorObject {
 		public:
 			TrampolineObject() {
-				elasticity = 10.0f;
+				elasticity = 8.0f;
 				name = "Trampoline";
 			}
 		};

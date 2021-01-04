@@ -6,8 +6,8 @@ namespace NCL {
 		public:
 			FloorObject() {
 				invMass = 0.0f;
-				elasticity = 0.2;
-				friction = 0.8;
+				elasticity = 0.0f;
+				friction = 0.5f;
 				name = "Floor";
 			}
 			void SetPhysicsObject(PhysicsObject* newObject) override {

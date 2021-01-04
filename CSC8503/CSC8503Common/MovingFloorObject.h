@@ -1,38 +1,39 @@
 #pragma once
 #include "FloorObject.h"
-
 namespace NCL {
 	namespace CSC8503 {
 		class MovingFloorObject : public FloorObject {
 		public:
 			MovingFloorObject(Vector3 start, Vector3 end) {
-				up = false;
-				right = false;
+				xSpeed = 0;
+				ySpeed = 0;
+				zSpeed = 0;
 				this->start = start;
 				this->end = end;
 				name = "MovingFloor";
 			}
-			void setUp(bool val) {
-				up = val;
+			void ToggleMoveRight(bool val) {
+				val ? xSpeed = 5 : xSpeed = -5;
 			}
-			bool getUp() const {
-				return up;
+			void ToggleMoveUp(bool val) {
+				val ? ySpeed = 5 : ySpeed = -5;
 			}
-			void setRight(bool val) {
-				right = val;
+			void ToggleMoveForwards(bool val) {
+				val ? zSpeed = -5 : zSpeed = 5;
 			}
-			bool getRight() const {
-				return right;
-			}
-			Vector3 getStart() const {
+			Vector3 GetStart() const {
 				return start;
 			}
-			Vector3 getEnd() const {
+			Vector3 GetEnd() const {
 				return end;
 			}
+			void Move() {
+				GetPhysicsObject()->SetLinearVelocity({ xSpeed, ySpeed, zSpeed });
+			}
 		protected:
-			bool up;
-			bool right;
+			float xSpeed;
+			float ySpeed;
+			float zSpeed;
 			Vector3 start;
 			Vector3 end;
 		};

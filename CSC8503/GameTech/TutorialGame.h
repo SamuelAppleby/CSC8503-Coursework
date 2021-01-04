@@ -2,6 +2,7 @@
 #include "GameTechRenderer.h"
 #include "../CSC8503Common/PhysicsSystem.h"
 #include "../CSC8503Common/MovingFloorObject.h"
+#include "../CSC8503Common/StateGameObject.h"
 
 namespace NCL {
 	namespace CSC8503 {
@@ -37,16 +38,15 @@ namespace NCL {
 			void LockedObjectMovement();
 
 			GameObject* AddFloorToWorld(GameObject* floor, const Vector3& position, const Vector3& size);
-
 			GameObject* AddSphereToWorld(GameObject* sphere, const Vector3& position, float radius);
-
 			GameObject* AddCubeToWorld(GameObject* cube, const Vector3& position, Vector3 dimensions);
-
 			GameObject* AddCapsuleToWorld(GameObject* cube, const Vector3& position, float halfHeight, float radius);
 
 			PlayerObject* AddPlayerToWorld(const Vector3& position);
 			GameObject* AddEnemyToWorld(const Vector3& position);
 			GameObject* AddBonusToWorld(const Vector3& position);
+			StateGameObject* AddOscillateStateObjectToWorld(const Vector3& position);
+			StateGameObject* AddPatrolStateObjectToWorld(const Vector3& position, GameObject* follow);
 
 			GameTechRenderer*	renderer;
 			PhysicsSystem*		physics;
@@ -69,6 +69,7 @@ namespace NCL {
 			OGLTexture* trampolineTex = nullptr;
 			OGLTexture* obstacleTex = nullptr;
 			OGLTexture* woodenTex = nullptr;
+			OGLTexture* bonusTex = nullptr;
 			OGLShader*	basicShader = nullptr;
 
 			//Coursework Meshes
@@ -83,6 +84,8 @@ namespace NCL {
 				lockedObject = o;
 			}
 			PlayerObject* player;
+			bool lockedOrientation;
+			StateGameObject* testStateObject;
 
 			vector<MovingFloorObject*> movingPlatforms;
 		};

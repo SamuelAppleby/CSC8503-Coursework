@@ -52,19 +52,13 @@ namespace NCL {
 
 			void GetConstraintIterators(std::vector<Constraint*>::const_iterator& first, std::vector<Constraint*>::const_iterator& last) const;
 
-			void AddDeletedGameObject(GameObject* o);
-
 		protected:
 			std::vector<GameObject*> gameObjects;
 			std::vector<Constraint*> constraints;
-
 			Camera* mainCamera;
-
 			bool	shuffleConstraints;
 			bool	shuffleObjects;
 			int		worldIDCounter;
-
-			std::vector<GameObject*> deleteGameObjects;
 		};
 	}
 }

@@ -141,6 +141,4 @@ void GameWorld::GetConstraintIterators(std::vector<Constraint*>::const_iterator&
 	last	= constraints.end();
 }
 
-void GameWorld::AddDeletedGameObject(GameObject* o) {
-	deleteGameObjects.emplace_back(o);
-}
+
