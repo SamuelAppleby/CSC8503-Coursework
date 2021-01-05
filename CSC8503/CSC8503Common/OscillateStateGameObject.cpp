@@ -17,6 +17,7 @@ OscillateStateGameObject::OscillateStateGameObject() {
 	stateMachine->AddTransition(new StateTransition(stateB, stateA, [&]()->bool {
 		return this->counter < 0.0f;
 	}));
+	name = "OscillateAI";
 }
 void OscillateStateGameObject::MoveLeft(float dt) {
 	GetPhysicsObject()->AddForce({ -1, 0, 0 });

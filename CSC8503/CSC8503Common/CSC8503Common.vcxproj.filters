@@ -129,9 +129,6 @@
     <ClInclude Include="MovingFloorObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="OrientedFloorObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="StateMachine.h">
       <Filter>AI</Filter>
     </ClInclude>
@@ -154,6 +151,9 @@
       <Filter>AI</Filter>
     </ClInclude>
     <ClInclude Include="SpringObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FinishObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

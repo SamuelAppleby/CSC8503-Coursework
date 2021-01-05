@@ -19,6 +19,7 @@ PatrolStateGameObject::PatrolStateGameObject(GameObject* val) {
 	stateMachine->AddTransition(new StateTransition(stateB, stateA, [&]()->bool {
 		return direction.Length() > 30.0f;
 	}));
+	name = "PatrolAI";
 }
 void PatrolStateGameObject::Update(float dt) {
 	direction = object->GetTransform().GetPosition() - this->GetTransform().GetPosition();

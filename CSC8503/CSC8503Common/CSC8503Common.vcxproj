@@ -101,7 +101,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -139,6 +139,7 @@
     <ClInclude Include="CapsuleVolume.h" />
     <ClInclude Include="CubeObject.h" />
     <ClInclude Include="EnemyObject.h" />
+    <ClInclude Include="FinishObject.h" />
     <ClInclude Include="FloorObject.h" />
     <ClInclude Include="IceObject.h" />
     <ClInclude Include="LavaObject.h" />
@@ -148,7 +149,6 @@
     <ClInclude Include="NavigationMesh.h" />
     <ClInclude Include="NavigationPath.h" />
     <ClInclude Include="OBBVolume.h" />
-    <ClInclude Include="OrientedFloorObject.h" />
     <ClInclude Include="OscillateStateGameObject.h" />
     <ClInclude Include="PatrolStateGameObject.h" />
     <ClInclude Include="PlayerObject.h" />

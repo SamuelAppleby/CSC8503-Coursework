@@ -7,7 +7,7 @@ namespace NCL {
 			SpringObject(Vector3 rest) {
 				invMass = 20.0f;
 				elasticity = 0.2;
-				friction = 0.8;
+				friction = 0.0;
 				name = "SpringCube";
 				restPosition = rest;
 			}

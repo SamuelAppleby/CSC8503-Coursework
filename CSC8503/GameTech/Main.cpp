@@ -18,8 +18,8 @@ vector<Vector3> testNodes;
 void TestPathfinding() {
 	NavigationGrid grid("TestGrid.txt");
 	NavigationPath outPath;
-	Vector3 startPos(160, 0, 20);
-	Vector3 endPos(160, 0, 160);
+	Vector3 startPos(80, 0, 10);
+	Vector3 endPos(80, 0, 80);
 	bool found = grid.FindPath(startPos, endPos, outPath);
 	Vector3 pos;
 	while (outPath.PopWaypoint(pos)) {
@@ -71,10 +71,16 @@ int main() {
 	w->LockMouseToWindow(true);
 	TutorialGame* g = new TutorialGame();
 	w->GetTimer()->GetTimeDeltaSeconds(); //Clear the timer so we don't get a larget first dt!
-	TestPathfinding();
-	while (w->UpdateWindow() && !Window::GetKeyboard()->KeyDown(KeyboardKeys::ESCAPE)) {
-		//TestStateMachine();
-		DisplayPathfinding();
+	while (w->UpdateWindow()) {
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::ESCAPE)) {
+			if(g->GetCurrentLevel() == 0)
+				break;
+			else {
+				g = new TutorialGame();
+			}
+		}
+		if(g->GetTimeout() > 5.0f)
+			g = new TutorialGame();
 		float dt = w->GetTimer()->GetTimeDeltaSeconds();
 		if (dt > 0.1f) {
 			std::cout << "Skipping large time delta" << std::endl;

@@ -9,6 +9,7 @@
 #include "SpringObject.h"
 #include "RotatingCubeObject.h"
 #include "LavaObject.h"
+#include "BonusObject.h"
 using namespace NCL;
 using namespace CSC8503;
 
@@ -193,7 +194,9 @@ void PhysicsSystem::BasicCollisionDetection() {
 			CollisionDetection::CollisionInfo info;
 			if (CollisionDetection::ObjectIntersection(*i, *j, info)) {
 				//std::cout << "Collision between " << (*i)->GetName() << " and " << (*j)->GetName() << std::endl;
-				ImpulseResolveCollision(*info.a, *info.b, info.point);
+				if (!(dynamic_cast<PlayerObject*>(info.a) && dynamic_cast<BonusObject*>(info.b)) &&		// Dont resolve bonus pickups
+					!(dynamic_cast<PlayerObject*>(info.b) && dynamic_cast<BonusObject*>(info.a)))
+					ImpulseResolveCollision(*info.a, *info.b, info.point);
 				info.framesLeft = numCollisionFrames;
 				allCollisions.insert(info);
 			}
@@ -322,7 +325,9 @@ void PhysicsSystem::NarrowPhase() {
 		if (CollisionDetection::ObjectIntersection(info.a, info.b, info)) {
 			//std::cout << "Collision between " << (*i).a->GetName() << " and " << (*i).b->GetName() << std::endl;
 			info.framesLeft = numCollisionFrames;
-			ImpulseResolveCollision(*info.a, *info.b, info.point);
+			if (!(dynamic_cast<PlayerObject*>(info.a) && dynamic_cast<BonusObject*>(info.b)) &&		// Dont resolve bonus pickups
+				!(dynamic_cast<PlayerObject*>(info.b) && dynamic_cast<BonusObject*>(info.a)))
+				ImpulseResolveCollision(*info.a, *info.b, info.point);
 			allCollisions.insert(info);
 		}
 	}
@@ -395,11 +400,7 @@ void PhysicsSystem::IntegrateVelocity(float dt) {
 
 		// Orientation Stuff
 		Quaternion orientation = transform.GetOrientation();
-		Vector3 angVel;
-		if (dynamic_cast<RotatingCubeObject*>((*i)))
-			angVel = Vector3(0, 2, 0);
-		else 
-			angVel = object->GetAngularVelocity();
+		Vector3 angVel = dynamic_cast<RotatingCubeObject*>((*i)) ? Vector3(0, 1, 0) : object->GetAngularVelocity();
 		orientation = orientation + (Quaternion(angVel * dt * 0.5f, 0.0f) * orientation);
 		orientation.Normalise();
 		transform.SetOrientation(orientation);

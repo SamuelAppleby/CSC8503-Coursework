@@ -13,7 +13,18 @@ namespace NCL {
 			~TutorialGame();
 
 			virtual void UpdateGame(float dt);
-
+			void UpdateMenu(float dt);
+			void UpdateLevel(float dt);
+			void UpdateLevel1(float dt);
+			void UpdateLevel2(float dt);
+			void FindPath();
+			void DisplayPath();
+			int GetCurrentLevel() const {
+				return currentLevel;
+			}
+			float GetTimeout() const {
+				return timeOut;
+			}
 		protected:
 			void InitialiseAssets();
 
@@ -22,12 +33,12 @@ namespace NCL {
 
 			void InitWorld();
 
-			void InitGameExamples();
-			void InitGameObstacles();
 			void InitSphereGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, float radius);
 			void InitMixedGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing);
 			void InitCubeGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, const Vector3& cubeDims);
-			void InitFloors();
+			void InitFloors(int level);
+			void InitGameExamples(int level);
+			void InitGameObstacles(int level);
 			void BridgeConstraintTest(Vector3 startPos);
 			
 			void FireObjects();
@@ -37,7 +48,7 @@ namespace NCL {
 			void DebugObjectMovement();
 			void LockedObjectMovement();
 
-			GameObject* AddFloorToWorld(GameObject* floor, const Vector3& position, const Vector3& size);
+			GameObject* AddFloorToWorld(GameObject* floor, const Vector3& position, const Vector3& size, const Matrix4& orientation = Matrix4());
 			GameObject* AddSphereToWorld(GameObject* sphere, const Vector3& position, float radius);
 			GameObject* AddCubeToWorld(GameObject* cube, const Vector3& position, Vector3 dimensions);
 			GameObject* AddCapsuleToWorld(GameObject* cube, const Vector3& position, float halfHeight, float radius);
@@ -57,6 +68,7 @@ namespace NCL {
 
 			float		forceMagnitude;
 			float sceneTime;
+			float timeOut;
 			GameObject* selectionObject = nullptr;
 
 			OGLMesh*	capsuleMesh = nullptr;
@@ -70,6 +82,10 @@ namespace NCL {
 			OGLTexture* obstacleTex = nullptr;
 			OGLTexture* woodenTex = nullptr;
 			OGLTexture* bonusTex = nullptr;
+			OGLTexture* playerTex = nullptr;
+			OGLTexture* enemyTex = nullptr;
+			OGLTexture* finishTex = nullptr;
+			OGLTexture* menuTex = nullptr;
 			OGLShader*	basicShader = nullptr;
 
 			//Coursework Meshes
@@ -88,6 +104,11 @@ namespace NCL {
 			StateGameObject* testStateObject;
 
 			vector<MovingFloorObject*> movingPlatforms;
+			int currentLevel;
+			vector<Vector3> path;
+
+			Vector4 white;
+			float textSize = 15.0f;
 		};
 	}
 }

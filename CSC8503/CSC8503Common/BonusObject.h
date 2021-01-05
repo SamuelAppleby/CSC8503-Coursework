@@ -9,8 +9,8 @@ namespace NCL {
 		public:
 			BonusObject() {
 				name = "Bonus";
-				invMass = 1000.0f;
-				elasticity = 0.2;
+				invMass = 0.0f;
+				elasticity = 0.0;
 				friction = 0.8;
 			}
 			void SetPhysicsObject(PhysicsObject* newObject) override {

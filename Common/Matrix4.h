@@ -25,7 +25,7 @@ namespace NCL {
 			Matrix4(const Quaternion& quat);
 			~Matrix4(void);
 
-			float	array[16];
+			float array[16];
 
 			//Set all matrix values to zero
 			void	ToZero();

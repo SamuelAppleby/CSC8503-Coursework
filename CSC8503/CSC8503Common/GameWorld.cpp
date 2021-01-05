@@ -4,6 +4,8 @@
 #include "CollisionDetection.h"
 #include "../../Common/Camera.h"
 #include <algorithm>
+#include <random>
+#include "PatrolStateGameObject.h"
 
 using namespace NCL;
 using namespace NCL::CSC8503;
@@ -58,13 +60,12 @@ void GameWorld::OperateOnContents(GameObjectFunc f) {
 }
 
 void GameWorld::UpdateWorld(float dt) {
-	if (shuffleObjects) {
-		std::random_shuffle(gameObjects.begin(), gameObjects.end());
-	}
-
-	if (shuffleConstraints) {
-		std::random_shuffle(constraints.begin(), constraints.end());
-	}
+	std::random_device rd;
+	std::mt19937 g(rd());
+	if (shuffleObjects) 
+		std::shuffle(gameObjects.begin(), gameObjects.end(), g);
+	if (shuffleConstraints) 
+		std::shuffle(constraints.begin(), constraints.end(), g);
 }
 
 void GameWorld::RemoveDeletedObjects() {
@@ -76,19 +77,15 @@ void GameWorld::RemoveDeletedObjects() {
 
 void GameWorld::ShowFacing() {
 	for (auto& i : gameObjects) {
-		if (i->GetName() == "Enemy") {
+		if (dynamic_cast<PatrolStateGameObject*>(i)) {
 			Ray ray(i->GetTransform().GetPosition(), i->GetTransform().GetOrientation() * Vector3(0, 0, -1));
 			RayCollision closestCollision;
 			if (Raycast(ray, closestCollision, i, true)) 
-				Debug::DrawLine(ray.GetPosition(), closestCollision.collidedAt, Debug::RED);
+				Debug::DrawLine(ray.GetPosition(), closestCollision.collidedAt, Debug::MAGENTA);
 			else 
-				Debug::DrawLine(ray.GetPosition(), ray.GetPosition() + (ray.GetDirection() * 500), Debug::RED);
+				Debug::DrawLine(ray.GetPosition(), ray.GetPosition() + (ray.GetDirection() * 500), Debug::YELLOW);
 		}
-		Matrix4 local = i->GetTransform().GetMatrix();
-		local.SetPositionVector({ 0, 0, 0 });
-		Vector3 fwd = local * Vector4(0, 0, -1, 1.0f);
-		Vector3 worldPos = i->GetTransform().GetPosition();
-		Debug::DrawLine(worldPos, worldPos + fwd * 2, Debug::BLUE);
+		Debug::DrawAxisLines(i->GetTransform().GetMatrix(), 2.0f);
 	}
 }
 

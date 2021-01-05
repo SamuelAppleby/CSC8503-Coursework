@@ -11,6 +11,7 @@ namespace NCL {
 				friction = 0.5;
 				canJump = false;
 				score = 1000;
+				finished = false;
 			}
 			void SetPhysicsObject(PhysicsObject* newObject) override {
 				physicsObject = newObject;
@@ -19,13 +20,15 @@ namespace NCL {
 				physicsObject->SetFriction(friction);
 			}
 			void OnCollisionBegin(GameObject* otherObject) override {
-				canJump = true;
+				if(!canJump)
+					canJump = true;
 			}
 			void OnCollisionEnd(GameObject* otherObject) override {
-				//canJump = false;
+				if(canJump)
+					canJump = false;
 			}
 			void Jump() {
-				if (canJump)
+				//if (canJump)
 					physicsObject->ApplyLinearImpulse(Vector3(0, 5, 0));
 			}
 			int GetScore() const {
@@ -37,12 +40,19 @@ namespace NCL {
 			void DecreaseScore(float dt) {
 				score -= (10 * dt);
 			}
+			bool GetFinished() const {
+				return finished;
+			}
+			void SetFinished(bool val) {
+				finished = val;
+			}
 		protected:
 			float invMass;
 			float elasticity;
 			float friction;
 			bool canJump;
 			float score;
+			bool finished;
 		};
 	}
 }
