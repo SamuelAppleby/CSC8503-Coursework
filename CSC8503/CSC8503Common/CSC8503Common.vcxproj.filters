@@ -156,6 +156,9 @@
     <ClInclude Include="FinishObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PathFindingStateGameObject.h">
+      <Filter>AI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GameWorld.cpp">
@@ -210,6 +213,9 @@
       <Filter>AI</Filter>
     </ClCompile>
     <ClCompile Include="PatrolStateGameObject.cpp">
+      <Filter>AI</Filter>
+    </ClCompile>
+    <ClCompile Include="PathFindingStateGameObject.cpp">
       <Filter>AI</Filter>
     </ClCompile>
   </ItemGroup>

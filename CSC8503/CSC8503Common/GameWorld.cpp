@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <random>
 #include "PatrolStateGameObject.h"
+#include "PathFindingStateGameObject.h"
+#include "PlayerObject.h"
 
 using namespace NCL;
 using namespace NCL::CSC8503;
@@ -66,6 +68,24 @@ void GameWorld::UpdateWorld(float dt) {
 		std::shuffle(gameObjects.begin(), gameObjects.end(), g);
 	if (shuffleConstraints) 
 		std::shuffle(constraints.begin(), constraints.end(), g);
+	for (auto& i : gameObjects) {
+		if (PathFindingStateGameObject* g = dynamic_cast<PathFindingStateGameObject*>(i)) {
+			if (g->GetRayTime() > 0.5f && !g->GetSeePlayer()) {
+				Ray ray(i->GetTransform().GetPosition(), i->GetTransform().GetOrientation() * Vector3(0, 0, -1));
+				RayCollision closestCollision;
+				if (Raycast(ray, closestCollision, i, true)) {
+					Debug::DrawLine(ray.GetPosition(), closestCollision.collidedAt, Debug::MAGENTA);
+					if (dynamic_cast<PlayerObject*>((GameObject*)closestCollision.node)) {
+						g->SetSeePlayer(true);
+						g->GetRenderObject()->SetColour({ 1,0,0,1 });
+					}
+				}
+				else
+					Debug::DrawLine(ray.GetPosition(), ray.GetPosition() + (ray.GetDirection() * 500), Debug::YELLOW);
+				g->SetRayTime(0.0f);
+			}
+		}
+	}
 }
 
 void GameWorld::RemoveDeletedObjects() {
@@ -76,17 +96,8 @@ void GameWorld::RemoveDeletedObjects() {
 }
 
 void GameWorld::ShowFacing() {
-	for (auto& i : gameObjects) {
-		if (dynamic_cast<PatrolStateGameObject*>(i)) {
-			Ray ray(i->GetTransform().GetPosition(), i->GetTransform().GetOrientation() * Vector3(0, 0, -1));
-			RayCollision closestCollision;
-			if (Raycast(ray, closestCollision, i, true)) 
-				Debug::DrawLine(ray.GetPosition(), closestCollision.collidedAt, Debug::MAGENTA);
-			else 
-				Debug::DrawLine(ray.GetPosition(), ray.GetPosition() + (ray.GetDirection() * 500), Debug::YELLOW);
-		}
+	for (auto& i : gameObjects) 
 		Debug::DrawAxisLines(i->GetTransform().GetMatrix(), 2.0f);
-	}
 }
 
 bool GameWorld::Raycast(Ray& r, RayCollision& closestCollision, GameObject* current, bool closestObject) const {

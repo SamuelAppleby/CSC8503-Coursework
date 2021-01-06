@@ -150,6 +150,7 @@
     <ClInclude Include="NavigationPath.h" />
     <ClInclude Include="OBBVolume.h" />
     <ClInclude Include="OscillateStateGameObject.h" />
+    <ClInclude Include="PathFindingStateGameObject.h" />
     <ClInclude Include="PatrolStateGameObject.h" />
     <ClInclude Include="PlayerObject.h" />
     <ClInclude Include="PositionConstraint.h" />
@@ -185,6 +186,7 @@
     <ClCompile Include="NavigationGrid.cpp" />
     <ClCompile Include="NavigationMesh.cpp" />
     <ClCompile Include="OscillateStateGameObject.cpp" />
+    <ClCompile Include="PathFindingStateGameObject.cpp" />
     <ClCompile Include="PatrolStateGameObject.cpp" />
     <ClCompile Include="PhysicsObject.cpp" />
     <ClCompile Include="PhysicsSystem.cpp" />
