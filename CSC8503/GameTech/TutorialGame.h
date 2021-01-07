@@ -1,10 +1,29 @@
 #pragma once
 #include "GameTechRenderer.h"
 #include "../CSC8503Common/PhysicsSystem.h"
-#include "../CSC8503Common/MovingFloorObject.h"
 #include "../CSC8503Common/StateGameObject.h"
 #include "../CSC8503Common/NavigationGrid.h"
 #include "../CSC8503Common/PathFindingStateGameObject.h"
+#include "../CSC8503Common/PlatformStateGameObject.h"
+#include "../CSC8503Common/GameWorld.h"
+#include "../../Plugins/OpenGLRendering/OGLMesh.h"
+#include "../../Plugins/OpenGLRendering/OGLShader.h"
+#include "../../Plugins/OpenGLRendering/OGLTexture.h"
+#include "../../Common/TextureLoader.h"
+#include "../CSC8503Common/PositionConstraint.h"
+#include "../CSC8503Common/IceObject.h"
+#include "../CSC8503Common/LavaObject.h"
+#include "../CSC8503Common/FloorObject.h"
+#include "../CSC8503Common/TrampolineObject.h"
+#include "../CSC8503Common/CubeObject.h"
+#include "../CSC8503Common/SphereObject.h"
+#include "../CSC8503Common/RotatingCubeObject.h"
+#include "../CSC8503Common/SpringObject.h"
+#include "../CSC8503Common/PlayerObject.h"
+#include "../CSC8503Common/EnemyObject.h"
+#include "../CSC8503Common/BonusObject.h"
+#include "../CSC8503Common/CapsuleObject.h"
+#include "../CSC8503Common/FinishObject.h"
 
 namespace NCL {
 	namespace CSC8503 {
@@ -17,8 +36,11 @@ namespace NCL {
 			virtual void UpdateGame(float dt);
 			void UpdateMenu(float dt);
 			void UpdateLevel(float dt);
+			void DrawDebugInfo();
 			void UpdateLevel1(float dt);
+			void FireObjects();
 			void UpdateLevel2(float dt);
+			void EnemyRaycast();
 			int GetCurrentLevel() const {
 				return currentLevel;
 			}
@@ -33,6 +55,7 @@ namespace NCL {
 
 			void InitWorld();
 			void InitFloors(int level);
+			void CreateMazeWalls();
 			void InitGameExamples(int level);
 			void InitGameObstacles(int level);
 			void InitSphereGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, float radius);
@@ -42,17 +65,13 @@ namespace NCL {
 			GameObject* AddFloorToWorld(GameObject* floor, const Vector3& position, const Vector3& size, const Matrix4& orientation = Matrix4());
 			GameObject* AddSphereToWorld(GameObject* sphere, const Vector3& position, float radius);
 			GameObject* AddCubeToWorld(GameObject* cube, const Vector3& position, Vector3 dimensions);
-			GameObject* AddCapsuleToWorld(GameObject* cube, const Vector3& position, float halfHeight, float radius);
+			GameObject* AddCapsuleToWorld(GameObject* capsule, const Vector3& position, float halfHeight, float radius);
 			void BridgeConstraintTest(Vector3 startPos);
 
-			PlayerObject* AddPlayerToWorld(const Vector3& position);
-			GameObject* AddEnemyToWorld(const Vector3& position);
+			GameObject* AddPlayerToWorld(GameObject* p, const Vector3& position);
+			GameObject* AddEnemyToWorld(GameObject* e, const Vector3& position);
 			GameObject* AddBonusToWorld(const Vector3& position);
-			StateGameObject* AddStateObjectToWorld(StateGameObject* object, const Vector3& position);
-			//StateGameObject* AddPathFindingStateObjectToWorld(const Vector3& position, GameObject* follow, NavigationGrid* grid);
 
-			void FireObjects();
-			void MovePlatforms();
 			bool SelectObject();
 			void MoveSelectedObject();
 			void DebugObjectMovement();
@@ -66,7 +85,7 @@ namespace NCL {
 			bool inSelectionMode;
 
 			float		forceMagnitude;
-			float sceneTime;
+			float reloadTime;
 			float timeOut;
 			GameObject* selectionObject = nullptr;
 
@@ -100,10 +119,10 @@ namespace NCL {
 			}
 			PlayerObject* player;
 			PathFindingStateGameObject* enemy;
+			vector<PlatformStateGameObject*> platforms;
 
 			bool lockedOrientation;
 
-			vector<MovingFloorObject*> movingPlatforms;
 			int currentLevel;
 			vector<Vector3> path;
 
@@ -111,6 +130,10 @@ namespace NCL {
 			float textSize = 15.0f;
 
 			NavigationGrid* grid;
+
+			Vector3 nodePos;
+			float xSize;
+			float zSize;
 		};
 	}
 }

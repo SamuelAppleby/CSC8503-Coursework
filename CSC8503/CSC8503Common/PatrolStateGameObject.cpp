@@ -2,30 +2,20 @@
 #include <algorithm>
 using namespace NCL;
 using namespace CSC8503;
-PatrolStateGameObject::PatrolStateGameObject(vector<Vector3> positions, GameObject* val) {
+PatrolStateGameObject::PatrolStateGameObject(GameObject* val, vector<Vector3> positions) : EnemyStateGameObject(val) {
 	locations = positions;
 	object = val;
-	direction = object->GetTransform().GetPosition() - this->GetTransform().GetPosition();
-	State* stateA = new State([&](float dt)->void {
+	patrolState = new State([&](float dt)->void {
 		this->Patrol(dt);
 	});
-	State* stateB = new State([&](float dt)->void {
-		this->FollowPlayer(dt);
-	});
-	stateMachine->AddState(stateA);
-	stateMachine->AddState(stateB);
-	stateMachine->AddTransition(new StateTransition(stateA, stateB, [&]()->bool {
-		return direction.Length() < 30.0f;
+	stateMachine->AddState(patrolState);
+	stateMachine->AddTransition(new StateTransition(followPlayerState, patrolState, [&]()->bool {
+		return !seePlayer;
 	}));
-	stateMachine->AddTransition(new StateTransition(stateB, stateA, [&]()->bool {
-		return direction.Length() > 30.0f;
+	stateMachine->AddTransition(new StateTransition(patrolState, followPlayerState, [&]()->bool {
+		return seePlayer;
 	}));
 	name = "PatrolAI";
-}
-
-void PatrolStateGameObject::Update(float dt) {
-	direction = object->GetTransform().GetPosition() - this->GetTransform().GetPosition();
-	stateMachine->Update(dt);
 }
 
 void PatrolStateGameObject::Patrol(float dt) {
@@ -41,9 +31,4 @@ void PatrolStateGameObject::Patrol(float dt) {
 		}
 		GetPhysicsObject()->ApplyLinearImpulse((locations.at(i) - currentPos) * 0.005);
 	}
-}
-
-void PatrolStateGameObject::FollowPlayer(float dt) {
-	GetPhysicsObject()->AddForce({ std::clamp(direction.x, -5.0f, 5.0f), 
-		std::clamp(direction.y, -5.0f, 5.0f), std::clamp(direction.z, -5.0f, 5.0f) });
 }

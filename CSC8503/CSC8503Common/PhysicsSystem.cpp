@@ -253,8 +253,8 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 	float jT = -(fricCoef * fricForce) / (totalMass + fricEffect);
 	Vector3 fricImpulse = t * jT;
 	/* Frictional effects */
-	physA->ApplyLinearImpulse(-fricImpulse);
-	physB->ApplyLinearImpulse(fricImpulse);		
+	physA->ApplyLinearImpulse(-fricImpulse * 2);
+	physB->ApplyLinearImpulse(fricImpulse * 2);		
 	physA->ApplyAngularImpulse(Vector3::Cross(relativeA, -fricImpulse));
 	physB->ApplyAngularImpulse(Vector3::Cross(relativeB, fricImpulse));
 

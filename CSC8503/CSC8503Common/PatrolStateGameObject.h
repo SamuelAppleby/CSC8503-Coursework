@@ -1,19 +1,16 @@
 #pragma once
-#include "StateGameObject.h"
+#include "EnemyStateGameObject.h"
 #include "Debug.h"
 #include "NavigationGrid.h"
 namespace NCL {
 	namespace CSC8503 {
-		class PatrolStateGameObject : public StateGameObject {
+		class PatrolStateGameObject : public EnemyStateGameObject {
 		public:
-			PatrolStateGameObject(vector<Vector3> positions, GameObject* follow);
-			void Update(float dt) override;
+			PatrolStateGameObject(GameObject* follow, vector<Vector3> positions);
 		protected:
 			void Patrol(float dt);
-			void FollowPlayer(float dt);
-			GameObject* object;
-			Vector3 direction;
 			vector<Vector3> locations;
+			State* patrolState;
 		};
 	}
 }

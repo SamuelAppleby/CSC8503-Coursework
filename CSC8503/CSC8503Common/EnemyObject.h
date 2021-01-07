@@ -8,7 +8,7 @@ namespace NCL {
 				name = "Enemy";
 				invMass = 5.0f;
 				elasticity = 0.2;
-				friction = 0.8;
+				friction = 0.2;
 			}
 			void SetPhysicsObject(PhysicsObject* newObject) override {
 				physicsObject = newObject;

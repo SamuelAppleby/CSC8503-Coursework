@@ -68,24 +68,6 @@ void GameWorld::UpdateWorld(float dt) {
 		std::shuffle(gameObjects.begin(), gameObjects.end(), g);
 	if (shuffleConstraints) 
 		std::shuffle(constraints.begin(), constraints.end(), g);
-	for (auto& i : gameObjects) {
-		if (PathFindingStateGameObject* g = dynamic_cast<PathFindingStateGameObject*>(i)) {
-			if (g->GetRayTime() > 0.5f && !g->GetSeePlayer()) {
-				Ray ray(i->GetTransform().GetPosition(), i->GetTransform().GetOrientation() * Vector3(0, 0, -1));
-				RayCollision closestCollision;
-				if (Raycast(ray, closestCollision, i, true)) {
-					Debug::DrawLine(ray.GetPosition(), closestCollision.collidedAt, Debug::MAGENTA);
-					if (dynamic_cast<PlayerObject*>((GameObject*)closestCollision.node)) {
-						g->SetSeePlayer(true);
-						g->GetRenderObject()->SetColour({ 1,0,0,1 });
-					}
-				}
-				else
-					Debug::DrawLine(ray.GetPosition(), ray.GetPosition() + (ray.GetDirection() * 500), Debug::YELLOW);
-				g->SetRayTime(0.0f);
-			}
-		}
-	}
 }
 
 void GameWorld::RemoveDeletedObjects() {

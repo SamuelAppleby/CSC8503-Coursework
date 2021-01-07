@@ -126,9 +126,6 @@
     <ClInclude Include="CapsuleObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MovingFloorObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="StateMachine.h">
       <Filter>AI</Filter>
     </ClInclude>
@@ -144,9 +141,6 @@
     <ClInclude Include="StateGameObject.h">
       <Filter>AI</Filter>
     </ClInclude>
-    <ClInclude Include="OscillateStateGameObject.h">
-      <Filter>AI</Filter>
-    </ClInclude>
     <ClInclude Include="PatrolStateGameObject.h">
       <Filter>AI</Filter>
     </ClInclude>
@@ -157,6 +151,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PathFindingStateGameObject.h">
+      <Filter>AI</Filter>
+    </ClInclude>
+    <ClInclude Include="EnemyStateGameObject.h">
+      <Filter>AI</Filter>
+    </ClInclude>
+    <ClInclude Include="PlatformStateGameObject.h">
       <Filter>AI</Filter>
     </ClInclude>
   </ItemGroup>
@@ -209,13 +209,16 @@
     <ClCompile Include="StateGameObject.cpp">
       <Filter>AI</Filter>
     </ClCompile>
-    <ClCompile Include="OscillateStateGameObject.cpp">
-      <Filter>AI</Filter>
-    </ClCompile>
     <ClCompile Include="PatrolStateGameObject.cpp">
       <Filter>AI</Filter>
     </ClCompile>
     <ClCompile Include="PathFindingStateGameObject.cpp">
+      <Filter>AI</Filter>
+    </ClCompile>
+    <ClCompile Include="EnemyStateGameObject.cpp">
+      <Filter>AI</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatformStateGameObject.cpp">
       <Filter>AI</Filter>
     </ClCompile>
   </ItemGroup>

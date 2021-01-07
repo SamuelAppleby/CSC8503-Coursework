@@ -12,11 +12,11 @@ x.x.x.x...x.x.x...x.x.x
 x.x.x.xxx.x.x.x.x.x.xxx
 x...x.x...x.x.x.x.x...x
 xxxxx.x.xx....x.x.xxx.x
-x...x...x..S....x...x.x
-x.x.x.xxxx...xxxx.x.x.x
-x.x...x...x.......x.x.x
-x.xxxxx.x.xxxxxxx.xxx.x
-x.x.....x.x.......x...x
+x...x....x.S....x...x.x
+x.x.xx.x.x...xxxx.x.x.x
+x.x....x.x........x.x.x
+x.xxxxxx.xxxxxxxx.xxx.x
+x.x.......x.......x...x
 x.xxx.xxx.x.xxxxxxx.x.x
 x.....x.x.x.....x...x.x
 xxxxxxx.x.x.xxxxx.xxx.x

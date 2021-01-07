@@ -10,11 +10,11 @@ namespace NCL {
 			int		  costs[4];
 
 			Vector3		position;
-
 			float f;
 			float g;
 
 			int type;
+			float drawn;
 
 			GridNode() {
 				for (int i = 0; i < 4; ++i) {
@@ -24,6 +24,7 @@ namespace NCL {
 				f = 0;
 				g = 0;
 				type = 0;
+				drawn = false;
 				parent = nullptr;
 			}
 			~GridNode() {}
