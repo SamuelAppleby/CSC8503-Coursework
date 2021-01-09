@@ -179,9 +179,6 @@
     <ClCompile Include="RenderObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PushdownState.cpp">
-      <Filter>AI</Filter>
-    </ClCompile>
     <ClCompile Include="PushdownMachine.cpp">
       <Filter>AI</Filter>
     </ClCompile>

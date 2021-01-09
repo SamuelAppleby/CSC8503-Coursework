@@ -8,7 +8,7 @@ namespace NCL {
 				name = "Player";
 				invMass = 5.0f;
 				elasticity = 0.2;
-				friction = 0.2;
+				friction = 0.5;
 				canJump = false;
 				score = 1000;
 				finished = false;

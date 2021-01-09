@@ -11,15 +11,12 @@ namespace NCL {
 				physicsObject->SetElasticity(0.2f);
 				physicsObject->SetFriction(0.8f);
 			}
-		protected:
-			void Idle(float dt);
 			void MoveToLocation(float dt);
-			float xSpeed;
-			float ySpeed;
-			float zSpeed;
+		protected:
+			State* followRouteState;
+			Vector3 speed;
 			Vector3 start;
 			Vector3 end;
-			bool moving;
 			float invMass;
 			float elasticity;
 			float friction;

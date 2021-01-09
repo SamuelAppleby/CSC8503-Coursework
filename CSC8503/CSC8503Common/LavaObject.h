@@ -15,9 +15,8 @@ namespace NCL {
 					p->GetPhysicsObject()->SetAngularVelocity(Vector3(0, 0, 0));
 					p->GetTransform().SetPosition(Vector3(0, 10, 0));
 				}
-				else {
+				else 
 					otherObject->SetIsActive(false);
-				}
 			}
 		};
 	}

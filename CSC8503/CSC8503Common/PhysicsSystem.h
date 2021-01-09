@@ -18,6 +18,10 @@ namespace NCL {
 				applyGravity = state;
 			}
 
+			void UseBroadphase(bool state) {
+				useBroadPhase = state;
+			}
+
 			void SetGlobalDamping(float d) {
 				globalDamping = d;
 			}
@@ -42,9 +46,30 @@ namespace NCL {
 				useBroadPhase = val;
 			}
 
+			void DecreaseIterationCount() {
+				constraintIterationCount--;
+			}
+
+			void IncreaseIterationCount() {
+				constraintIterationCount++;
+			}
+
 			int GetConstraintIterationCount() const {
 				return constraintIterationCount;
 			}
+
+			int GetBasicCollisionsTested() const {
+				return basicCollisionsTested;
+			}
+
+			int GetBroadPhaseCollisionsTested() const {
+				return broadphaseCollisions.size();
+			}
+
+			int GetCollisionsSize() const {
+				return totalCollisions;
+			}
+
 		protected:
 			void BasicCollisionDetection();
 			void BroadPhase();
@@ -61,7 +86,7 @@ namespace NCL {
 			void UpdateObjectAABBs();
 
 			void ImpulseResolveCollision(GameObject& a , GameObject&b, CollisionDetection::ContactPoint& p) const;
-			void SpringOnPoint(SpringObject* a) const;
+			void SpringTowardsPoint(SpringObject* a) const;
 
 			GameWorld& gameWorld;
 
@@ -75,6 +100,9 @@ namespace NCL {
 			bool useBroadPhase;
 			int numCollisionFrames	= 5;
 			int constraintIterationCount = 10;
+
+			int basicCollisionsTested;
+			int totalCollisions;
 		};
 	}
 }

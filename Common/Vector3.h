@@ -10,6 +10,7 @@ https://research.ncl.ac.uk/game/
 #include <cmath>
 #include <iostream>
 #include <algorithm>
+#include <string>
 
 namespace NCL {
 	namespace Maths {
@@ -27,6 +28,9 @@ namespace NCL {
 				float array[3];
 			};
 		public:
+			std::string ToString() const {
+				return "(" + std::to_string((int)x) + ", " + std::to_string((int)y) + ", " + std::to_string((int)z) + ")";
+			}
 			constexpr Vector3(void) : x(0.0f), y(0.0f), z(0.0f) {}
 
 			constexpr Vector3(float xVal, float yVal, float zVal) : x(xVal), y(yVal), z(zVal) {}

@@ -1,4 +1,6 @@
 #include "TutorialGame.h"
+#include "../CSC8503Common/Pushdownstate.h"
+#include "../CSC8503Common/PushdownMachine.h"
 using namespace NCL;
 using namespace CSC8503;
 
@@ -10,6 +12,8 @@ TutorialGame::TutorialGame() {
 	forceMagnitude = 10.0f;
 	useGravity = true;
 	physics->UseGravity(useGravity);
+	useBroadphase = true;
+	physics->UseBroadphase(useBroadphase);
 	inSelectionMode = false;
 	reloadTime = 0.0f;
 	timeOut = 0.0f;
@@ -20,8 +24,6 @@ TutorialGame::TutorialGame() {
 	currentLevel = 0;
 	white = { 1,1,1,1 };
 	grid = new NavigationGrid("MazePath.txt");
-	xSize = 10;
-	zSize = 10;
 	InitialiseAssets();
 }
 
@@ -91,12 +93,11 @@ TutorialGame::~TutorialGame() {
 }
 
 void TutorialGame::UpdateGame(float dt) {
+	currentLevel == 0 ? UpdateMenu(dt) : UpdateLevel(dt);
 	physics->ClearDeletedCollisions();
 	world->RemoveDeletedObjects();
-	currentLevel == 0 ? UpdateMenu(dt) : UpdateLevel(dt);
-	world->UpdateWorld(dt);
-	renderer->Update(dt);
 	Debug::FlushRenderables(dt);
+	renderer->Update(dt);
 	renderer->Render();
 }
 
@@ -112,8 +113,84 @@ void TutorialGame::UpdateMenu(float dt) {
 }
 
 void TutorialGame::UpdateLevel(float dt) {
-	DrawDebugInfo();
-	if (player) {
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::Q)) {
+		inSelectionMode = !inSelectionMode;
+		if (inSelectionMode) {
+			Window::GetWindow()->ShowOSPointer(true);
+			Window::GetWindow()->LockMouseToWindow(false);
+		}
+		else {
+			Window::GetWindow()->ShowOSPointer(false);
+			Window::GetWindow()->LockMouseToWindow(true);
+		}
+	}
+	inSelectionMode ? renderer->DrawString("Change to play mode(Q)", Vector2(69, 10), white, textSize) :
+		renderer->DrawString("Change to debug mode(Q)", Vector2(68, 10), white, textSize);
+	renderer->DrawString("Exit to Menu (ESC)", Vector2(75, 5), white, textSize);
+	if (inSelectionMode) {
+		UpdateKeys();
+		DrawDebugInfo();
+		world->ShowFacing();
+	}
+	else {
+		renderer->DrawString("Score: " + std::to_string(player->GetScore()), Vector2(0, 5), white, textSize);
+		world->GetMainCamera()->UpdateCamera(dt);
+	}
+	SelectObject();
+	lockedObject ? LockedObjectMovement() : DebugObjectMovement();
+	CheckFinished(dt);
+	physics->Update(dt);
+	currentLevel == 1 ? UpdateLevel1(dt) : UpdateLevel2(dt);
+	if (lockedObject) {
+		world->GetMainCamera()->UpdateCameraWithObject(dt, world->GetMainCamera(), lockedObject->GetTransform().GetPosition());
+		if (lockedOrientation)
+			lockedObject->GetTransform().SetOrientation(Matrix4::Rotation(world->GetMainCamera()->GetYaw(), { 0, 1, 0 }));
+	}
+}
+
+void TutorialGame::DrawDebugInfo() {
+	renderer->DrawString("Reset Camera(F1)", Vector2(0, 5), white, textSize); 
+	world->GetShuffleObjects() ? renderer->DrawString("Shuffle Objects(F2):On", Vector2(0, 10), white, textSize) :
+		renderer->DrawString("Shuffle Objects(F2):Off", Vector2(0, 10), white, textSize);
+	world->GetShuffleConstraints() ? renderer->DrawString("Shuffle Constraints(F3):On", Vector2(0, 15), white, textSize) :
+		renderer->DrawString("Shuffle Constraints(F3):Off", Vector2(0, 15), white, textSize);
+
+	useGravity ? renderer->DrawString("Gravity(G):On", Vector2(0, 20), white, textSize) : renderer->DrawString("Gravity(G):Off", Vector2(0, 20), white, textSize);
+	renderer->DrawString("Click Force(Scroll Wheel):" + std::to_string((int)forceMagnitude), Vector2(0, 25), white, textSize);
+	renderer->DrawString("Constraint Iteration Count(I/O):" + std::to_string(physics->GetConstraintIterationCount()), Vector2(0, 30), white, textSize);
+
+	if (physics->GetBroadPhase()) {
+		renderer->DrawString("QuadTree(B):On", Vector2(0, 35), white, textSize);
+		renderer->DrawString("Collisions Tested:" + std::to_string(physics->GetBroadPhaseCollisionsTested()), Vector2(68, 90), white, textSize);
+	}
+	else {
+		renderer->DrawString("QuadTree(B):Off", Vector2(0, 35), white, textSize);
+		renderer->DrawString("Collisions Tested:" + std::to_string(physics->GetBasicCollisionsTested()), Vector2(68, 90), white, textSize);
+	}
+	
+	renderer->DrawString("Current Collisions:" + std::to_string(physics->GetCollisionsSize()), Vector2(70, 95), white, textSize);
+	renderer->DrawString("Total Objects:" + std::to_string(world->GetTotalWorldObjects()), Vector2(75, 85), white, textSize);
+	if (selectionObject) {
+		if(StateGameObject* g = dynamic_cast<StateGameObject*>(selectionObject))
+			renderer->DrawString("State:" + g->StateToString(), Vector2(0, 55), white, textSize);
+		renderer->DrawString("Position:" + selectionObject->GetTransform().GetPosition().ToString(), Vector2(0, 60), white, textSize);
+		renderer->DrawString("Orientation:" + selectionObject->GetTransform().GetOrientation().ToEuler().ToString(), Vector2(0, 65), white, textSize);
+		renderer->DrawString("Selected Object:" + selectionObject->GetName(), Vector2(0, 70), white, textSize);
+		renderer->DrawString("Inverse Mass:" + std::to_string(selectionObject->GetPhysicsObject()->GetInverseMass()), Vector2(0, 75), white, textSize);
+		renderer->DrawString("Friction:" + std::to_string(selectionObject->GetPhysicsObject()->GetFriction()), Vector2(0, 80), white, textSize);
+		renderer->DrawString("Elasticity:" + std::to_string(selectionObject->GetPhysicsObject()->GetElasticity()), Vector2(0, 85), white, textSize);
+	}
+	if (lockedObject) {
+		renderer->DrawString("Unlock object(L)", Vector2(0, 90), white, textSize);
+		lockedOrientation ? renderer->DrawString("Lock object orientation(P): On", Vector2(0, 95), white, textSize) :
+			renderer->DrawString("Lock object orientation(P): Off", Vector2(0, 95), white, textSize);
+	}
+	else
+		renderer->DrawString("Lock selected object(L)", Vector2(0, 90), white, textSize);
+}
+
+void TutorialGame::CheckFinished(float dt) {
+	if (player && !inSelectionMode) {
 		if (player->GetScore() <= 0 || player->GetFinished()) {
 			timeOut += dt;
 			if (player->GetScore() <= 0)
@@ -122,7 +199,7 @@ void TutorialGame::UpdateLevel(float dt) {
 				renderer->DrawString("Level Finished", Vector2(34, 40), Vector4(0, 1, 0, 1), 25.0f);
 				renderer->DrawString("Score: " + std::to_string(player->GetScore()), Vector2(42, 45), Vector4(1, 1, 0, 1));
 			}
-			renderer->DrawString("Exiting to Menu in: " + std::to_string((int)(5.0f - timeOut)) + "s", Vector2(30, 50));
+			renderer->DrawString("Exiting to Menu in:" + std::to_string((int)(5.0f - timeOut)) + "s", Vector2(30, 50));
 		}
 		else
 			player->DecreaseScore(dt);
@@ -130,48 +207,8 @@ void TutorialGame::UpdateLevel(float dt) {
 	if (enemy) {
 		if (enemy->GetFinished()) {
 			renderer->DrawString("AI Won - Game Over", Vector2(32, 40), Vector4(1, 0, 0, 1), 25.0f);
-			renderer->DrawString("Score: " + std::to_string(player->GetScore()), Vector2(42, 45), Vector4(1, 1, 0, 1));
-			renderer->DrawString("Exiting to Menu in: " + std::to_string((int)(5.0f - timeOut)) + "s", Vector2(30, 50));
-		}
-	}
-	inSelectionMode ? world->ShowFacing() : world->GetMainCamera()->UpdateCamera(dt);
-	UpdateKeys();
-	SelectObject();
-	MoveSelectedObject();
-	physics->Update(dt);
-	if (lockedObject != nullptr) {
-		if (!lockedObject->IsActive()) {
-			lockedObject = nullptr;
-			selectionObject = nullptr;
-		}
-		else {
-			Debug::DrawAxisLines(lockedObject->GetTransform().GetMatrix(), 2.0f);
-			world->GetMainCamera()->UpdateCameraWithObject(dt, world->GetMainCamera(), lockedObject->GetTransform().GetPosition());
-			if (lockedOrientation)
-				lockedObject->GetTransform().SetOrientation(Matrix4::Rotation(world->GetMainCamera()->GetYaw(), { 0, 1, 0 }));
-		}
-	}
-	currentLevel == 1 ? UpdateLevel1(dt) : UpdateLevel2(dt);
-}
-
-void TutorialGame::DrawDebugInfo() {
-	renderer->DrawString("Exit to Menu (ESC)", Vector2(75, 5), white, textSize);
-	useGravity ? renderer->DrawString("Gravity(G): On", Vector2(0, 5), white, textSize) : renderer->DrawString("Gravity(G): Off", Vector2(0, 5), white, textSize);
-	renderer->DrawString("Click Force: " + std::to_string(forceMagnitude), Vector2(0, 10), white, textSize);
-	physics->GetBroadPhase() ? renderer->DrawString("QuadTree(B): On", Vector2(0, 15), white, textSize)
-		: renderer->DrawString("QuadTree(B): Off", Vector2(0, 15), white, textSize);
-	renderer->DrawString("Constraint Iteration Count(I/O):" + std::to_string(physics->GetConstraintIterationCount()), Vector2(0, 20), white, textSize);
-	renderer->DrawString("Score: " + std::to_string(player->GetScore()), Vector2(0, 25), white, textSize);
-	inSelectionMode ? renderer->DrawString("Press Q to change to camera mode!", Vector2(0, 95), white, textSize) :
-		renderer->DrawString("Press Q to change to select mode!", Vector2(0, 95), white, textSize);
-	if (selectionObject) {
-		renderer->DrawString("Selected Object: " + selectionObject->GetName(), Vector2(0, 85), white, textSize);
-		if (!lockedObject)
-			renderer->DrawString("Lock selected object(L)", Vector2(0, 90), white, textSize);
-		else {
-			renderer->DrawString("Press L to unlock object!", Vector2(0, 90), white, textSize);
-			lockedOrientation ? renderer->DrawString("Locked object orientation(P): On", Vector2(0, 80), white, textSize) :
-				renderer->DrawString("Locked object orientation(P): Off", Vector2(0, 80), white, textSize);
+			renderer->DrawString("Score:" + std::to_string(player->GetScore()), Vector2(42, 45), Vector4(1, 1, 0, 1));
+			renderer->DrawString("Exiting to Menu in:" + std::to_string((int)(5.0f - timeOut)) + "s", Vector2(30, 50));
 		}
 	}
 }
@@ -203,52 +240,50 @@ void TutorialGame::UpdateLevel2(float dt) {
 }
 
 void TutorialGame::EnemyRaycast() {
-	if (enemy->GetRayTime() > 0.5f && !enemy->GetSeePlayer()) {
+	if (enemy->GetRayTime() < 0.0f && enemy->GetState() != state::FOLLOWPLAYER) {
 		Ray ray(enemy->GetTransform().GetPosition(), enemy->GetTransform().GetOrientation() * Vector3(0, 0, -1));
 		RayCollision closestCollision;
 		if (world->Raycast(ray, closestCollision, enemy, true)) {
 			Debug::DrawLine(ray.GetPosition(), closestCollision.collidedAt, Debug::MAGENTA);
 			if (dynamic_cast<PlayerObject*>((GameObject*)closestCollision.node)) {
-				enemy->SetSeePlayer(true);
+				enemy->SetState(state::FOLLOWPLAYER);
 				enemy->GetRenderObject()->SetColour({ 1,0,0,1 });
 			}
 		}
 		else
 			Debug::DrawLine(ray.GetPosition(), ray.GetPosition() + (ray.GetDirection() * 500), Debug::YELLOW);
-		enemy->SetRayTime(0.0f);
+		enemy->SetRayTime(0.5f);
 	}
 }
 
 void TutorialGame::UpdateKeys() {
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F1)) {
-		InitWorld();
-		selectionObject = nullptr;
-		lockedObject = nullptr;
-	}
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F2)) {
-		InitCamera(); //F2 will reset the camera to a specific default place
-	}
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::G)) {
 		useGravity = !useGravity; //Toggle gravity!
 		physics->UseGravity(useGravity);
 	}
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::B)) {
+		useBroadphase = !useBroadphase;
+		physics->UseBroadphase(useBroadphase);
+	}
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::I)) 
+		physics->IncreaseIterationCount();
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::O)) 
+		physics->DecreaseIterationCount();
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F1)) 
+		InitCamera(); //F2 will reset the camera to a specific default place
 	/*Running certain physics updates in a consistent order might cause some
 	bias in the calculations - the same objects might keep 'winning' the constraint
 	allowing the other one to stretch too much etc. Shuffling the order so that it
 	is random every frame can help reduce such bias. */
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F9)) {
-		world->ShuffleConstraints(true);
-	}
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F10)) {
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F2))
+		world->ShuffleObjects(!world->GetShuffleObjects());
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F3)) 
+		world->ShuffleConstraints(!world->GetShuffleConstraints());
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F5)) 
 		world->ShuffleConstraints(false);
-	}
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F7)) {
-		world->ShuffleObjects(true);
-	}
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F8)) {
-		world->ShuffleObjects(false);
-	}
-	lockedObject ? LockedObjectMovement() : DebugObjectMovement();
+	/* If an object has been clicked, it can be pushed with the right mouse button, by an amount
+	determined by the scroll wheel. */
+	forceMagnitude += Window::GetMouse()->GetWheelMovement() * 10.0f;
 }
 
 void TutorialGame::InitCamera() {
@@ -280,6 +315,7 @@ void TutorialGame::InitFloors(int level) {
 		AddFloorToWorld(new FloorObject, Vector3(120, 5, -225), Vector3(1, 5, 30));
 
 		/* Regular Platform */
+		AddFloorToWorld(new FloorObject, Vector3(100, 0, 0), Vector3(40, 1, 20), Matrix4::Rotation(-30, { 1, 0, 0 }));
 		AddFloorToWorld(new FloorObject, Vector3(0, 0, 0), Vector3(25, 1, 25));
 		AddFloorToWorld(new FloorObject, Vector3(0, 0, -85), Vector3(25, 1, 10));
 		AddFloorToWorld(new FloorObject, Vector3(-15, 0, -145), Vector3(10, 1, 50));
@@ -320,8 +356,8 @@ void TutorialGame::InitFloors(int level) {
 		AddFloorToWorld(new FloorObject, Vector3(165, 20, -1060), Vector3(80, 1, 10));
 
 		/* Rotated Platform */
-		AddFloorToWorld(new FloorObject, Vector3(205, 10, -1035), Vector3(40, 1, 20), Matrix4::Rotation(30, { 1, 0, 0 }));
-		AddFloorToWorld(new FloorObject, Vector3(205, -10, -995), Vector3(40, 1, 20), Matrix4::Rotation(-30, { 1, 0, 0 }));
+		//AddFloorToWorld(new FloorObject, Vector3(205, 10, -1035), Vector3(40, 1, 20), Matrix4::Rotation(30, { 1, 0, 0 }));
+		//AddFloorToWorld(new FloorObject, Vector3(205, -10, -995), Vector3(40, 1, 20), Matrix4::Rotation(-30, { 1, 0, 0 }));
 
 		/* Finish Platform */
 		AddFloorToWorld(new FinishObject, Vector3(204, -50, -1065), Vector3(39, 1, 38));
@@ -352,6 +388,9 @@ void TutorialGame::InitFloors(int level) {
 }
 
 void TutorialGame::CreateMazeWalls() {
+	Vector3 nodePos;
+	float xSize;
+	float zSize;
 	/* Place all horizontally efficient walls */
 	zSize = 10;
 	for (int y = 0; y < 23; ++y) {
@@ -439,7 +478,7 @@ void TutorialGame::InitGameObstacles(int level) {
 	switch (level) {
 	case 1:
 		/* Spinning Bar */
-		AddCubeToWorld(new RotatingCubeObject, Vector3(0, 3, -735), Vector3(1, 1, 100));
+		//AddCubeToWorld(new RotatingCubeObject, Vector3(0, 3, -735), Vector3(1, 1, 100));
 
 		/* Spring Platforms*/
 		AddCubeToWorld(new SpringObject(Vector3(0, 5, -890)), Vector3(0, 5, -890), Vector3(4, 4, 1));
@@ -447,7 +486,7 @@ void TutorialGame::InitGameObstacles(int level) {
 		AddCubeToWorld(new SpringObject(Vector3(-60, -15, -985)), Vector3(-60, -15, -985), Vector3(10, 1, 45));
 
 		/* Bridge */
-		BridgeConstraintTest(Vector3(-30, 20, -1060));
+		AddBridgeToWorld(Vector3(-30, 20, -1060));
 		break;
 	case 2:
 		break;
@@ -494,23 +533,13 @@ A single function to add a large immoveable cube to the bottom of our world
 */
 GameObject* TutorialGame::AddFloorToWorld(GameObject* floor, const Vector3& position, const Vector3& size, const Matrix4& orientation) {
 	/* Checking if oriented (need OBB) */
-	for (int i = 0; i < 16; ++i) {
-		if (i == 0 || i == 5 || i == 10 || i == 15) {
-			if (orientation.array[i] != 1) {
-				OBBVolume* volume = new OBBVolume(size);
-				floor->SetBoundingVolume((CollisionVolume*)volume);
-				break;
-			}
-			else if (i == 15) {
-				AABBVolume* volume = new AABBVolume(size);
-				floor->SetBoundingVolume((CollisionVolume*)volume);
-			}
-		}
-		else if (orientation.array[i] != 0) {
-			OBBVolume* volume = new OBBVolume(size);
-			floor->SetBoundingVolume((CollisionVolume*)volume);
-			break;
-		}
+	if (Vector3(1, 1, 1) != orientation * Vector3(1, 1, 1)) {
+		OBBVolume* volume = new OBBVolume(size);
+		floor->SetBoundingVolume((CollisionVolume*)volume);
+	}
+	else {
+		AABBVolume* volume = new AABBVolume(size);
+		floor->SetBoundingVolume((CollisionVolume*)volume);
 	}
 	floor->GetTransform().SetScale(size * 2).SetPosition(position).SetOrientation(orientation);
 	floor->SetRenderObject(new RenderObject(&floor->GetTransform(), cubeMesh, floorTex, basicShader));
@@ -573,15 +602,14 @@ GameObject* TutorialGame::AddCapsuleToWorld(GameObject* capsule, const Vector3& 
 	return capsule;
 }
 
-void TutorialGame::BridgeConstraintTest(Vector3 startPos) {
-	Vector3 cubeSize(1, 1, 5);
+void TutorialGame::AddBridgeToWorld(Vector3 startPos) {
+	Vector3 cubeSize(1, 0.5, 5);
 	Vector3 baseSize(5, 1, 5);
-
+	float bridgeWidth = 110;
 	float invCubeMass = 5; // how heavy the middle pieces are
-	int numLinks = 20;
-	float maxDistance = 5; // constraint distance
-	float cubeDistance = 5; // distance between links
-
+	int numLinks = 22;
+	float maxDistance = (bridgeWidth / (numLinks + 2)); // constraint distance
+	float cubeDistance = (bridgeWidth / (numLinks + 2)); // distance between links
 	GameObject* start = AddFloorToWorld(new FloorObject, startPos + Vector3(0, 0, 0), baseSize);
 	GameObject* end = AddFloorToWorld(new FloorObject, startPos + Vector3((numLinks + 2) * cubeDistance, 0, 0), baseSize);
 	GameObject* previous = start;
@@ -598,7 +626,7 @@ void TutorialGame::BridgeConstraintTest(Vector3 startPos) {
 
 GameObject* TutorialGame::AddPlayerToWorld(GameObject* p, const Vector3& position) {
 	float meshSize = 3.0f;
-	SphereVolume* volume = new SphereVolume(meshSize * 0.85);
+	AABBVolume* volume = new AABBVolume(Vector3(1, 3, 1));
 	p->SetBoundingVolume((CollisionVolume*)volume);
 	p->GetTransform().SetScale(Vector3(meshSize, meshSize, meshSize)).SetPosition(position);
 	(rand() % 2) ? p->SetRenderObject(new RenderObject(&p->GetTransform(), charMeshA, playerTex, basicShader)) :
@@ -641,34 +669,21 @@ manipulated later. Pressing Q will let you toggle between this behaviour and ins
 letting you move the camera around.
 */
 bool TutorialGame::SelectObject() {
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::Q)) {
-		inSelectionMode = !inSelectionMode;
-		if (inSelectionMode) {
-			Window::GetWindow()->ShowOSPointer(true);
-			Window::GetWindow()->LockMouseToWindow(false);
+	if (Window::GetMouse()->ButtonDown(NCL::MouseButtons::LEFT)) {
+		Ray ray = CollisionDetection::BuildRayFromMouse(*world->GetMainCamera());
+		RayCollision closestCollision;
+		if (world->Raycast(ray, closestCollision, nullptr, true)) {
+			if (selectionObject) {
+				selectionObject->GetRenderObject()->SetColour(Vector4(1, 1, 1, 1));
+				selectionObject->SetSelected(false);
+			}
+			selectionObject = (GameObject*)closestCollision.node;
+			selectionObject->GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
+			selectionObject->SetSelected(true);
+			return true;
 		}
 		else {
-			Window::GetWindow()->ShowOSPointer(false);
-			Window::GetWindow()->LockMouseToWindow(true);
-		}
-	}
-	if (inSelectionMode) {
-		if (Window::GetMouse()->ButtonDown(NCL::MouseButtons::LEFT)) {
-			if (selectionObject) {	//set colour to deselected;
-				selectionObject->GetRenderObject()->SetColour(Vector4(1, 1, 1, 1));
-				selectionObject = nullptr;
-				lockedObject = nullptr;
-			}
-			Ray ray = CollisionDetection::BuildRayFromMouse(*world->GetMainCamera());
-			RayCollision closestCollision;
-			if (world->Raycast(ray, closestCollision, nullptr, true)) {
-				selectionObject = (GameObject*)closestCollision.node;
-				selectionObject->GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
-				return true;
-			}
-			else {
-				return false;
-			}
+			return false;
 		}
 	}
 	if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::L)) {
@@ -682,29 +697,6 @@ bool TutorialGame::SelectObject() {
 		}
 	}
 	return false;
-}
-
-/*
-If an object has been clicked, it can be pushed with the right mouse button, by an amount
-determined by the scroll wheel. In the first tutorial this won't do anything, as we haven't
-added linear motion into our physics system. After the second tutorial, objects will move in a straight
-line - after the third, they'll be able to twist under torque aswell.
-*/
-void TutorialGame::MoveSelectedObject() {
-	forceMagnitude += Window::GetMouse()->GetWheelMovement() * 10.0f;
-	if (!selectionObject) {
-		return;// we haven ’t selected anything !
-	}
-	// Push the selected object !
-	if (Window::GetMouse()->ButtonPressed(NCL::MouseButtons::RIGHT)) {
-		Ray ray = CollisionDetection::BuildRayFromMouse(*world->GetMainCamera());
-		RayCollision closestCollision;
-		if (world->Raycast(ray, closestCollision, nullptr, true)) {
-			if (closestCollision.node == selectionObject) {
-				selectionObject->GetPhysicsObject()->AddForceAtPosition(ray.GetDirection() * forceMagnitude, closestCollision.collidedAt);
-			}
-		}
-	}
 }
 
 void TutorialGame::DebugObjectMovement() {
@@ -728,6 +720,14 @@ void TutorialGame::DebugObjectMovement() {
 		}
 		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::NUM8)) {
 			selectionObject->GetPhysicsObject()->AddTorque(Vector3(0, 10, 0));
+		}
+		if (Window::GetMouse()->ButtonPressed(NCL::MouseButtons::RIGHT)) {
+			Ray ray = CollisionDetection::BuildRayFromMouse(*world->GetMainCamera());
+			RayCollision closestCollision;
+			if (world->Raycast(ray, closestCollision, nullptr, true)) {
+				if (closestCollision.node == selectionObject) 
+					selectionObject->GetPhysicsObject()->AddForceAtPosition(ray.GetDirection() * forceMagnitude, closestCollision.collidedAt);
+			}
 		}
 	}
 }

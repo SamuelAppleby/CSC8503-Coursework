@@ -52,6 +52,17 @@ namespace NCL {
 
 			void GetConstraintIterators(std::vector<Constraint*>::const_iterator& first, std::vector<Constraint*>::const_iterator& last) const;
 
+			int GetTotalWorldObjects() const {
+				return gameObjects.size();
+			}
+
+			bool GetShuffleConstraints() const {
+				return shuffleConstraints;
+			}
+
+			bool GetShuffleObjects() const {
+				return shuffleObjects;
+			}
 		protected:
 			std::vector<GameObject*> gameObjects;
 			std::vector<Constraint*> constraints;

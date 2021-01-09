@@ -37,6 +37,7 @@ namespace NCL {
 			void UpdateMenu(float dt);
 			void UpdateLevel(float dt);
 			void DrawDebugInfo();
+			void CheckFinished(float dt);
 			void UpdateLevel1(float dt);
 			void FireObjects();
 			void UpdateLevel2(float dt);
@@ -66,25 +67,25 @@ namespace NCL {
 			GameObject* AddSphereToWorld(GameObject* sphere, const Vector3& position, float radius);
 			GameObject* AddCubeToWorld(GameObject* cube, const Vector3& position, Vector3 dimensions);
 			GameObject* AddCapsuleToWorld(GameObject* capsule, const Vector3& position, float halfHeight, float radius);
-			void BridgeConstraintTest(Vector3 startPos);
+			void AddBridgeToWorld(Vector3 startPos);
 
 			GameObject* AddPlayerToWorld(GameObject* p, const Vector3& position);
 			GameObject* AddEnemyToWorld(GameObject* e, const Vector3& position);
 			GameObject* AddBonusToWorld(const Vector3& position);
 
 			bool SelectObject();
-			void MoveSelectedObject();
 			void DebugObjectMovement();
 			void LockedObjectMovement();
 
-			GameTechRenderer*	renderer;
-			PhysicsSystem*		physics;
-			GameWorld*			world;
+			GameTechRenderer* renderer;
+			PhysicsSystem* physics;
+			GameWorld* world;
 
 			bool useGravity;
+			bool useBroadphase;
 			bool inSelectionMode;
 
-			float		forceMagnitude;
+			float forceMagnitude;
 			float reloadTime;
 			float timeOut;
 			GameObject* selectionObject = nullptr;
@@ -118,22 +119,17 @@ namespace NCL {
 				lockedObject = o;
 			}
 			PlayerObject* player;
-			PathFindingStateGameObject* enemy;
+			EnemyStateGameObject* enemy;
 			vector<PlatformStateGameObject*> platforms;
 
 			bool lockedOrientation;
 
 			int currentLevel;
-			vector<Vector3> path;
+			NavigationGrid* grid;
 
 			Vector4 white;
 			float textSize = 15.0f;
 
-			NavigationGrid* grid;
-
-			Vector3 nodePos;
-			float xSize;
-			float zSize;
 		};
 	}
 }

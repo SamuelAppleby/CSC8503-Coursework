@@ -4,6 +4,7 @@
 using namespace NCL;
 using namespace CSC8503;
 PathFindingStateGameObject::PathFindingStateGameObject(GameObject* val, NavigationGrid* map) : EnemyStateGameObject(val) {
+	currentState = state::FOLLOWPATH;
 	grid = map;
 	mazeStart = { 220, 0, 440 };
 	mazeEnd = { 220, 0, 220 };
@@ -14,10 +15,16 @@ PathFindingStateGameObject::PathFindingStateGameObject(GameObject* val, Navigati
 	});
 	stateMachine->AddState(followPathState);
 	stateMachine->AddTransition(new StateTransition(followPlayerState, followPathState, [&]()->bool {
-		return !seePlayer;
+		return currentState == state::FOLLOWPATH;
 	}));
 	stateMachine->AddTransition(new StateTransition(followPathState, followPlayerState, [&]()->bool {
-		return seePlayer;
+		return currentState == state::FOLLOWPLAYER;
+	}));
+	stateMachine->AddTransition(new StateTransition(idleState, followPathState, [&]()->bool {
+		return currentState == state::FOLLOWPATH;
+	}));
+	stateMachine->AddTransition(new StateTransition(followPathState, idleState, [&]()->bool {
+		return currentState == state::IDLE;
 	}));
 	name = "PathfindingAI";
 }

@@ -1,6 +1,8 @@
 #include "../../Common/Window.h"
 #include "../CSC8503Common/NavigationGrid.h"
 #include "TutorialGame.h"
+#include "../CSC8503Common/Pushdownstate.h"
+#include "../CSC8503Common/PushdownMachine.h"
 
 using namespace NCL;
 using namespace CSC8503;
@@ -14,6 +16,75 @@ instead.
 This time, we've added some extra functionality to the window class - we can
 hide or show the 
 */
+class PauseScreen : public PushdownState {
+	PushdownResult OnUpdate(float dt, PushdownState** newState) override {
+		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::U)) {
+			return PushdownResult::Pop;
+		}
+		return PushdownResult::NoChange;
+	}
+	void OnAwake() override {
+		std::cout << "Press U to unpause game!\n";
+	}
+};
+
+class GameScreen : public PushdownState {
+	PushdownResult OnUpdate(float dt, PushdownState** newState) override {
+		pauseReminder -= dt;
+		if (pauseReminder < 0) {
+			std::cout << "Coins mined:" << coinsMined << "\n";
+			std::cout << "Press P to pause game, or F1 to return to main menu!\n";
+				pauseReminder += 1.0f;
+		}
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::P)) {
+			*newState = new PauseScreen();
+			return PushdownResult::Push;
+		}
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::F1)) {
+			std::cout << "Returning to main menu!\n";
+			return PushdownResult::Pop;
+		}
+		if (rand() % 7 == 0) {
+			coinsMined++;
+		}
+		return PushdownResult::NoChange;
+	};
+	void OnAwake() override {
+		std::cout << "Preparing to mine coins!\n";
+	}
+
+	protected:
+		int coinsMined = 0;
+		float pauseReminder = 1;
+};
+
+class IntroScreen : public PushdownState {
+	PushdownResult OnUpdate(float dt, PushdownState** newState) override {
+		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::SPACE)) {
+			*newState = new GameScreen();
+			return PushdownResult::Push;
+		}
+		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::ESCAPE)) {
+			return PushdownResult::Pop;
+		}
+		return PushdownResult::NoChange;
+	};
+	void OnAwake() override {
+		std::cout << "Welcome to a really awesome game!\n";
+		std::cout << "Press Space To Begin or escape to quit!\n";
+	}
+};
+
+void TestPushdownAutomata(Window* w) {
+	PushdownMachine machine(new IntroScreen());
+	while (w->UpdateWindow()) {
+		float dt = w->GetTimer()->GetTimeDeltaSeconds();
+		if (!machine.Update(dt)) {
+			return;
+		}
+	}
+}
+
 vector<Vector3> testNodes;
 void TestPathfinding() {
 	NavigationGrid grid("TestGrid.txt");
@@ -62,10 +133,10 @@ void TestStateMachine() {
 }
 
 int main() {
-	Window*w = Window::CreateGameWindow("CSC8503 Game technology!", 1280, 720);
+	Window* w = Window::CreateGameWindow("CSC8503 Game technology!", 1280, 720);
 	if (!w->HasInitialised()) {
 		return -1;
-	}	
+	}
 	srand(time(0));
 	w->ShowOSPointer(false);
 	w->LockMouseToWindow(true);
@@ -75,12 +146,12 @@ int main() {
 		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::ESCAPE)) {
 			if(g->GetCurrentLevel() == 0)
 				break;
-			else {
+			else 
 				g = new TutorialGame();
-			}
 		}
-		if(g->GetTimeout() > 5.0f)
+		if (g->GetTimeout() > 5.0f) 
 			g = new TutorialGame();
+
 		float dt = w->GetTimer()->GetTimeDeltaSeconds();
 		if (dt > 0.1f) {
 			std::cout << "Skipping large time delta" << std::endl;
@@ -95,7 +166,7 @@ int main() {
 		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::T)) {
 			w->SetWindowPosition(0, 0);
 		}
-		w->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
+		w->SetTitle("Frame Time:" + std::to_string(1000.0f * dt));
 		g->UpdateGame(dt);
 	}
 	Window::DestroyGameWindow();

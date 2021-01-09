@@ -24,6 +24,8 @@ PhysicsSystem::PhysicsSystem(GameWorld& g) : gameWorld(g)	{
 	globalDamping	= 0.995f;
 	dampingFactor = 0.4;
 	SetGravity(Vector3(0.0f, -9.8f, 0.0f));
+	basicCollisionsTested = 0;
+	totalCollisions = 0;
 }
 
 PhysicsSystem::~PhysicsSystem()	{
@@ -43,7 +45,7 @@ void PhysicsSystem::Clear() {
 
 void PhysicsSystem::ClearDeletedCollisions() {
 	for (std::set<CollisionDetection::CollisionInfo>::iterator i = allCollisions.begin(); i != allCollisions.end();) {
-		if (!i->a->IsActive() || !i->b->IsActive())
+		if ((!i->a->IsActive() && !i->a->GetSelected()) || (!i->b->IsActive() && !i->b->GetSelected()))
 			i = allCollisions.erase(i);
 		else
 			++i;
@@ -64,17 +66,6 @@ int realHZ		= idealHZ;
 float realDT	= idealDT;
 
 void PhysicsSystem::Update(float dt) {	
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::B)) {
-		useBroadPhase = !useBroadPhase;
-	}
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::I)) {
-		constraintIterationCount--;
-		std::cout << "Setting constraint iterations to " << constraintIterationCount << std::endl;
-	}
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::O)) {
-		constraintIterationCount++;
-		std::cout << "Setting constraint iterations to " << constraintIterationCount << std::endl;
-	}
 
 	dTOffset += dt; //We accumulate time delta here - there might be remainders from previous frame!
 
@@ -118,7 +109,7 @@ void PhysicsSystem::Update(float dt) {
 	if (updateTime > realDT) {
 		realHZ /= 2;
 		realDT *= 2;
-		//std::cout << "Dropping iteration count due to long physics time...(now " << realHZ << ")\n";
+		std::cout << "Dropping iteration count due to long physics time...(now " << realHZ << ")\n";
 	}
 	else if(dt*2 < realDT) { //we have plenty of room to increase iteration count!
 		int temp = realHZ;
@@ -130,7 +121,7 @@ void PhysicsSystem::Update(float dt) {
 			realDT = idealDT;
 		}
 		if (temp != realHZ) {
-			//std::cout << "Raising iteration count due to short physics time...(now " << realHZ << ")\n";
+			std::cout << "Raising iteration count due to short physics time...(now " << realHZ << ")\n";
 		}
 	}
 }
@@ -180,6 +171,8 @@ a particular pair will only be added once, so objects colliding for
 multiple frames won't flood the set with duplicates.
 */
 void PhysicsSystem::BasicCollisionDetection() {
+	basicCollisionsTested = 0;
+	totalCollisions = 0;
 	std::vector<GameObject*>::const_iterator first;
 	std::vector<GameObject*>::const_iterator last;
 	gameWorld.GetObjectIterators(first, last);
@@ -192,6 +185,7 @@ void PhysicsSystem::BasicCollisionDetection() {
 				continue;
 			}
 			CollisionDetection::CollisionInfo info;
+			basicCollisionsTested++;
 			if (CollisionDetection::ObjectIntersection(*i, *j, info)) {
 				//std::cout << "Collision between " << (*i)->GetName() << " and " << (*j)->GetName() << std::endl;
 				if (!(dynamic_cast<PlayerObject*>(info.a) && dynamic_cast<BonusObject*>(info.b)) &&		// Dont resolve bonus pickups
@@ -202,6 +196,7 @@ void PhysicsSystem::BasicCollisionDetection() {
 			}
 		}
 	}
+	totalCollisions = allCollisions.size();
 }
 
 /*
@@ -253,8 +248,8 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 	float jT = -(fricCoef * fricForce) / (totalMass + fricEffect);
 	Vector3 fricImpulse = t * jT;
 	/* Frictional effects */
-	physA->ApplyLinearImpulse(-fricImpulse * 2);
-	physB->ApplyLinearImpulse(fricImpulse * 2);		
+	physA->ApplyLinearImpulse(-fricImpulse);
+	physB->ApplyLinearImpulse(fricImpulse);		
 	physA->ApplyAngularImpulse(Vector3::Cross(relativeA, -fricImpulse));
 	physB->ApplyAngularImpulse(Vector3::Cross(relativeB, fricImpulse));
 
@@ -267,7 +262,7 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 }
 
 /* Directly apply spring forces to object */
-void PhysicsSystem::SpringOnPoint(SpringObject* a) const {
+void PhysicsSystem::SpringTowardsPoint(SpringObject* a) const {
 	float k = 0.005;
 	Vector3 extension = a->GetTransform().GetPosition() - a->GetRestPosition();
 	Vector3 force = extension * -k;
@@ -320,6 +315,7 @@ The broadphase will now only give us likely collisions, so we can now go through
 and work out if they are truly colliding, and if so, add them into the main collision list
 */
 void PhysicsSystem::NarrowPhase() {
+	totalCollisions = 0;
 	for (std::set<CollisionDetection::CollisionInfo>::iterator i = broadphaseCollisions.begin(); i != broadphaseCollisions.end(); ++i) {
 		CollisionDetection::CollisionInfo info = *i;
 		if (CollisionDetection::ObjectIntersection(info.a, info.b, info)) {
@@ -329,8 +325,10 @@ void PhysicsSystem::NarrowPhase() {
 				!(dynamic_cast<PlayerObject*>(info.b) && dynamic_cast<BonusObject*>(info.a)))
 				ImpulseResolveCollision(*info.a, *info.b, info.point);
 			allCollisions.insert(info);
+			totalCollisions++;
 		}
 	}
+	totalCollisions = allCollisions.size();
 }
 
 /*
@@ -412,7 +410,7 @@ void PhysicsSystem::IntegrateVelocity(float dt) {
 
 		/* Spring objects should have some force added towards their resting position */
 		if (SpringObject* s = dynamic_cast<SpringObject*>((*i))) 
-			SpringOnPoint(s);
+			SpringTowardsPoint(s);
 	}
 }
 

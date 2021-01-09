@@ -71,6 +71,12 @@ namespace NCL {
 			void SetIsActive(bool val) {
 				isActive = val;
 			}
+			int GetSelected() const {
+				return selectedObject;
+			}
+			void SetSelected(bool val) {
+				selectedObject = val;
+			}
 		protected:
 			Transform			transform;
 
@@ -81,7 +87,7 @@ namespace NCL {
 			bool	isActive;
 			int		worldID;
 			string	name;
-
+			bool selectedObject;
 			Vector3 broadphaseAABB;
 		};
 	}

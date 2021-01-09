@@ -6,7 +6,7 @@ namespace NCL {
 		public:
 			FloorObject() {
 				invMass = 0.0f;
-				elasticity = 0.0f;
+				elasticity = 0.2f;
 				friction = 0.5f;
 				name = "Floor";
 			}
