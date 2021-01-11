@@ -1,6 +1,4 @@
 #include "TutorialGame.h"
-#include "../CSC8503Common/Pushdownstate.h"
-#include "../CSC8503Common/PushdownMachine.h"
 using namespace NCL;
 using namespace CSC8503;
 
@@ -19,11 +17,10 @@ TutorialGame::TutorialGame() {
 	timeOut = 0.0f;
 	Debug::SetRenderer(renderer);
 	player = nullptr;
-	enemy = nullptr;
 	lockedOrientation = true;
 	currentLevel = 0;
-	white = { 1,1,1,1 };
 	grid = new NavigationGrid("MazePath.txt");
+	currentlySelected = 1;
 	InitialiseAssets();
 }
 
@@ -88,26 +85,25 @@ TutorialGame::~TutorialGame() {
 	delete basicShader;
 
 	delete physics;
-	delete renderer;
+	//delete renderer;
 	delete world;
 }
 
 void TutorialGame::UpdateGame(float dt) {
-	currentLevel == 0 ? UpdateMenu(dt) : UpdateLevel(dt);
-	physics->ClearDeletedCollisions();
-	world->RemoveDeletedObjects();
-	Debug::FlushRenderables(dt);
-	renderer->Update(dt);
-	renderer->Render();
+	
 }
 
 void TutorialGame::UpdateMenu(float dt) {
-	renderer->DrawString("Choose Level", Vector2(35, 5), { 0, 1, 0, 1 }, 30.0f);
-	renderer->DrawString("Level 1: Single Player Obstacle Course(1)", Vector2(0, 15), white);
-	renderer->DrawString("Level 2: Multiplayer Maze(2)", Vector2(0, 50), white);
+	renderer->DrawString("Choose Level", Vector2(35, 5), Debug::WHITE, 30.0f);
+	currentlySelected == 1 ? renderer->DrawString("Level 1: Single Player Obstacle Course", Vector2(0, 15), { 0,1,0,1 }) :
+		renderer->DrawString("Level 1: Single Player Obstacle Course", Vector2(0, 15), Debug::WHITE);
+	currentlySelected == 2 ? renderer->DrawString("Level 2: Multiplayer Maze", Vector2(0, 50), { 0,1,0,1 }) :
+		renderer->DrawString("Level 2: Multiplayer Maze", Vector2(0, 50), Debug::WHITE);
 	renderer->DrawString("Exit(ESC)", Vector2(80, 5));
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::NUM1) || Window::GetKeyboard()->KeyPressed(KeyboardKeys::NUM2)) {
-		Window::GetKeyboard()->KeyPressed(KeyboardKeys::NUM1) ? currentLevel = 1 : currentLevel = 2;
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::UP) || Window::GetKeyboard()->KeyPressed(KeyboardKeys::DOWN)) 
+		currentlySelected = currentlySelected == 1 ? 2 : 1;
+	if(Window::GetKeyboard()->KeyPressed(KeyboardKeys::RETURN)) {
+		currentLevel = currentlySelected;
 		InitWorld();
 	}
 }
@@ -124,16 +120,17 @@ void TutorialGame::UpdateLevel(float dt) {
 			Window::GetWindow()->LockMouseToWindow(true);
 		}
 	}
-	inSelectionMode ? renderer->DrawString("Change to play mode(Q)", Vector2(69, 10), white, textSize) :
-		renderer->DrawString("Change to debug mode(Q)", Vector2(68, 10), white, textSize);
-	renderer->DrawString("Exit to Menu (ESC)", Vector2(75, 5), white, textSize);
+	inSelectionMode ? renderer->DrawString("Change to play mode(Q)", Vector2(69, 10), Debug::WHITE, textSize) :
+		renderer->DrawString("Change to debug mode(Q)", Vector2(68, 10), Debug::WHITE, textSize);
+	renderer->DrawString("Exit to Menu (ESC)", Vector2(75, 5), Debug::WHITE, textSize);
+	renderer->DrawString("Pause(P)", Vector2(88, 15), Debug::WHITE, textSize);
 	if (inSelectionMode) {
 		UpdateKeys();
 		DrawDebugInfo();
 		world->ShowFacing();
 	}
 	else {
-		renderer->DrawString("Score: " + std::to_string(player->GetScore()), Vector2(0, 5), white, textSize);
+		renderer->DrawString("Score:" + std::to_string(player->GetScore()), Vector2(0, 5), Debug::WHITE, textSize);
 		world->GetMainCamera()->UpdateCamera(dt);
 	}
 	SelectObject();
@@ -149,44 +146,45 @@ void TutorialGame::UpdateLevel(float dt) {
 }
 
 void TutorialGame::DrawDebugInfo() {
-	renderer->DrawString("Reset Camera(F1)", Vector2(0, 5), white, textSize); 
-	world->GetShuffleObjects() ? renderer->DrawString("Shuffle Objects(F2):On", Vector2(0, 10), white, textSize) :
-		renderer->DrawString("Shuffle Objects(F2):Off", Vector2(0, 10), white, textSize);
-	world->GetShuffleConstraints() ? renderer->DrawString("Shuffle Constraints(F3):On", Vector2(0, 15), white, textSize) :
-		renderer->DrawString("Shuffle Constraints(F3):Off", Vector2(0, 15), white, textSize);
+	renderer->DrawString("Reset Camera(F1)", Vector2(0, 5), Debug::WHITE, textSize);
+	world->GetShuffleObjects() ? renderer->DrawString("Shuffle Objects(F2):On", Vector2(0, 10), Debug::WHITE, textSize) :
+		renderer->DrawString("Shuffle Objects(F2):Off", Vector2(0, 10), Debug::WHITE, textSize);
+	world->GetShuffleConstraints() ? renderer->DrawString("Shuffle Constraints(F3):On", Vector2(0, 15), Debug::WHITE, textSize) :
+		renderer->DrawString("Shuffle Constraints(F3):Off", Vector2(0, 15), Debug::WHITE, textSize);
 
-	useGravity ? renderer->DrawString("Gravity(G):On", Vector2(0, 20), white, textSize) : renderer->DrawString("Gravity(G):Off", Vector2(0, 20), white, textSize);
-	renderer->DrawString("Click Force(Scroll Wheel):" + std::to_string((int)forceMagnitude), Vector2(0, 25), white, textSize);
-	renderer->DrawString("Constraint Iteration Count(I/O):" + std::to_string(physics->GetConstraintIterationCount()), Vector2(0, 30), white, textSize);
+	useGravity ? renderer->DrawString("Gravity(G):On", Vector2(0, 20), Debug::WHITE, textSize) : 
+		renderer->DrawString("Gravity(G):Off", Vector2(0, 20), Debug::WHITE, textSize);
+	renderer->DrawString("Click Force(Scroll Wheel):" + std::to_string((int)forceMagnitude), Vector2(0, 25), Debug::WHITE, textSize);
+	renderer->DrawString("Constraint Iteration Count(I/O):" + std::to_string(physics->GetConstraintIterationCount()), Vector2(0, 30), Debug::WHITE, textSize);
 
 	if (physics->GetBroadPhase()) {
-		renderer->DrawString("QuadTree(B):On", Vector2(0, 35), white, textSize);
-		renderer->DrawString("Collisions Tested:" + std::to_string(physics->GetBroadPhaseCollisionsTested()), Vector2(68, 90), white, textSize);
+		renderer->DrawString("QuadTree(B):On", Vector2(0, 35), Debug::WHITE, textSize);
+		renderer->DrawString("Collisions Tested:" + std::to_string(physics->GetBroadPhaseCollisionsTested()), Vector2(68, 90), Debug::WHITE, textSize);
 	}
 	else {
-		renderer->DrawString("QuadTree(B):Off", Vector2(0, 35), white, textSize);
-		renderer->DrawString("Collisions Tested:" + std::to_string(physics->GetBasicCollisionsTested()), Vector2(68, 90), white, textSize);
+		renderer->DrawString("QuadTree(B):Off", Vector2(0, 35), Debug::WHITE, textSize);
+		renderer->DrawString("Collisions Tested:" + std::to_string(physics->GetBasicCollisionsTested()), Vector2(68, 90), Debug::WHITE, textSize);
 	}
 	
-	renderer->DrawString("Current Collisions:" + std::to_string(physics->GetCollisionsSize()), Vector2(70, 95), white, textSize);
-	renderer->DrawString("Total Objects:" + std::to_string(world->GetTotalWorldObjects()), Vector2(75, 85), white, textSize);
+	renderer->DrawString("Current Collisions:" + std::to_string(physics->GetCollisionsSize()), Vector2(70, 95), Debug::WHITE, textSize);
+	renderer->DrawString("Total Objects:" + std::to_string(world->GetTotalWorldObjects()), Vector2(75, 85), Debug::WHITE, textSize);
 	if (selectionObject) {
 		if(StateGameObject* g = dynamic_cast<StateGameObject*>(selectionObject))
-			renderer->DrawString("State:" + g->StateToString(), Vector2(0, 55), white, textSize);
-		renderer->DrawString("Position:" + selectionObject->GetTransform().GetPosition().ToString(), Vector2(0, 60), white, textSize);
-		renderer->DrawString("Orientation:" + selectionObject->GetTransform().GetOrientation().ToEuler().ToString(), Vector2(0, 65), white, textSize);
-		renderer->DrawString("Selected Object:" + selectionObject->GetName(), Vector2(0, 70), white, textSize);
-		renderer->DrawString("Inverse Mass:" + std::to_string(selectionObject->GetPhysicsObject()->GetInverseMass()), Vector2(0, 75), white, textSize);
-		renderer->DrawString("Friction:" + std::to_string(selectionObject->GetPhysicsObject()->GetFriction()), Vector2(0, 80), white, textSize);
-		renderer->DrawString("Elasticity:" + std::to_string(selectionObject->GetPhysicsObject()->GetElasticity()), Vector2(0, 85), white, textSize);
+			renderer->DrawString("State:" + g->StateToString(), Vector2(0, 55), Debug::WHITE, textSize);
+		renderer->DrawString("Position:" + selectionObject->GetTransform().GetPosition().ToString(), Vector2(0, 60), Debug::WHITE, textSize);
+		renderer->DrawString("Orientation:" + selectionObject->GetTransform().GetOrientation().ToEuler().ToString(), Vector2(0, 65), Debug::WHITE, textSize);
+		renderer->DrawString("Selected Object:" + selectionObject->GetName(), Vector2(0, 70), Debug::WHITE, textSize);
+		renderer->DrawString("Inverse Mass:" + std::to_string(selectionObject->GetPhysicsObject()->GetInverseMass()), Vector2(0, 75), Debug::WHITE, textSize);
+		renderer->DrawString("Friction:" + std::to_string(selectionObject->GetPhysicsObject()->GetFriction()), Vector2(0, 80), Debug::WHITE, textSize);
+		renderer->DrawString("Elasticity:" + std::to_string(selectionObject->GetPhysicsObject()->GetElasticity()), Vector2(0, 85), Debug::WHITE, textSize);
 	}
 	if (lockedObject) {
-		renderer->DrawString("Unlock object(L)", Vector2(0, 90), white, textSize);
-		lockedOrientation ? renderer->DrawString("Lock object orientation(P): On", Vector2(0, 95), white, textSize) :
-			renderer->DrawString("Lock object orientation(P): Off", Vector2(0, 95), white, textSize);
+		renderer->DrawString("Unlock object(L)", Vector2(0, 90), Debug::WHITE, textSize);
+		lockedOrientation ? renderer->DrawString("Lock object orientation(P): On", Vector2(0, 95), Debug::WHITE, textSize) :
+			renderer->DrawString("Lock object orientation(P): Off", Vector2(0, 95), Debug::WHITE, textSize);
 	}
 	else
-		renderer->DrawString("Lock selected object(L)", Vector2(0, 90), white, textSize);
+		renderer->DrawString("Lock selected object(L)", Vector2(0, 90), Debug::WHITE, textSize);
 }
 
 void TutorialGame::CheckFinished(float dt) {
@@ -201,16 +199,18 @@ void TutorialGame::CheckFinished(float dt) {
 			}
 			renderer->DrawString("Exiting to Menu in:" + std::to_string((int)(5.0f - timeOut)) + "s", Vector2(30, 50));
 		}
-		else
-			player->DecreaseScore(dt);
 	}
-	if (enemy) {
-		if (enemy->GetFinished()) {
+	for (auto& e : enemies) {
+		if (e->GetFinished()) {
+			timeOut += dt;
 			renderer->DrawString("AI Won - Game Over", Vector2(32, 40), Vector4(1, 0, 0, 1), 25.0f);
 			renderer->DrawString("Score:" + std::to_string(player->GetScore()), Vector2(42, 45), Vector4(1, 1, 0, 1));
 			renderer->DrawString("Exiting to Menu in:" + std::to_string((int)(5.0f - timeOut)) + "s", Vector2(30, 50));
 		}
 	}
+	
+	if (timeOut == 0.0f)
+		player->DecreaseScore(dt);
 }
 
 void TutorialGame::UpdateLevel1(float dt) {
@@ -235,11 +235,13 @@ void TutorialGame::FireObjects() {
 }
 
 void TutorialGame::UpdateLevel2(float dt) {
-	enemy->Update(dt);
-	EnemyRaycast();
+	for (auto& e : enemies) {
+		e->Update(dt);
+		EnemyRaycast(e);
+	}
 }
 
-void TutorialGame::EnemyRaycast() {
+void TutorialGame::EnemyRaycast(EnemyStateGameObject* enemy) {
 	if (enemy->GetRayTime() < 0.0f && enemy->GetState() != state::FOLLOWPLAYER) {
 		Ray ray(enemy->GetTransform().GetPosition(), enemy->GetTransform().GetOrientation() * Vector3(0, 0, -1));
 		RayCollision closestCollision;
@@ -380,6 +382,7 @@ void TutorialGame::InitFloors(int level) {
 
 		/* Maze Floor */
 		AddFloorToWorld(new FloorObject, Vector3(0, 0, -240), Vector3(210, 1, 210));
+		AddFloorToWorld(new IceObject, Vector3(-70, 0, -50), Vector3(60, 1.5, 20));
 		CreateMazeWalls();
 		/* Finish Platform */
 		AddFloorToWorld(new FinishObject, Vector3(0, 1, -240), Vector3(10, 1, 10));
@@ -469,7 +472,9 @@ void TutorialGame::InitGameExamples(int level) {
 		break;
 	case 2:
 		player = (PlayerObject*)AddPlayerToWorld(new PlayerObject, Vector3(0, 10, -100));
-		enemy = (PathFindingStateGameObject*)AddEnemyToWorld(new PathFindingStateGameObject(player, grid), Vector3(0, 10, 20));
+		/* One enemy will not take costs into account, the other will, both using A* */
+		enemies.push_back((PathFindingStateGameObject*)AddEnemyToWorld(new PathFindingStateGameObject(player, grid, true), Vector3(-10, 10, 20)));
+		enemies.push_back((PathFindingStateGameObject*)AddEnemyToWorld(new PathFindingStateGameObject(player, grid, false), Vector3(10, 10, 20)));
 		break;
 	}
 }
@@ -489,6 +494,7 @@ void TutorialGame::InitGameObstacles(int level) {
 		AddBridgeToWorld(Vector3(-30, 20, -1060));
 		break;
 	case 2:
+		AddCubeToWorld(new SpringObject(Vector3(-70, 15, -40)), Vector3(-60, 5, -50), Vector3(1, 8, 8));
 		break;
 	}
 }

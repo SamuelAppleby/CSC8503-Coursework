@@ -159,6 +159,18 @@
     <ClInclude Include="PlatformStateGameObject.h">
       <Filter>AI</Filter>
     </ClInclude>
+    <ClInclude Include="PauseScreen.h">
+      <Filter>AI</Filter>
+    </ClInclude>
+    <ClInclude Include="GlobalVariables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IntroScreen.h">
+      <Filter>AI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GameWorld.cpp">
@@ -218,5 +230,10 @@
     <ClCompile Include="PlatformStateGameObject.cpp">
       <Filter>AI</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="CSC8503Common.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

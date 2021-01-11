@@ -36,7 +36,7 @@ namespace NCL {
 			NavigationGrid(const std::string&filename);
 			~NavigationGrid();
 
-			bool FindPath(const Vector3& from, const Vector3& to, NavigationPath& outPath) override;
+			bool FindPath(const Vector3& from, const Vector3& to, NavigationPath& outPath, bool ignoreCosts) override;
 			GridNode* GetNodes(){
 				return allNodes;
 			}

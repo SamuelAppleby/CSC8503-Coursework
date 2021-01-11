@@ -39,6 +39,6 @@ NavigationMesh::~NavigationMesh()
 {
 }
 
-bool NavigationMesh::FindPath(const Vector3& from, const Vector3& to, NavigationPath& outPath) {
+bool NavigationMesh::FindPath(const Vector3& from, const Vector3& to, NavigationPath& outPath, bool ignoreCosts) {
 	return false;
 }

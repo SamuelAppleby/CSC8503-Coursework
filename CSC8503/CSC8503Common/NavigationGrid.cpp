@@ -62,6 +62,9 @@ NavigationGrid::NavigationGrid(const std::string&filename) : NavigationGrid() {
 					if (n.connected[i]->type == '.') {
 						n.costs[i]		= 1;
 					}
+					if (n.connected[i]->type == '-') {
+						n.costs[i] = 10;
+					}
 					if (n.connected[i]->type == 'x') {
 						n.connected[i] = nullptr; //actually a wall, disconnect!
 					}
@@ -75,7 +78,7 @@ NavigationGrid::~NavigationGrid()	{
 	delete[] allNodes;
 }
 
-bool NavigationGrid::FindPath(const Vector3& from, const Vector3& to, NavigationPath& outPath) {
+bool NavigationGrid::FindPath(const Vector3& from, const Vector3& to, NavigationPath& outPath, bool ignoreCosts) {
 	//need to work out which node 'from' sits in, and 'to' sits in
 	int fromX = ((int)from.x / nodeSize);
 	int fromZ = ((int)from.z / nodeSize);
@@ -129,10 +132,9 @@ bool NavigationGrid::FindPath(const Vector3& from, const Vector3& to, Navigation
 					continue; //already discarded this neighbour...
 				}
 
-				float h = Heuristic(neighbour, endNode);				
-				float g = currentBestNode->g + currentBestNode->costs[i];
+				float h = Heuristic(neighbour, endNode);
+				float g = ignoreCosts ? g = currentBestNode->g + 1 : g = currentBestNode->g + currentBestNode->costs[i];
 				float f = h + g;
-
 				bool inOpen		= NodeInList(neighbour, openList);
 
 				if (!inOpen) { //first time we've seen this neighbour

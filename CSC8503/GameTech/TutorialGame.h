@@ -24,11 +24,14 @@
 #include "../CSC8503Common/BonusObject.h"
 #include "../CSC8503Common/CapsuleObject.h"
 #include "../CSC8503Common/FinishObject.h"
+#include "../CSC8503Common/Pushdownstate.h"
+#include "../CSC8503Common/PauseScreen.h"
+#include "../CSC8503Common/GlobalVariables.h"
 
 namespace NCL {
 	namespace CSC8503 {
 		class PlayerObject;
-		class TutorialGame {
+		class TutorialGame : public PushdownState {
 		public:
 			TutorialGame();
 			~TutorialGame();
@@ -41,13 +44,8 @@ namespace NCL {
 			void UpdateLevel1(float dt);
 			void FireObjects();
 			void UpdateLevel2(float dt);
-			void EnemyRaycast();
-			int GetCurrentLevel() const {
-				return currentLevel;
-			}
-			float GetTimeout() const {
-				return timeOut;
-			}
+			void EnemyRaycast(EnemyStateGameObject*);
+
 		protected:
 			void InitialiseAssets();
 
@@ -119,17 +117,43 @@ namespace NCL {
 				lockedObject = o;
 			}
 			PlayerObject* player;
-			EnemyStateGameObject* enemy;
+			vector<EnemyStateGameObject*> enemies;
 			vector<PlatformStateGameObject*> platforms;
-
+			int currentLevel;
 			bool lockedOrientation;
 
-			int currentLevel;
 			NavigationGrid* grid;
 
-			Vector4 white;
 			float textSize = 15.0f;
 
+			int currentlySelected;
+
+			PushdownResult OnUpdate(float dt, PushdownState** newState) override {
+				currentLevel == 0 ? UpdateMenu(dt) : UpdateLevel(dt);
+				physics->ClearDeletedCollisions();
+				world->RemoveDeletedObjects();
+				Debug::FlushRenderables(dt);
+				renderer->Update(dt);
+				renderer->Render();
+				if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::P)) {
+					*newState = new PauseScreen();
+					renderer->DrawString("Paused(P)", Vector2(40, 50), Debug::WHITE, 30.0f);
+					renderer->Render();
+					return PushdownResult::Push;
+				}
+				if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::ESCAPE) || timeOut > 5.0f) {
+					if (currentLevel != 0) {
+						renderer->DrawString("Returning to Menu", Vector2(25, 50), Debug::WHITE, 30.0f);
+						renderer->Render();
+					}
+					else 
+						quit = true;
+					return PushdownResult::Pop;
+				}
+				return PushdownResult::NoChange;
+			};
+			void OnAwake() override {
+			}
 		};
 	}
 }
