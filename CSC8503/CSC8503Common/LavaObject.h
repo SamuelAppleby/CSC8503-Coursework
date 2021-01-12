@@ -13,7 +13,7 @@ namespace NCL {
 					p->GetPhysicsObject()->ClearForces();
 					p->GetPhysicsObject()->SetLinearVelocity(Vector3(0, 0, 0));
 					p->GetPhysicsObject()->SetAngularVelocity(Vector3(0, 0, 0));
-					p->GetTransform().SetPosition(Vector3(0, 10, 0));
+					p->GetTransform().SetPosition(p->GetSpawnPos());
 				}
 				else 
 					otherObject->SetIsActive(false);

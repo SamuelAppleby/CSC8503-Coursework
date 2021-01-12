@@ -11,9 +11,6 @@ const int RIGHT_NODE	= 1;
 const int TOP_NODE		= 2;
 const int BOTTOM_NODE	= 3;
 
-const char WALL_NODE	= 'x';
-const char FLOOR_NODE	= '.';
-
 NavigationGrid::NavigationGrid()	{
 	nodeSize	= 0;
 	gridWidth	= 0;
@@ -59,13 +56,16 @@ NavigationGrid::NavigationGrid(const std::string&filename) : NavigationGrid() {
 			}
 			for (int i = 0; i < 4; ++i) {
 				if (n.connected[i]) {
-					if (n.connected[i]->type == '.') {
-						n.costs[i]		= 1;
-					}
-					if (n.connected[i]->type == '-') {
+					if (n.connected[i]->type == FLOOR_NODE) {
 						n.costs[i] = 10;
 					}
-					if (n.connected[i]->type == 'x') {
+					if (n.connected[i]->type == ICE_NODE) {
+						n.costs[i] = 20;
+					}
+					if (n.connected[i]->type == SPRING_NODE) {
+						n.costs[i] = 30;
+					}
+					if (n.connected[i]->type == WALL_NODE) {
 						n.connected[i] = nullptr; //actually a wall, disconnect!
 					}
 				}
@@ -99,17 +99,15 @@ bool NavigationGrid::FindPath(const Vector3& from, const Vector3& to, Navigation
 	GridNode* startNode = &allNodes[(fromZ * gridWidth) + fromX];
 	GridNode* endNode	= &allNodes[(toZ * gridWidth) + toX];
 
-	std::vector<GridNode*> openList;
-	std::vector<GridNode*> closedList;
+	std::stack<GridNode*> openList;
 
-	openList.emplace_back(startNode);
+	openList.push(startNode);
 
 	startNode->f = 0;
 	startNode->g = 0;
 	startNode->parent = nullptr;
 
 	GridNode* currentBestNode = nullptr;
-
 	while (!openList.empty()) {
 		currentBestNode = RemoveBestNode(openList);
 
@@ -124,21 +122,17 @@ bool NavigationGrid::FindPath(const Vector3& from, const Vector3& to, Navigation
 		else {
 			for (int i = 0; i < 4; ++i) {
 				GridNode* neighbour = currentBestNode->connected[i];
-				if (!neighbour) { //might not be connected...
+				if (!neighbour || neighbour->considered) { //might not be connected or has been considered
 					continue;
-				}	
-				bool inClosed	= NodeInList(neighbour, closedList);
-				if (inClosed) {
-					continue; //already discarded this neighbour...
 				}
 
 				float h = Heuristic(neighbour, endNode);
 				float g = ignoreCosts ? g = currentBestNode->g + 1 : g = currentBestNode->g + currentBestNode->costs[i];
 				float f = h + g;
-				bool inOpen		= NodeInList(neighbour, openList);
+				bool inOpen	= NodeInList(neighbour, openList);
 
 				if (!inOpen) { //first time we've seen this neighbour
-					openList.emplace_back(neighbour);
+					openList.push(neighbour);
 				}
 				if (!inOpen || f < neighbour->f) {//might be a better route to this neighbour
 					neighbour->parent = currentBestNode;
@@ -146,30 +140,41 @@ bool NavigationGrid::FindPath(const Vector3& from, const Vector3& to, Navigation
 					neighbour->g = g;
 				}
 			}
-			closedList.emplace_back(currentBestNode);
+			currentBestNode->considered = true;
 		}
 	}
 	return false; //open list emptied out with no path!
 }
 
-bool NavigationGrid::NodeInList(GridNode* n, std::vector<GridNode*>& list) const {
-	std::vector<GridNode*>::iterator i = std::find(list.begin(), list.end(), n);
-	return i == list.end() ? false : true;
+bool NavigationGrid::NodeInList(GridNode* n, std::stack<GridNode*>& list) {
+	std::stack<GridNode*> newList = list;
+	while (!newList.empty()) {
+		GridNode* next = newList.top();
+		newList.pop();
+		if (next == n) 
+			return true;
+	}
+	return false;
 }
 
-GridNode*  NavigationGrid::RemoveBestNode(std::vector<GridNode*>& list) const {
-	std::vector<GridNode*>::iterator bestI = list.begin();
-
-	GridNode* bestNode = *list.begin();
-
-	for (auto i = list.begin(); i != list.end(); ++i) {
-		if ((*i)->f < bestNode->f) {
-			bestNode	= (*i);
-			bestI		= i;
-		}
+GridNode* NavigationGrid::RemoveBestNode(std::stack<GridNode*>& list) {
+	std::stack<GridNode*> newList;
+	GridNode* bestNode = list.top();
+	list.pop();
+	newList.push(bestNode);
+	while (!list.empty()) {
+		GridNode* next = list.top();
+		list.pop();
+		if (next->f < bestNode->f) 
+			bestNode = next;
+		newList.push(next);
 	}
-	list.erase(bestI);
-
+	while (!newList.empty()) {
+		GridNode* next = newList.top();
+		newList.pop();
+		if(bestNode != next)
+			list.push(next);
+	}
 	return bestNode;
 }
 

@@ -454,9 +454,10 @@ bool CollisionDetection::AABBOBBIntersection(const AABBVolume& volumeA, const Tr
 		float maxOBBExtent = Vector3::Dot(maxOBBPoint, orientedAxes[i].Normalised());
 		float minOBBExtent = Vector3::Dot(minOBBPoint, orientedAxes[i].Normalised());
 
-		if ((minOBBExtent > minAABBExtent) && (minOBBExtent < maxAABBExtent)) {
+		if (minOBBExtent > minAABBExtent && minOBBExtent < maxAABBExtent) {
 			float penetration = maxAABBExtent - minOBBExtent;
-			std::cout << "Collision" << std::endl;
+			collisionInfo.AddContactPoint(worldTransformA.GetPosition(), worldTransformB.GetPosition(), orientedAxes[i], penetration);
+			return true;
 		}
 		///* Cross Products - 9 in total */
 		//for (int j = 0; j < 3; ++j) {
@@ -471,33 +472,6 @@ bool CollisionDetection::AABBOBBIntersection(const AABBVolume& volumeA, const Tr
 		//	}
 		//}
 	}
-
-	/* Then test extents */
-	//if (abs(point.x) < totalSize.x && abs(point.y) < totalSize.y && abs(point.z) < totalSize.z) {
-	//	std::cout << "HERERERERERERERE" << std::endl;
-	//	static const Vector3 faces[6] = { Vector3(-1, 0, 0), Vector3(1, 0, 0), Vector3(0, -1, 0), Vector3(0, 1, 0), Vector3(0, 0, -1), Vector3(0, 0, 1) };
-	//	Vector3 maxA = AABBposition + boxASize;
-	//	Vector3 minA = AABBposition - boxASize;
-	//	Vector3 maxB = OBBposition + boxBSize;
-	//	Vector3 minB = OBBposition - boxBSize;
-	//	float distances[6] =
-	//	{ (maxB.x - minA.x),// distance of box ’b’ to ’left ’ of ’a ’.
-	//	(maxA.x - minB.x),// distance of box ’b’ to ’right ’ of ’a ’.
-	//	(maxB.y - minA.y),// distance of box ’b’ to ’bottom ’ of ’a ’.
-	//	(maxA.y - minB.y),// distance of box ’b’ to ’top ’ of ’a ’.
-	//	(maxB.z - minA.z),// distance of box ’b’ to ’far ’ of ’a ’.
-	//	(maxA.z - minB.z) }; // distance of box ’b’ to ’near ’ of ’a ’.
-	//	float penetration = FLT_MAX;
-	//	Vector3 bestAxis;
-	//	for (int i = 0; i < 6; i++) {
-	//		if (distances[i] < penetration) {
-	//			penetration = distances[i];
-	//			bestAxis = localDir * faces[i];
-	//		}
-	//	}
-	//	//collisionInfo.AddContactPoint(AABBposition, point, bestAxis, penetration);
-	//	return true;
-	//}
 	return false;
 }
 

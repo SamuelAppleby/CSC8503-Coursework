@@ -6,7 +6,7 @@ namespace NCL {
 	namespace CSC8503 {
 		class PathFindingStateGameObject : public EnemyStateGameObject {
 		public:
-			PathFindingStateGameObject(GameObject* follow, NavigationGrid* map, bool ignoreCosts);
+			PathFindingStateGameObject(GameObject* follow, bool ignoreCosts);
 		protected:
 			void FindPath();
 			void DisplayPath();
@@ -14,7 +14,6 @@ namespace NCL {
 			vector<Vector3> path;
 			Vector3 mazeStart;
 			Vector3 mazeEnd;
-			NavigationGrid* grid;
 			State* followPathState;
 			bool ignoreCosts;
 		};

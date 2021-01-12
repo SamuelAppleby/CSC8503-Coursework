@@ -36,6 +36,34 @@ namespace NCL {
 			TutorialGame();
 			~TutorialGame();
 
+			PushdownResult OnUpdate(float dt, PushdownState** newState) override {
+				currentLevel == 0 ? UpdateMenu(dt) : UpdateLevel(dt);
+				physics->ClearDeletedCollisions();
+				world->RemoveDeletedObjects();
+				Debug::FlushRenderables(dt);
+				renderer->Update(dt);
+				renderer->Render();
+				if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::P)) {
+					if (currentLevel != 0) {
+						*newState = new PauseScreen();
+						renderer->DrawString("Paused(P)", Vector2(40, 50), Debug::WHITE, 30.0f);
+						renderer->Render();
+						return PushdownResult::Push;
+					}
+				}
+				if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::ESCAPE) || timeOut > 5.0f) {
+					if (currentLevel != 0) {
+						renderer->DrawString("Returning to Menu", Vector2(25, 50), Debug::WHITE, 30.0f);
+						renderer->Render();
+					}
+					else
+						quit = true;
+					return PushdownResult::Pop;
+				}
+				return PushdownResult::NoChange;
+			};
+			void OnAwake() override {
+			}
 			virtual void UpdateGame(float dt);
 			void UpdateMenu(float dt);
 			void UpdateLevel(float dt);
@@ -54,7 +82,7 @@ namespace NCL {
 
 			void InitWorld();
 			void InitFloors(int level);
-			void CreateMazeWalls();
+			void CreateMaze();
 			void InitGameExamples(int level);
 			void InitGameObstacles(int level);
 			void InitSphereGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, float radius);
@@ -113,9 +141,7 @@ namespace NCL {
 
 			//Coursework Additional functionality	
 			GameObject* lockedObject	= nullptr;
-			void LockCameraToObject(GameObject* o) {
-				lockedObject = o;
-			}
+		
 			PlayerObject* player;
 			vector<EnemyStateGameObject*> enemies;
 			vector<PlatformStateGameObject*> platforms;
@@ -127,33 +153,9 @@ namespace NCL {
 			float textSize = 15.0f;
 
 			int currentlySelected;
+			int numEnemies;
+			vector<GameObject*> menuEnemies;
 
-			PushdownResult OnUpdate(float dt, PushdownState** newState) override {
-				currentLevel == 0 ? UpdateMenu(dt) : UpdateLevel(dt);
-				physics->ClearDeletedCollisions();
-				world->RemoveDeletedObjects();
-				Debug::FlushRenderables(dt);
-				renderer->Update(dt);
-				renderer->Render();
-				if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::P)) {
-					*newState = new PauseScreen();
-					renderer->DrawString("Paused(P)", Vector2(40, 50), Debug::WHITE, 30.0f);
-					renderer->Render();
-					return PushdownResult::Push;
-				}
-				if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::ESCAPE) || timeOut > 5.0f) {
-					if (currentLevel != 0) {
-						renderer->DrawString("Returning to Menu", Vector2(25, 50), Debug::WHITE, 30.0f);
-						renderer->Render();
-					}
-					else 
-						quit = true;
-					return PushdownResult::Pop;
-				}
-				return PushdownResult::NoChange;
-			};
-			void OnAwake() override {
-			}
 		};
 	}
 }

@@ -46,6 +46,12 @@ namespace NCL {
 			void SetFinished(bool val) {
 				finished = val;
 			}
+			Vector3 GetSpawnPos() const {
+				return spawnPos;
+			}
+			void SetSpawnPos(Vector3 val) {
+				spawnPos = val;
+			}
 		protected:
 			float invMass;
 			float elasticity;
@@ -53,6 +59,7 @@ namespace NCL {
 			bool canJump;
 			float score;
 			bool finished;
+			Vector3 spawnPos;
 		};
 	}
 }

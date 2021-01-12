@@ -3,10 +3,9 @@
 #include "../../Common/Maths.h"
 using namespace NCL;
 using namespace CSC8503;
-PathFindingStateGameObject::PathFindingStateGameObject(GameObject* val, NavigationGrid* map, bool ignore) : EnemyStateGameObject(val) {
+PathFindingStateGameObject::PathFindingStateGameObject(GameObject* val, bool ignore) : EnemyStateGameObject(val) {
 	currentState = state::FOLLOWPATH;
 	ignoreCosts = ignore;
-	grid = map;
 	mazeStart = { 220, 0, 440 };
 	mazeEnd = { 220, 0, 220 };
 	FindPath();
@@ -32,7 +31,8 @@ PathFindingStateGameObject::PathFindingStateGameObject(GameObject* val, Navigati
 
 void PathFindingStateGameObject::FindPath() {
 	NavigationPath outPath;
-	bool found = grid->FindPath(mazeStart, mazeEnd, outPath, ignoreCosts);
+	NavigationGrid grid("MazePath.txt");
+	bool found = grid.FindPath(mazeStart, mazeEnd, outPath, ignoreCosts);
 	Vector3 pos;
 	while (outPath.PopWaypoint(pos)) {
 		path.push_back(pos - (mazeStart + Vector3(0, 0, 20)));		// Offset the path position by world pos
@@ -56,7 +56,7 @@ void PathFindingStateGameObject::FollowPath(float dt) {
 			if (path.size() == 0)		// Path completed
 				return;
 		}
-		if(GetPhysicsObject()->GetLinearVelocity().Length() < 15)
+		if(GetPhysicsObject()->GetLinearVelocity().Length() < 30)
 			GetPhysicsObject()->ApplyLinearImpulse((path[0] - GetTransform().GetPosition()) * 0.01);
 	}
 }

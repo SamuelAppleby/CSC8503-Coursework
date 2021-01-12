@@ -1,21 +1,26 @@
 #pragma once
 #include "NavigationMap.h"
 #include <string>
+#include <stack>
+
 namespace NCL {
 	namespace CSC8503 {
+		const char WALL_NODE = 'x';
+		const char FLOOR_NODE = '.';
+		const char ICE_NODE = '-';
+		const char SPRING_NODE = '~';
 		struct GridNode {
 			GridNode* parent;
 
 			GridNode* connected[4];
 			int		  costs[4];
 
-			Vector3		position;
+			Vector3	position;
 			float f;
 			float g;
 
 			int type;
-			float drawn;
-
+			bool considered;
 			GridNode() {
 				for (int i = 0; i < 4; ++i) {
 					connected[i] = nullptr;
@@ -24,8 +29,8 @@ namespace NCL {
 				f = 0;
 				g = 0;
 				type = 0;
-				drawn = false;
 				parent = nullptr;
+				considered = false;
 			}
 			~GridNode() {}
 		};
@@ -41,8 +46,8 @@ namespace NCL {
 				return allNodes;
 			}
 		protected:
-			bool		NodeInList(GridNode* n, std::vector<GridNode*>& list) const;
-			GridNode*	RemoveBestNode(std::vector<GridNode*>& list) const;
+			bool		NodeInList(GridNode* n, std::stack<GridNode*>& list);
+			GridNode*	RemoveBestNode(std::stack<GridNode*>& list);
 			float		Heuristic(GridNode* hNode, GridNode* endNode) const;
 			int nodeSize;
 			int gridWidth;
