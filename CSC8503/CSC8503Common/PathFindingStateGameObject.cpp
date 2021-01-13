@@ -8,6 +8,7 @@ PathFindingStateGameObject::PathFindingStateGameObject(GameObject* val, bool ign
 	ignoreCosts = ignore;
 	mazeStart = { 220, 0, 440 };
 	mazeEnd = { 220, 0, 220 };
+	pathTimeout = 0.0f;
 	FindPath();
 	followPathState = new State([&](float dt)->void {
 		this->DisplayPath();
@@ -15,16 +16,32 @@ PathFindingStateGameObject::PathFindingStateGameObject(GameObject* val, bool ign
 	});
 	stateMachine->AddState(followPathState);
 	stateMachine->AddTransition(new StateTransition(followPlayerState, followPathState, [&]()->bool {
-		return currentState == state::FOLLOWPATH;
+		if (this->followTimeout < 0.0f) {
+			currentState = state::FOLLOWPATH;
+			return true;
+		}
+		return false;
 	}));
 	stateMachine->AddTransition(new StateTransition(followPathState, followPlayerState, [&]()->bool {
-		return currentState == state::FOLLOWPLAYER;
+		if (this->followTimeout > 0.0f) {
+			currentState = state::FOLLOWPLAYER;
+			return true;
+		}
+		return false;
 	}));
 	stateMachine->AddTransition(new StateTransition(idleState, followPathState, [&]()->bool {
-		return currentState == state::FOLLOWPATH;
+		if (this->path.size() > 0) {
+			currentState = state::FOLLOWPATH;
+			return true;
+		}
+		return false;
 	}));
 	stateMachine->AddTransition(new StateTransition(followPathState, idleState, [&]()->bool {
-		return currentState == state::IDLE;
+		if (this->path.size() == 0) {
+			currentState = state::IDLE;
+			return true;
+		}
+		return false;
 	}));
 	name = "PathfindingAI";
 }
@@ -48,10 +65,16 @@ void PathFindingStateGameObject::DisplayPath() {
 }
 
 void PathFindingStateGameObject::FollowPath(float dt) {
+	pathTimeout += dt;
+	if (pathTimeout > 10.0f) {
+		GetTransform().SetPosition(path[0] + Vector3(0, 10, 0));		// If we are following the path and can't reach a node
+		pathTimeout = 0.0f;
+	}
 	if (path.size() > 0) {
 		travelDir = path[0] - GetTransform().GetPosition();
 		travelDir.y = 0;
 		if (travelDir.Length() < 10.0f) {
+			pathTimeout = 0.0f;
 			path.erase(path.begin());
 			if (path.size() == 0)		// Path completed
 				return;

@@ -10,12 +10,6 @@ namespace NCL {
 			StateGameObject();
 			~StateGameObject();
 			virtual void Update(float dt);
-			state GetState() const {
-				return currentState;
-			}
-			void SetState(state val) {
-				currentState = val;
-			}
 			string StateToString() const;
 			void Idle();
 		protected:

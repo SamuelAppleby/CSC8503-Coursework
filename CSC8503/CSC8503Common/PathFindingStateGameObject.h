@@ -7,6 +7,9 @@ namespace NCL {
 		class PathFindingStateGameObject : public EnemyStateGameObject {
 		public:
 			PathFindingStateGameObject(GameObject* follow, bool ignoreCosts);
+			vector<Vector3> GetPath() const {
+				return path;
+			}
 		protected:
 			void FindPath();
 			void DisplayPath();
@@ -16,6 +19,7 @@ namespace NCL {
 			Vector3 mazeEnd;
 			State* followPathState;
 			bool ignoreCosts;
+			float pathTimeout;
 		};
 	}
 }

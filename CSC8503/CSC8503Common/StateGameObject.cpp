@@ -34,4 +34,5 @@ string StateGameObject::StateToString() const {
 }
 
 void StateGameObject::Idle() {
+	GetPhysicsObject()->ClearForces();
 }

@@ -19,6 +19,12 @@ namespace NCL {
 			void SetFinished(bool val) {
 				finished = val;
 			}
+			void SetFollowTimeOut(float val) {
+				followTimeout = val;
+			}
+			GameObject* GetFollowObject() const {
+				return object;
+			}
 			void Update(float dt) override;
 			void FollowPlayer(float dt);
 		protected:
@@ -27,6 +33,7 @@ namespace NCL {
 			Vector3 travelDir;
 			float rayTime;
 			bool finished;
+			float followTimeout;
 		};
 	}
 }

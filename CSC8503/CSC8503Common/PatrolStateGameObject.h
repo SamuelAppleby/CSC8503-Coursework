@@ -7,10 +7,17 @@ namespace NCL {
 		class PatrolStateGameObject : public EnemyStateGameObject {
 		public:
 			PatrolStateGameObject(GameObject* follow, vector<Vector3> positions);
+			vector<Vector3> GetRoute() const {
+				return route;
+			}
+			int GetCurrentDest() const {
+				return currentDest;
+			}
 		protected:
 			void Patrol(float dt);
-			vector<Vector3> locations;
+			vector<Vector3> route;
 			State* patrolState;
+			int currentDest;
 		};
 	}
 }

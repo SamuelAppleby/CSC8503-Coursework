@@ -15,10 +15,18 @@ PlatformStateGameObject::PlatformStateGameObject(Vector3 start, Vector3 end) {
 	});
 	stateMachine->AddState(followRouteState);
 	stateMachine->AddTransition(new StateTransition(idleState, followRouteState, [&]()->bool {
-		return currentState == state::FOLLOWROUTE;
+		if ((this->start - this->end).Length() > 0.0f) {
+			currentState == state::FOLLOWROUTE;
+			return true;
+		}
+		return false;
 	}));
 	stateMachine->AddTransition(new StateTransition(followRouteState, idleState, [&]()->bool {
-		return currentState == state::IDLE;
+		if ((this->start - this->end).Length() == 0.0f) {
+			currentState == state::IDLE;
+			return true;
+		}
+		return false;
 	}));
 	name = "PlatformAI";
 }

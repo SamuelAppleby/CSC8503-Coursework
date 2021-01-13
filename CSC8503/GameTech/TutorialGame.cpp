@@ -8,7 +8,7 @@ TutorialGame::TutorialGame() {
 	physics = new PhysicsSystem(*world);
 	physics->SetDampingFactor(0.3);
 	forceMagnitude = 10.0f;
-	useGravity = true;
+	useGravity = false;
 	physics->UseGravity(useGravity);
 	useBroadphase = true;
 	physics->UseBroadphase(useBroadphase);
@@ -110,6 +110,8 @@ void TutorialGame::UpdateMenu(float dt) {
 	currentlySelected == 5 ? renderer->DrawString("[3]", Vector2(48, 50), { 0,1,0,1 }) :
 		renderer->DrawString("[3]", Vector2(48, 50), Debug::WHITE);
 	renderer->DrawString("Exit(ESC)", Vector2(80, 5));
+	renderer->DrawString("Choose[UP][DOWN]", Vector2(70, 90));
+	renderer->DrawString("Select[SPACE]", Vector2(75, 95));
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::UP) || Window::GetKeyboard()->KeyPressed(KeyboardKeys::DOWN)) {
 		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::UP))
 			currentlySelected = currentlySelected == 1 ? 5 : currentlySelected - 1;
@@ -249,7 +251,7 @@ void TutorialGame::CheckFinished(float dt) {
 }
 
 void TutorialGame::UpdateLevel1(float dt) {
-	for(auto& p : platforms)
+	for (auto& p : platforms) 
 		p->Update(dt);
 	reloadTime += dt;
 	if (reloadTime > 2.0f)
@@ -288,22 +290,23 @@ void TutorialGame::UpdateLevel2(float dt) {
 	}
 }
 
+/* Enemies fire 11 rays every 0.5s across a range to detect the player */
 void TutorialGame::EnemyRaycast(EnemyStateGameObject* enemy) {
-	float range = -1, numRay = 23;
-	if (enemy->GetRayTime() < 0.0f && enemy->GetState() != state::FOLLOWPLAYER) {
+	float fov = -1, numRay = 11;
+	if (enemy->GetRayTime() < 0.0f) {
 		for (int i = 0; i < numRay; ++i) {
-			Ray ray(enemy->GetTransform().GetPosition(), enemy->GetTransform().GetOrientation() * Vector3(range, 0, -1));
+			Ray ray(enemy->GetTransform().GetPosition(), enemy->GetTransform().GetOrientation() * Vector3(fov, 0, -1));
 			RayCollision closestCollision;
 			if (world->Raycast(ray, closestCollision, enemy, true)) {
 				Debug::DrawLine(ray.GetPosition(), closestCollision.collidedAt, Debug::MAGENTA);
 				if (dynamic_cast<PlayerObject*>((GameObject*)closestCollision.node)) {
-					enemy->SetState(state::FOLLOWPLAYER);
+					enemy->SetFollowTimeOut(5.0f);		// If sees player reset their timer
 					enemy->GetRenderObject()->SetColour({ 1,0,0,1 });
 				}
 			}
 			else
 				Debug::DrawLine(ray.GetPosition(), ray.GetPosition() + (ray.GetDirection() * 500), Debug::YELLOW);
-			range += 2 / numRay;
+			fov += 2 / numRay;
 		}
 		enemy->SetRayTime(0.5f);
 	}
@@ -410,8 +413,8 @@ void TutorialGame::InitFloors(int level) {
 		AddFloorToWorld(new FloorObject, Vector3(165, 20, -1060), Vector3(80, 1, 10));
 
 		/* Rotated Platform */
-		//AddFloorToWorld(new FloorObject, Vector3(205, 10, -1035), Vector3(40, 1, 20), Matrix4::Rotation(30, { 1, 0, 0 }));
-		//AddFloorToWorld(new FloorObject, Vector3(205, -10, -995), Vector3(40, 1, 20), Matrix4::Rotation(-30, { 1, 0, 0 }));
+		AddFloorToWorld(new FloorObject, Vector3(205, 10, -1035), Vector3(40, 1, 20), Matrix4::Rotation(30, { 1, 0, 0 }));
+		AddFloorToWorld(new FloorObject, Vector3(205, -10, -995), Vector3(40, 1, 20), Matrix4::Rotation(-30, { 1, 0, 0 }));
 
 		/* Finish Platform */
 		AddFloorToWorld(new FinishObject, Vector3(204, -50, -1065), Vector3(39, 1, 38));
@@ -532,6 +535,7 @@ void TutorialGame::InitGameExamples(int level) {
 		}
 		break;
 	case 1:
+		AddCapsuleToWorld(new CapsuleObject, Vector3(-30, 0, 0), 5.0f, 3);
 		player = (PlayerObject*)AddPlayerToWorld(new PlayerObject, Vector3(0, 10, 0));
 		platforms.push_back((PlatformStateGameObject*)AddFloorToWorld(
 			new PlatformStateGameObject(Vector3(-12.5, 0, -50), Vector3(12.5, 0, -50)), Vector3(-12.5, 0, -50), { 12.5,1,25 }));
@@ -553,7 +557,7 @@ void TutorialGame::InitGameExamples(int level) {
 		AddBonusToWorld(Vector3(20, 20, -1060))->GetTransform().SetOrientation(Matrix4::Rotation(270, { 0, 1, 0 }));
 		break;
 	case 2:
-		player = (PlayerObject*)AddPlayerToWorld(new PlayerObject, Vector3(0, 10, 25));
+		player = (PlayerObject*)AddPlayerToWorld(new PlayerObject, Vector3(0, 10, -10));
 		/* One enemy will not take costs into account, the other will, both using A* */
 		if(numEnemies >= 1)
 			enemies.push_back((PathFindingStateGameObject*)AddEnemyToWorld(new PathFindingStateGameObject(player, false), Vector3(5, 10, 20)));
@@ -569,7 +573,7 @@ void TutorialGame::InitGameObstacles(int level) {
 	switch (level) {
 	case 1:
 		/* Spinning Bar */
-		//AddCubeToWorld(new RotatingCubeObject, Vector3(0, 3, -735), Vector3(1, 1, 100));
+		AddCubeToWorld(new RotatingCubeObject, Vector3(0, 3, -735), Vector3(1, 1, 100));
 
 		/* Spring Platforms*/
 		AddCubeToWorld(new SpringObject(Vector3(0, 5, -890)), Vector3(0, 5, -890), Vector3(4, 4, 1));
@@ -580,7 +584,6 @@ void TutorialGame::InitGameObstacles(int level) {
 		AddBridgeToWorld(Vector3(-30, 20, -1060));
 		break;
 	case 2:
-		//AddCubeToWorld(new SpringObject(Vector3(-70, 15, -40)), Vector3(-60, 5, -50), Vector3(1, 8, 8));
 		break;
 	}
 }
@@ -718,7 +721,7 @@ void TutorialGame::AddBridgeToWorld(Vector3 startPos) {
 
 GameObject* TutorialGame::AddPlayerToWorld(GameObject* p, const Vector3& position) {
 	float meshSize = 3.0f;
-	AABBVolume* volume = new AABBVolume(Vector3(1, 3, 1));
+	SphereVolume* volume = new SphereVolume(meshSize * 0.85);
 	p->SetBoundingVolume((CollisionVolume*)volume);
 	p->GetTransform().SetScale(Vector3(meshSize, meshSize, meshSize)).SetPosition(position);
 	(rand() % 2) ? p->SetRenderObject(new RenderObject(&p->GetTransform(), charMeshA, playerTex, basicShader)) :

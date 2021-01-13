@@ -7,23 +7,30 @@ EnemyStateGameObject::EnemyStateGameObject(GameObject* o) {
 	object = o;
 	rayTime = 0.5f;
 	finished = false;
+	followTimeout = 0.0f;
 	travelDir = object->GetTransform().GetPosition() - this->GetTransform().GetPosition();
 	followPlayerState = new State([&](float dt)->void {
 		this->FollowPlayer(dt);
 	});
 	stateMachine->AddState(followPlayerState);
 	stateMachine->AddTransition(new StateTransition(idleState, followPlayerState, [&]()->bool {
-		return currentState == state::FOLLOWPLAYER;
+		if (this->followTimeout > 0.0f) {
+			currentState = state::FOLLOWPLAYER;
+			return true;
+		}
+		return false;
 	}));
 	stateMachine->AddTransition(new StateTransition(followPlayerState, idleState, [&]()->bool {
-		return currentState == state::IDLE;
+		if (this->followTimeout < 0.0f) {
+			currentState = state::IDLE;
+			return true;
+		}
+		return false;
 	}));
-	name = "EnemyAi";
+	name = "EnemyAI";
 }
 
 void EnemyStateGameObject::Update(float dt) {
-	if (currentState != state::FOLLOWPLAYER)
-		rayTime -= dt;
 	if (currentState != state::IDLE) {
 		Matrix3 rotMatrix;
 		rotMatrix.SetColumn(0, -Vector3::Cross(Vector3(0, 1, 0), travelDir.Normalised()));
@@ -31,12 +38,14 @@ void EnemyStateGameObject::Update(float dt) {
 		rotMatrix.SetColumn(2, -travelDir.Normalised());
 		GetTransform().SetOrientation(Matrix4(rotMatrix));
 	}
+	rayTime -= dt;
 	stateMachine->Update(dt);
 }
 
 void EnemyStateGameObject::FollowPlayer(float dt) {
+	followTimeout -= dt;
 	travelDir = object->GetTransform().GetPosition() - this->GetTransform().GetPosition();
 	travelDir.y = 0;
-	GetPhysicsObject()->AddForce({ std::clamp(travelDir.x, -5.0f, 5.0f),
-		std::clamp(travelDir.y, -5.0f, 5.0f), std::clamp(travelDir.z, -5.0f, 5.0f) });
+	if (GetPhysicsObject()->GetLinearVelocity().Length() < 30)
+		GetPhysicsObject()->ApplyLinearImpulse(travelDir * 0.01);
 }
