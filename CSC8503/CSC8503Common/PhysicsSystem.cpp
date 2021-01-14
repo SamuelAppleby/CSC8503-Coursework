@@ -283,19 +283,21 @@ void PhysicsSystem::BroadPhase() {
 	gameWorld.GetObjectIterators(first, last);
 	for (auto i = first; i != last; ++i) {
 		/* Any object with a velocity is not asleep */
-		if ((*i)->GetPhysicsObject()->GetLinearVelocity().Length() != 0.0 || (*i)->GetPhysicsObject()->GetAngularVelocity().Length() != 0.0)
-			(*i)->GetPhysicsObject()->SetIsAsleep(false);
-		else
+		if ((*i)->GetPhysicsObject()->GetLinearVelocity().Length() == 0.0 && (*i)->GetPhysicsObject()->GetAngularVelocity().Length() == 0.0)
 			(*i)->GetPhysicsObject()->SetIsAsleep(true);
+		else
+			(*i)->GetPhysicsObject()->SetIsAsleep(false);
 		Vector3 halfSizes;
 		if (!(*i)->GetBroadphaseAABB(halfSizes)) {
 			continue;
 		}
 		Vector3 pos = (*i)->GetTransform().GetPosition();
+		
 		tree.Insert(*i, pos, halfSizes);
 	}
 	tree.OperateOnContents([&](std::list<QuadTreeEntry<GameObject*>>& data) {
 		CollisionDetection::CollisionInfo info;
+		int x = 0;
 		for (auto i = data.begin(); i != data.end(); ++i) {
 			for (auto j = std::next(i); j != data.end(); ++j) {
 				if (!((*i).object->GetPhysicsObject()->GetIsStatic() && (*j).object->GetPhysicsObject()->GetIsStatic())

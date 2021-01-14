@@ -163,6 +163,7 @@ void TutorialGame::UpdateLevel(float dt) {
 	renderer->DrawString("Pause(P)", Vector2(88, 15), Debug::WHITE, textSize);
 	if (inSelectionMode) {
 		UpdateKeys();
+		SelectObject();
 		DrawDebugInfo();
 		world->ShowFacing();
 	}
@@ -170,7 +171,6 @@ void TutorialGame::UpdateLevel(float dt) {
 		renderer->DrawString("Score:" + std::to_string(player->GetScore()), Vector2(0, 5), Debug::WHITE, textSize);
 		world->GetMainCamera()->UpdateCamera(dt);
 	}
-	SelectObject();
 	lockedObject ? LockedObjectMovement() : DebugObjectMovement();
 	CheckFinished(dt);
 	physics->Update(dt);
@@ -217,8 +217,8 @@ void TutorialGame::DrawDebugInfo() {
 	}
 	if (lockedObject) {
 		renderer->DrawString("Unlock object(L)", Vector2(0, 90), Debug::WHITE, textSize);
-		lockedOrientation ? renderer->DrawString("Lock object orientation(P): On", Vector2(0, 95), Debug::WHITE, textSize) :
-			renderer->DrawString("Lock object orientation(P): Off", Vector2(0, 95), Debug::WHITE, textSize);
+		lockedOrientation ? renderer->DrawString("Lock object orientation(K): On", Vector2(0, 95), Debug::WHITE, textSize) :
+			renderer->DrawString("Lock object orientation(K): Off", Vector2(0, 95), Debug::WHITE, textSize);
 	}
 	else
 		renderer->DrawString("Lock selected object(L)", Vector2(0, 90), Debug::WHITE, textSize);
@@ -254,8 +254,8 @@ void TutorialGame::UpdateLevel1(float dt) {
 	for (auto& p : platforms) 
 		p->Update(dt);
 	reloadTime += dt;
-	if (reloadTime > 2.0f)
-		FireObjects();
+	//if (reloadTime > 2.0f)
+	//	FireObjects();
 	if (player) {
 		if (player->GetTransform().GetPosition().z < -265) 
 			player->SetSpawnPos({ 0, 10, -265 });
@@ -313,6 +313,8 @@ void TutorialGame::EnemyRaycast(EnemyStateGameObject* enemy) {
 }
 
 void TutorialGame::UpdateKeys() {
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::K))
+		lockedOrientation = !lockedOrientation;
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::G)) {
 		useGravity = !useGravity; //Toggle gravity!
 		physics->UseGravity(useGravity);
@@ -364,72 +366,72 @@ void TutorialGame::InitFloors(int level) {
 		AddFloorToWorld(new FloorObject, Vector3(0, 50, 0), Vector3(80, 40, 1))->GetRenderObject()->SetDefaultTexture(menuTex);
 		break;
 	case 1:
-		/* Lava */
-		AddFloorToWorld(new LavaObject, Vector3(0, -60, -400), Vector3(500, 1, 1000));
+		///* Lava */
+		//AddFloorToWorld(new LavaObject, Vector3(0, -60, -400), Vector3(500, 1, 1000));
 
-		/* Projectile Walls */
-		AddFloorToWorld(new FloorObject, Vector3(-50, 5, -140), Vector3(1, 5, 40));
-		AddFloorToWorld(new FloorObject, Vector3(120, 5, -225), Vector3(1, 5, 30));
-
-		/* Regular Platform */
-		AddFloorToWorld(new FloorObject, Vector3(100, 0, 0), Vector3(40, 1, 20), Matrix4::Rotation(-30, { 1, 0, 0 }));
-		AddFloorToWorld(new FloorObject, Vector3(0, 0, 0), Vector3(25, 1, 25));
-		AddFloorToWorld(new FloorObject, Vector3(0, 0, -85), Vector3(25, 1, 10));
-		AddFloorToWorld(new FloorObject, Vector3(-15, 0, -145), Vector3(10, 1, 50));
-		AddFloorToWorld(new FloorObject, Vector3(15, 0, -145), Vector3(10, 1, 50));
-		AddFloorToWorld(new FloorObject, Vector3(0, 0, -205), Vector3(100, 1, 10));
-		AddFloorToWorld(new FloorObject, Vector3(-90, 0, -225), Vector3(10, 1, 10));
-		AddFloorToWorld(new FloorObject, Vector3(90, 0, -225), Vector3(10, 1, 10));
-
-		/* Ice Shortcut */
-		AddFloorToWorld(new IceObject, Vector3(0, 0, -225), Vector3(5, 1, 5));
-
-		AddFloorToWorld(new FloorObject, Vector3(0, 0, -245), Vector3(100, 1, 10));
-		AddFloorToWorld(new FloorObject, Vector3(0, 0, -265), Vector3(10, 1, 10));
-
-		/* High elasticity trampoline */
-		AddFloorToWorld(new TrampolineObject, Vector3(0, -30, -315), Vector3(10, 1, 10));
-		AddFloorToWorld(new TrampolineObject, Vector3(0, -30, -395), Vector3(10, 1, 10));
-
-		AddFloorToWorld(new FloorObject, Vector3(0, 0, -445), Vector3(10, 1, 10));
-
-		/* Low Friction Ice */
-		AddFloorToWorld(new IceObject, Vector3(30, 0, -465), Vector3(40, 1, 10));
-		AddFloorToWorld(new IceObject, Vector3(60, 0, -515), Vector3(10, 1, 40));
-		AddFloorToWorld(new IceObject, Vector3(30, 0, -565), Vector3(40, 1, 10));
+		///* Projectile Walls */
+		//AddFloorToWorld(new FloorObject, Vector3(-50, 5, -140), Vector3(1, 5, 40));
+		//AddFloorToWorld(new FloorObject, Vector3(120, 5, -225), Vector3(1, 5, 30));
 
 		/* Regular Platform */
-		AddFloorToWorld(new FloorObject, Vector3(0, 0, -605), Vector3(10, 1, 30));
-		AddFloorToWorld(new FloorObject, Vector3(0, 0, -645), Vector3(80, 1, 10));
-		AddFloorToWorld(new FloorObject, Vector3(-90, 0, -735), Vector3(10, 1, 100));
-		AddFloorToWorld(new FloorObject, Vector3(90, 0, -735), Vector3(10, 1, 100));
-		AddFloorToWorld(new FloorObject, Vector3(0, 0, -825), Vector3(80, 1, 10));
-		AddFloorToWorld(new FloorObject, Vector3(0, 0, -865), Vector3(5, 1, 30));
-		AddFloorToWorld(new FloorObject, Vector3(-25, 0, -900), Vector3(30, 1, 5));
-		AddFloorToWorld(new FloorObject, Vector3(-60, 0, -915), Vector3(5, 1, 20));
-		AddFloorToWorld(new FloorObject, Vector3(-60, -20, -1050), Vector3(5, 1, 20));
+		AddFloorToWorld(new FloorObject, Vector3(0, -10, 0), Vector3(40, 1, 20), Matrix4::Rotation(-30, { 1, 0, 0 }));
+		//AddFloorToWorld(new FloorObject, Vector3(0, -10, 0), Vector3(25, 1, 25));
+		//AddFloorToWorld(new FloorObject, Vector3(0, 0, -85), Vector3(25, 1, 10));
+		//AddFloorToWorld(new FloorObject, Vector3(-15, 0, -145), Vector3(10, 1, 50));
+		//AddFloorToWorld(new FloorObject, Vector3(15, 0, -145), Vector3(10, 1, 50));
+		//AddFloorToWorld(new FloorObject, Vector3(0, 0, -205), Vector3(100, 1, 10));
+		//AddFloorToWorld(new FloorObject, Vector3(-90, 0, -225), Vector3(10, 1, 10));
+		//AddFloorToWorld(new FloorObject, Vector3(90, 0, -225), Vector3(10, 1, 10));
 
-		/* Regular Platform */
-		AddFloorToWorld(new FloorObject, Vector3(165, 20, -1060), Vector3(80, 1, 10));
+		///* Ice Shortcut */
+		//AddFloorToWorld(new IceObject, Vector3(0, 0, -225), Vector3(5, 1, 5));
 
-		/* Rotated Platform */
-		AddFloorToWorld(new FloorObject, Vector3(205, 10, -1035), Vector3(40, 1, 20), Matrix4::Rotation(30, { 1, 0, 0 }));
-		AddFloorToWorld(new FloorObject, Vector3(205, -10, -995), Vector3(40, 1, 20), Matrix4::Rotation(-30, { 1, 0, 0 }));
+		//AddFloorToWorld(new FloorObject, Vector3(0, 0, -245), Vector3(100, 1, 10));
+		//AddFloorToWorld(new FloorObject, Vector3(0, 0, -265), Vector3(10, 1, 10));
 
-		/* Finish Platform */
-		AddFloorToWorld(new FinishObject, Vector3(204, -50, -1065), Vector3(39, 1, 38));
+		///* High elasticity trampoline */
+		//AddFloorToWorld(new TrampolineObject, Vector3(0, -30, -315), Vector3(10, 1, 10));
+		//AddFloorToWorld(new TrampolineObject, Vector3(0, -30, -395), Vector3(10, 1, 10));
 
-		AddFloorToWorld(new FloorObject, Vector3(204, -52, -1065), Vector3(41, 1, 40));
+		//AddFloorToWorld(new FloorObject, Vector3(0, 0, -445), Vector3(10, 1, 10));
 
-		/* Walls */
-		AddFloorToWorld(new FloorObject, Vector3(-5, 3, -865.5), Vector3(1, 2, 30.5));
-		AddFloorToWorld(new FloorObject, Vector3(5, 3, -869.5), Vector3(1, 2, 34.5));
-		AddFloorToWorld(new FloorObject, Vector3(-36.25, 3, -895), Vector3(30.25, 2, 1));
-		AddFloorToWorld(new FloorObject, Vector3(-55.5, 3, -920.5), Vector3(1, 2, 14.5));
-		AddFloorToWorld(new FloorObject, Vector3(205, -45, -1026), Vector3(40, 6, 1));
-		AddFloorToWorld(new FloorObject, Vector3(205, -45, -1104), Vector3(40, 6, 1));
-		AddFloorToWorld(new FloorObject, Vector3(164, -45, -1065), Vector3(1, 6, 40));
-		AddFloorToWorld(new FloorObject, Vector3(244, -45, -1065), Vector3(1, 6, 40));
+		///* Low Friction Ice */
+		//AddFloorToWorld(new IceObject, Vector3(30, 0, -465), Vector3(40, 1, 10));
+		//AddFloorToWorld(new IceObject, Vector3(60, 0, -515), Vector3(10, 1, 40));
+		//AddFloorToWorld(new IceObject, Vector3(30, 0, -565), Vector3(40, 1, 10));
+
+		///* Regular Platform */
+		//AddFloorToWorld(new FloorObject, Vector3(0, 0, -605), Vector3(10, 1, 30));
+		//AddFloorToWorld(new FloorObject, Vector3(0, 0, -645), Vector3(80, 1, 10));
+		//AddFloorToWorld(new FloorObject, Vector3(-90, 0, -735), Vector3(10, 1, 100));
+		//AddFloorToWorld(new FloorObject, Vector3(90, 0, -735), Vector3(10, 1, 100));
+		//AddFloorToWorld(new FloorObject, Vector3(0, 0, -825), Vector3(80, 1, 10));
+		//AddFloorToWorld(new FloorObject, Vector3(0, 0, -865), Vector3(5, 1, 30));
+		//AddFloorToWorld(new FloorObject, Vector3(-25, 0, -900), Vector3(30, 1, 5));
+		//AddFloorToWorld(new FloorObject, Vector3(-60, 0, -915), Vector3(5, 1, 20));
+		//AddFloorToWorld(new FloorObject, Vector3(-60, -20, -1050), Vector3(5, 1, 20));
+
+		///* Regular Platform */
+		//AddFloorToWorld(new FloorObject, Vector3(165, 20, -1060), Vector3(80, 1, 10));
+
+		///* Rotated Platform */
+		//AddFloorToWorld(new FloorObject, Vector3(205, 10, -1035), Vector3(40, 1, 20), Matrix4::Rotation(30, { 1, 0, 0 }));
+		//AddFloorToWorld(new FloorObject, Vector3(205, -10, -995), Vector3(40, 1, 20), Matrix4::Rotation(-30, { 1, 0, 0 }));
+
+		///* Finish Platform */
+		//AddFloorToWorld(new FinishObject, Vector3(204, -50, -1065), Vector3(39, 1, 38));
+
+		//AddFloorToWorld(new FloorObject, Vector3(204, -52, -1065), Vector3(41, 1, 40));
+
+		///* Walls */
+		//AddFloorToWorld(new FloorObject, Vector3(-5, 3, -865.5), Vector3(1, 2, 30.5));
+		//AddFloorToWorld(new FloorObject, Vector3(5, 3, -869.5), Vector3(1, 2, 34.5));
+		//AddFloorToWorld(new FloorObject, Vector3(-36.25, 3, -895), Vector3(30.25, 2, 1));
+		//AddFloorToWorld(new FloorObject, Vector3(-55.5, 3, -920.5), Vector3(1, 2, 14.5));
+		//AddFloorToWorld(new FloorObject, Vector3(205, -45, -1026), Vector3(40, 6, 1));
+		//AddFloorToWorld(new FloorObject, Vector3(205, -45, -1104), Vector3(40, 6, 1));
+		//AddFloorToWorld(new FloorObject, Vector3(164, -45, -1065), Vector3(1, 6, 40));
+		//AddFloorToWorld(new FloorObject, Vector3(244, -45, -1065), Vector3(1, 6, 40));
 		break;
 	case 2:
 		/* Regular Platform */
@@ -535,9 +537,10 @@ void TutorialGame::InitGameExamples(int level) {
 		}
 		break;
 	case 1:
-		AddCapsuleToWorld(new CapsuleObject, Vector3(-30, 0, 0), 5.0f, 3);
+		//AddSphereToWorld(new SphereObject, Vector3(10, 10, 0),3);
+		//AddCapsuleToWorld(new CapsuleObject, Vector3(-10, 10, 0), 5.0f, 3);
 		player = (PlayerObject*)AddPlayerToWorld(new PlayerObject, Vector3(0, 10, 0));
-		platforms.push_back((PlatformStateGameObject*)AddFloorToWorld(
+		/*platforms.push_back((PlatformStateGameObject*)AddFloorToWorld(
 			new PlatformStateGameObject(Vector3(-12.5, 0, -50), Vector3(12.5, 0, -50)), Vector3(-12.5, 0, -50), { 12.5,1,25 }));
 		platforms.push_back((PlatformStateGameObject*)AddFloorToWorld(
 			new PlatformStateGameObject(Vector3(-45, -20, -1060), Vector3(-45, 20, -1060)), Vector3(-45, -20, -1060), {10,1,10}));
@@ -554,7 +557,7 @@ void TutorialGame::InitGameExamples(int level) {
 		AddBonusToWorld(Vector3(-30, 5, -900))->GetTransform().SetOrientation(Matrix4::Rotation(90, { 0, 1, 0 }));
 		AddBonusToWorld(Vector3(-60, 5, -915));
 		AddBonusToWorld(Vector3(-60, -15, -1060));
-		AddBonusToWorld(Vector3(20, 20, -1060))->GetTransform().SetOrientation(Matrix4::Rotation(270, { 0, 1, 0 }));
+		AddBonusToWorld(Vector3(20, 20, -1060))->GetTransform().SetOrientation(Matrix4::Rotation(270, { 0, 1, 0 }));*/
 		break;
 	case 2:
 		player = (PlayerObject*)AddPlayerToWorld(new PlayerObject, Vector3(0, 10, -10));
@@ -572,16 +575,16 @@ void TutorialGame::InitGameExamples(int level) {
 void TutorialGame::InitGameObstacles(int level) {
 	switch (level) {
 	case 1:
-		/* Spinning Bar */
-		AddCubeToWorld(new RotatingCubeObject, Vector3(0, 3, -735), Vector3(1, 1, 100));
+		///* Spinning Bar */
+		//AddCubeToWorld(new RotatingCubeObject, Vector3(0, 3, -735), Vector3(1, 1, 100));
 
-		/* Spring Platforms*/
-		AddCubeToWorld(new SpringObject(Vector3(0, 5, -890)), Vector3(0, 5, -890), Vector3(4, 4, 1));
-		AddCubeToWorld(new SpringObject(Vector3(-50, 5, -900)), Vector3(-50, 5, -900), Vector3(1, 4, 4));
-		AddCubeToWorld(new SpringObject(Vector3(-60, -15, -985)), Vector3(-60, -15, -985), Vector3(10, 1, 45));
+		///* Spring Platforms*/
+		//AddCubeToWorld(new SpringObject(Vector3(0, 5, -890)), Vector3(0, 5, -890), Vector3(4, 4, 1));
+		//AddCubeToWorld(new SpringObject(Vector3(-50, 5, -900)), Vector3(-50, 5, -900), Vector3(1, 4, 4));
+		//AddCubeToWorld(new SpringObject(Vector3(-60, -15, -985)), Vector3(-60, -15, -985), Vector3(10, 1, 45));
 
-		/* Bridge */
-		AddBridgeToWorld(Vector3(-30, 20, -1060));
+		///* Bridge */
+		//AddBridgeToWorld(Vector3(-30, 20, -1060));
 		break;
 	case 2:
 		break;
@@ -721,7 +724,7 @@ void TutorialGame::AddBridgeToWorld(Vector3 startPos) {
 
 GameObject* TutorialGame::AddPlayerToWorld(GameObject* p, const Vector3& position) {
 	float meshSize = 3.0f;
-	SphereVolume* volume = new SphereVolume(meshSize * 0.85);
+	CapsuleVolume* volume = new CapsuleVolume(meshSize * 0.85, 2);
 	p->SetBoundingVolume((CollisionVolume*)volume);
 	p->GetTransform().SetScale(Vector3(meshSize, meshSize, meshSize)).SetPosition(position);
 	(rand() % 2) ? p->SetRenderObject(new RenderObject(&p->GetTransform(), charMeshA, playerTex, basicShader)) :
@@ -735,7 +738,7 @@ GameObject* TutorialGame::AddPlayerToWorld(GameObject* p, const Vector3& positio
 
 GameObject* TutorialGame::AddEnemyToWorld(GameObject* e, const Vector3& position) {
 	float meshSize = 3.0f;
-	SphereVolume* volume = new SphereVolume(meshSize * 0.85);
+	CapsuleVolume* volume = new CapsuleVolume(meshSize * 0.85, 1.5);
 	e->SetBoundingVolume((CollisionVolume*)volume);
 	e->GetTransform().SetScale(Vector3(meshSize, meshSize, meshSize)).SetPosition(position);
 	e->SetRenderObject(new RenderObject(&e->GetTransform(), enemyMesh, enemyTex, basicShader));
@@ -851,6 +854,4 @@ void TutorialGame::LockedObjectMovement() {
 		if (dynamic_cast<PlayerObject*>(lockedObject))
 			((PlayerObject*)lockedObject)->Jump();
 	}
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::P))
-		lockedOrientation = !lockedOrientation;
 }

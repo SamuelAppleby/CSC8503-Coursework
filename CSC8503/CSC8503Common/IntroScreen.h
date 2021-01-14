@@ -17,6 +17,8 @@ class IntroScreen : public PushdownState {
 		return PushdownResult::NoChange;
 	};
 	void OnAwake() override {
+		Window::GetWindow()->ShowOSPointer(false);
+		Window::GetWindow()->LockMouseToWindow(true);
 	}
 };
 
