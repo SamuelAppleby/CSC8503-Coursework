@@ -2,11 +2,12 @@
 #include "StateGameObject.h"
 #include "Debug.h"
 #include "NavigationGrid.h"
+#include <set>
 namespace NCL {
 	namespace CSC8503 {
 		class EnemyStateGameObject : public StateGameObject {
 		public:
-			EnemyStateGameObject(GameObject* o);
+			EnemyStateGameObject();
 			float GetRayTime() const {
 				return rayTime;
 			}
@@ -22,18 +23,30 @@ namespace NCL {
 			void SetFollowTimeOut(float val) {
 				followTimeout = val;
 			}
-			GameObject* GetFollowObject() const {
-				return object;
+			void AddFollowObject(GameObject* o) {
+				interestObjects.insert(o);
+			}
+			void RemoveFollowObject(GameObject* o) {
+				interestObjects.erase(o);
+			}
+			Vector3 GetTravelDirection() const {
+				return travelDir;
+			}
+			GameObject* GetCurrentObject() const {
+				return currentObject;
 			}
 			void Update(float dt) override;
-			void FollowPlayer(float dt);
+			void FollowObject(float dt);
+
 		protected:
-			State* followPlayerState;
-			GameObject* object;
+			State* followObjectState;
+			std::set<GameObject*> interestObjects;
+			GameObject* currentObject;
 			Vector3 travelDir;
 			float rayTime;
 			bool finished;
 			float followTimeout;
+			float speed;
 		};
 	}
 }

@@ -3,7 +3,7 @@
 #include "../../Common/Maths.h"
 using namespace NCL;
 using namespace CSC8503;
-PathFindingStateGameObject::PathFindingStateGameObject(GameObject* val, bool ignore) : EnemyStateGameObject(val) {
+PathFindingStateGameObject::PathFindingStateGameObject(GameObject* val, bool ignore) : EnemyStateGameObject() {
 	currentState = state::FOLLOWPATH;
 	ignoreCosts = ignore;
 	mazeStart = { 220, 0, 440 };
@@ -15,30 +15,31 @@ PathFindingStateGameObject::PathFindingStateGameObject(GameObject* val, bool ign
 		this->FollowPath(dt);
 	});
 	stateMachine->AddState(followPathState);
-	stateMachine->AddTransition(new StateTransition(followPlayerState, followPathState, [&]()->bool {
-		if (this->followTimeout < 0.0f) {
-			currentState = state::FOLLOWPATH;
-			return true;
-		}
-		return false;
-	}));
-	stateMachine->AddTransition(new StateTransition(followPathState, followPlayerState, [&]()->bool {
-		if (this->followTimeout > 0.0f) {
-			currentState = state::FOLLOWPLAYER;
-			return true;
-		}
-		return false;
-	}));
 	stateMachine->AddTransition(new StateTransition(idleState, followPathState, [&]()->bool {
 		if (this->path.size() > 0) {
 			currentState = state::FOLLOWPATH;
 			return true;
 		}
 		return false;
-	}));
+		}));
 	stateMachine->AddTransition(new StateTransition(followPathState, idleState, [&]()->bool {
 		if (this->path.size() == 0) {
 			currentState = state::IDLE;
+			return true;
+		}
+		return false;
+		}));
+	stateMachine->AddTransition(new StateTransition(followObjectState, followPathState, [&]()->bool {
+		if (this->followTimeout < 0.0f) {
+			interestObjects.erase(currentObject);
+			currentState = state::FOLLOWPATH;
+			return true;
+		}
+		return false;
+	}));
+	stateMachine->AddTransition(new StateTransition(followPathState, followObjectState, [&]()->bool {
+		if (this->followTimeout > 0.0f) {
+			currentState = state::FOLLOWOBJECT;
 			return true;
 		}
 		return false;
@@ -79,7 +80,7 @@ void PathFindingStateGameObject::FollowPath(float dt) {
 			if (path.size() == 0)		// Path completed
 				return;
 		}
-		if(GetPhysicsObject()->GetLinearVelocity().Length() < 30)
-			GetPhysicsObject()->ApplyLinearImpulse((path[0] - GetTransform().GetPosition()) * 0.01);
+		GetPhysicsObject()->ApplyLinearImpulse(Vector3(std::clamp(travelDir.x, -speed, speed), 
+			std::clamp(travelDir.y, -speed, speed), std::clamp(travelDir.z, -speed, speed)));
 	}
 }

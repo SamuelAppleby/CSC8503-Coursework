@@ -37,6 +37,7 @@ namespace NCL {
 			~TutorialGame();
 
 			PushdownResult OnUpdate(float dt, PushdownState** newState) override {
+				renderer->DrawString("FPS:" + std::to_string((int)(1 / dt)), Vector2(0, 5), Debug::WHITE, 15.0f);
 				currentLevel == 0 ? UpdateMenu(dt) : UpdateLevel(dt);
 				physics->ClearDeletedCollisions();
 				world->RemoveDeletedObjects();
@@ -64,7 +65,6 @@ namespace NCL {
 			};
 			void OnAwake() override {
 			}
-			virtual void UpdateGame(float dt);
 			void UpdateMenu(float dt);
 			void UpdateLevel(float dt);
 			void DrawDebugInfo();
@@ -148,13 +148,12 @@ namespace NCL {
 			int currentLevel;
 			bool lockedOrientation;
 
-			NavigationGrid* grid;
-
 			float textSize = 15.0f;
 
 			int currentlySelected;
 			int numEnemies;
 			vector<GameObject*> menuEnemies;
+			vector<GameObject*> menuPlayers;
 
 		};
 	}

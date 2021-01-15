@@ -3,7 +3,7 @@
 #include "StateMachine.h"
 namespace NCL {
 	namespace CSC8503 {
-		enum class state { IDLE, FOLLOWROUTE, FOLLOWPATH, FOLLOWPLAYER };
+		enum class state { IDLE, FOLLOWROUTE, FOLLOWPATH, FOLLOWOBJECT };
 		class StateMachine;
 		class StateGameObject : public GameObject {
 		public:

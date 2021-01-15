@@ -11,6 +11,8 @@ GameObject::GameObject(string objectName)	{
 	physicsObject	= nullptr;
 	renderObject	= nullptr;
 	selectedObject = false;
+	canCollide = true;
+	timeInSet = 0.0f;
 }
 
 GameObject::~GameObject()	{

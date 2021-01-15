@@ -2,25 +2,24 @@
 #include <algorithm>
 using namespace NCL;
 using namespace CSC8503;
-PatrolStateGameObject::PatrolStateGameObject(GameObject* val, vector<Vector3> positions) : EnemyStateGameObject(val) {
+PatrolStateGameObject::PatrolStateGameObject(vector<Vector3> positions) : EnemyStateGameObject() {
 	currentState = state::FOLLOWROUTE;
 	route = positions;
-	object = val;
 	currentDest = 0;
 	patrolState = new State([&](float dt)->void {
 		this->Patrol(dt);
 	});
 	stateMachine->AddState(patrolState);
-	stateMachine->AddTransition(new StateTransition(followPlayerState, patrolState, [&]()->bool {
+	stateMachine->AddTransition(new StateTransition(followObjectState, patrolState, [&]()->bool {
 		if (this->followTimeout < 0.0f) {
 			currentState = state::FOLLOWROUTE;
 			return true;
 		}
 		return false;
 	}));
-	stateMachine->AddTransition(new StateTransition(patrolState, followPlayerState, [&]()->bool {
+	stateMachine->AddTransition(new StateTransition(patrolState, followObjectState, [&]()->bool {
 		if (this->followTimeout > 0.0f) {
-			currentState = state::FOLLOWPLAYER;
+			currentState = state::FOLLOWOBJECT;
 			return true;
 		}
 		return false;

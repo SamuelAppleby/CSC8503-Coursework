@@ -12,6 +12,7 @@ namespace NCL {
 				invMass = 0.0f;
 				elasticity = 0.0;
 				friction = 0.8;
+				canCollide = false;
 			}
 			void SetPhysicsObject(PhysicsObject* newObject) override {
 				physicsObject = newObject;
@@ -20,10 +21,13 @@ namespace NCL {
 				physicsObject->SetFriction(friction);
 			}
 			void OnCollisionBegin(GameObject* otherObject) override {
-				if (dynamic_cast<PlayerObject*>(otherObject) || dynamic_cast<EnemyObject*>(otherObject)
-					|| dynamic_cast<PatrolStateGameObject*>(otherObject)) {
+				if (dynamic_cast<PlayerObject*>(otherObject) || dynamic_cast<EnemyStateGameObject*>(otherObject)) {
 					if (PlayerObject* p = dynamic_cast<PlayerObject*>(otherObject))
 						p->BonusAcquired();
+					if (EnemyStateGameObject* e = dynamic_cast<EnemyStateGameObject*>(otherObject)) {
+						e->RemoveFollowObject(this);
+						e->SetFollowTimeOut(0.0f);
+					}
 					isActive = false;
 				}
 			}

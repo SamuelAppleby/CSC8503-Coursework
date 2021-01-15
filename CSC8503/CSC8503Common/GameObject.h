@@ -77,6 +77,18 @@ namespace NCL {
 			void SetSelected(bool val) {
 				selectedObject = val;
 			}
+			bool CanCollide() const {
+				return canCollide;
+			}
+			void IncreaseTimeInSet(float dt) {
+				timeInSet += dt;
+			}
+			void SetTimeInSet(float val) {
+				timeInSet = val;
+			}
+			float GetTimeInSet() const {
+				return timeInSet;
+			}
 		protected:
 			Transform			transform;
 
@@ -89,6 +101,8 @@ namespace NCL {
 			string	name;
 			bool selectedObject;
 			Vector3 broadphaseAABB;
+			bool canCollide;
+			float timeInSet;
 		};
 	}
 }

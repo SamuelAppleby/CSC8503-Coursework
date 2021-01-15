@@ -26,8 +26,8 @@ string StateGameObject::StateToString() const {
 			return "Following Route";
 		case state::FOLLOWPATH:
 			return "Following A* Path";
-		case state::FOLLOWPLAYER:
-			return "Following Player";
+		case state::FOLLOWOBJECT:
+			return "Following Raycasted Object";
 		default:
 			return "State Not Known";
 	}

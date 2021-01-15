@@ -25,7 +25,7 @@ namespace NCL {
 					o->GetTransform().SetPosition(o->GetRoute()[o->GetCurrentDest()]);
 				}
 				else if (EnemyStateGameObject* o = dynamic_cast<EnemyStateGameObject*>(otherObject)) {
-					o->GetTransform().SetPosition(o->GetFollowObject()->GetTransform().GetPosition() + Vector3(0, 5, 10));
+					o->GetTransform().SetPosition(o->GetCurrentObject()->GetTransform().GetPosition() + Vector3(0, 5, 10));
 				}
 				else if (!dynamic_cast<StateGameObject*>(otherObject)) {		// Don't ever delete state objects
 					otherObject->SetIsActive(false);

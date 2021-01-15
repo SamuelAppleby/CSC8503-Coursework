@@ -188,8 +188,7 @@ void PhysicsSystem::BasicCollisionDetection() {
 			basicCollisionsTested++;
 			if (CollisionDetection::ObjectIntersection(*i, *j, info)) {
 				//std::cout << "Collision between " << (*i)->GetName() << " and " << (*j)->GetName() << std::endl;
-				if (!(dynamic_cast<PlayerObject*>(info.a) && dynamic_cast<BonusObject*>(info.b)) &&		// Dont resolve bonus pickups
-					!(dynamic_cast<PlayerObject*>(info.b) && dynamic_cast<BonusObject*>(info.a)))
+				if (info.a->CanCollide() && info.b->CanCollide())
 					ImpulseResolveCollision(*info.a, *info.b, info.point);
 				info.framesLeft = numCollisionFrames;
 				allCollisions.insert(info);
@@ -245,6 +244,8 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 	Vector3 fricInertiaB = Vector3::Cross(physB->GetInertiaTensor() * Vector3::Cross(relativeB, t), relativeB);
 	float fricEffect = Vector3::Dot(fricInertiaA + fricInertiaB, t);
 	float fricCoef = physA->GetFriction() * physB->GetFriction();
+	if (fricCoef > 1.0)
+		fricCoef = 1.0;
 	float jT = -(fricCoef * fricForce) / (totalMass + fricEffect);
 	Vector3 fricImpulse = t * jT;
 	/* Frictional effects */
@@ -323,8 +324,7 @@ void PhysicsSystem::NarrowPhase() {
 		if (CollisionDetection::ObjectIntersection(info.a, info.b, info)) {
 			//std::cout << "Collision between " << (*i).a->GetName() << " and " << (*i).b->GetName() << std::endl;
 			info.framesLeft = numCollisionFrames;
-			if (!(dynamic_cast<PlayerObject*>(info.a) && dynamic_cast<BonusObject*>(info.b)) &&		// Dont resolve bonus pickups
-				!(dynamic_cast<PlayerObject*>(info.b) && dynamic_cast<BonusObject*>(info.a)))
+			if (info.a->CanCollide() && info.b->CanCollide())
 				ImpulseResolveCollision(*info.a, *info.b, info.point);
 			allCollisions.insert(info);
 			totalCollisions++;

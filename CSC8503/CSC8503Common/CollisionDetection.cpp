@@ -623,22 +623,22 @@ bool CollisionDetection::AABBCapsuleIntersection(const AABBVolume& volumeA, cons
 
 	Vector3 delta = capsulePos - AABBPos;
 	Vector3 closestPointOnBox = Maths::Clamp(delta, -boxSize, boxSize);
+	closestPointOnBox += AABBPos;
 	Vector3 d = capsulePos + up * Vector3::Dot(closestPointOnBox - capsulePos, up);
 
-	if (Vector3::Dot(topSpherePos - AABBPos, topSpherePos - capsulePos) < 0) {
-		delta = (topSpherePos - AABBPos);
+	if (Vector3::Dot(topSpherePos - closestPointOnBox, topSpherePos - capsulePos) < 0) {
+		delta = topSpherePos - closestPointOnBox;
 	}
-	else if (Vector3::Dot(bottomSpherePos - AABBPos, bottomSpherePos - capsulePos) < 0) {
-		delta = (bottomSpherePos - AABBPos);
+	else if (Vector3::Dot((bottomSpherePos - closestPointOnBox), bottomSpherePos - capsulePos) < 0) {
+		delta = bottomSpherePos - closestPointOnBox;
 	}
 	else {
-		delta = (d - AABBPos);
+		delta = d - closestPointOnBox;
 	}
 
-	Vector3 localPoint = delta - closestPointOnBox;
-	float distance = localPoint.Length();
+	float distance = delta.Length();
 	if (distance < volumeB.GetRadius()) {
-		Vector3 collisionNormal = localPoint.Normalised();
+		Vector3 collisionNormal = delta.Normalised();
 		float penetration = volumeB.GetRadius() - distance;
 		Vector3 localA = Vector3();
 		Vector3 localB = -collisionNormal * volumeB.GetRadius();
@@ -686,8 +686,8 @@ bool CollisionDetection::OBBCapsuleIntersection(const OBBVolume& volumeA, const 
 	up.Normalise();
 
 	Vector3 OBBPos = worldTransformA.GetPosition();
-	Vector3 boxSize = volumeA.GetHalfDimensions();
 	Quaternion OBBorientation = worldTransformA.GetOrientation();
+	Vector3 boxSize = volumeA.GetHalfDimensions();
 	Matrix3 invTransform = Matrix3(OBBorientation.Conjugate());
 
 	Vector3 invCapsulePos = invTransform * worldTransformB.GetPosition();
@@ -696,23 +696,22 @@ bool CollisionDetection::OBBCapsuleIntersection(const OBBVolume& volumeA, const 
 
 	Vector3 delta = invCapsulePos - OBBPos;
 	Vector3 closestPointOnBox = Maths::Clamp(delta, -boxSize, boxSize);
+	closestPointOnBox += OBBPos;
 	Vector3 d = invCapsulePos + up * Vector3::Dot(closestPointOnBox - invCapsulePos, up);
 
-	if (Vector3::Dot(topSpherePos - OBBPos, topSpherePos - invCapsulePos) < 0) {
-		delta = (topSpherePos - OBBPos);
+	if (Vector3::Dot(topSpherePos - closestPointOnBox, topSpherePos - invCapsulePos) < 0) {
+		delta = topSpherePos - closestPointOnBox;
 	}
-	else if (Vector3::Dot(bottomSpherePos - OBBPos, bottomSpherePos - invCapsulePos) < 0) {
-		delta = (bottomSpherePos - OBBPos);
+	else if (Vector3::Dot(bottomSpherePos - closestPointOnBox, bottomSpherePos - invCapsulePos) < 0) {
+		delta = bottomSpherePos - closestPointOnBox;
 	}
 	else {
-		delta = (d - OBBPos);
+		delta = d - closestPointOnBox;
 	}
-
-	Vector3 localPoint = delta - closestPointOnBox;
-	float distance = localPoint.Length();
+	float distance = delta.Length() - volumeB.GetRadius() / 1.5;		// Adjust for top and bottom
 	if (distance < volumeB.GetRadius()) {
-		localPoint = (Matrix3(OBBorientation) * localPoint);
-		Vector3 collisionNormal = localPoint.Normalised();
+		delta = (Matrix3(OBBorientation) * delta);
+		Vector3 collisionNormal = delta.Normalised();
 		float penetration = volumeB.GetRadius() - distance;
 		Vector3 localA = OBBorientation * closestPointOnBox;
 		Vector3 localB = -collisionNormal * volumeB.GetRadius();
