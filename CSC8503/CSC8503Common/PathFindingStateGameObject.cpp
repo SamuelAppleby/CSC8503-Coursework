@@ -3,7 +3,7 @@
 #include "../../Common/Maths.h"
 using namespace NCL;
 using namespace CSC8503;
-PathFindingStateGameObject::PathFindingStateGameObject(GameObject* val, bool ignore) : EnemyStateGameObject() {
+PathFindingStateGameObject::PathFindingStateGameObject(bool ignore) : EnemyStateGameObject() {
 	currentState = state::FOLLOWPATH;
 	ignoreCosts = ignore;
 	mazeStart = { 220, 0, 440 };
@@ -11,8 +11,9 @@ PathFindingStateGameObject::PathFindingStateGameObject(GameObject* val, bool ign
 	pathTimeout = 0.0f;
 	FindPath();
 	followPathState = new State([&](float dt)->void {
-		this->DisplayPath();
 		this->FollowPath(dt);
+		if(displayPath)
+			this->DisplayPath();
 	});
 	stateMachine->AddState(followPathState);
 	stateMachine->AddTransition(new StateTransition(idleState, followPathState, [&]()->bool {
@@ -21,14 +22,14 @@ PathFindingStateGameObject::PathFindingStateGameObject(GameObject* val, bool ign
 			return true;
 		}
 		return false;
-		}));
+	}));
 	stateMachine->AddTransition(new StateTransition(followPathState, idleState, [&]()->bool {
 		if (this->path.size() == 0) {
 			currentState = state::IDLE;
 			return true;
 		}
 		return false;
-		}));
+	}));
 	stateMachine->AddTransition(new StateTransition(followObjectState, followPathState, [&]()->bool {
 		if (this->followTimeout < 0.0f) {
 			interestObjects.erase(currentObject);
@@ -59,9 +60,7 @@ void PathFindingStateGameObject::FindPath() {
 
 void PathFindingStateGameObject::DisplayPath() {
 	for (int i = 1; i < path.size(); ++i) {
-		Vector3 a = path[i - 1];
-		Vector3 b = path[i];
-		Debug::DrawLine(a + Vector3(0, 10, 0), b + Vector3(0, 10, 0), Vector4(0, 1, 0, 1));
+		Debug::DrawLine(path[i - 1] + Vector3(0, 10, 0), path[i] + Vector3(0, 10, 0), Debug::WHITE);
 	}
 }
 

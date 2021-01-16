@@ -1,7 +1,6 @@
 #pragma once
 #include "StateGameObject.h"
 #include "Debug.h"
-#include "NavigationGrid.h"
 #include <set>
 namespace NCL {
 	namespace CSC8503 {
@@ -26,8 +25,8 @@ namespace NCL {
 			void AddFollowObject(GameObject* o) {
 				interestObjects.insert(o);
 			}
-			void RemoveFollowObject(GameObject* o) {
-				interestObjects.erase(o);
+			void ClearFollowObjects() {
+				interestObjects.clear();
 			}
 			Vector3 GetTravelDirection() const {
 				return travelDir;
@@ -35,9 +34,12 @@ namespace NCL {
 			GameObject* GetCurrentObject() const {
 				return currentObject;
 			}
+			void SetDisplayDirection(float val) {
+				displayPath = val;
+			}
 			void Update(float dt) override;
 			void FollowObject(float dt);
-
+			void DisplayDirection();
 		protected:
 			State* followObjectState;
 			std::set<GameObject*> interestObjects;
@@ -47,6 +49,7 @@ namespace NCL {
 			bool finished;
 			float followTimeout;
 			float speed;
+			bool displayPath;
 		};
 	}
 }

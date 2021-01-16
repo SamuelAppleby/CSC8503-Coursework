@@ -24,10 +24,6 @@ namespace NCL {
 				if (dynamic_cast<PlayerObject*>(otherObject) || dynamic_cast<EnemyStateGameObject*>(otherObject)) {
 					if (PlayerObject* p = dynamic_cast<PlayerObject*>(otherObject))
 						p->BonusAcquired();
-					if (EnemyStateGameObject* e = dynamic_cast<EnemyStateGameObject*>(otherObject)) {
-						e->RemoveFollowObject(this);
-						e->SetFollowTimeOut(0.0f);
-					}
 					isActive = false;
 				}
 			}

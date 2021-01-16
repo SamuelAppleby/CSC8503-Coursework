@@ -27,7 +27,6 @@
 #include "../CSC8503Common/Pushdownstate.h"
 #include "../CSC8503Common/PauseScreen.h"
 #include "../CSC8503Common/GlobalVariables.h"
-
 namespace NCL {
 	namespace CSC8503 {
 		class PlayerObject;
@@ -110,7 +109,6 @@ namespace NCL {
 			bool useGravity;
 			bool useBroadphase;
 			bool inSelectionMode;
-
 			float forceMagnitude;
 			float reloadTime;
 			float timeOut;

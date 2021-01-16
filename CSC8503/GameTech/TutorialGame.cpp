@@ -1,4 +1,5 @@
 #include "TutorialGame.h"
+#include "../CSC8503Common/GlobalVariables.h"
 using namespace NCL;
 using namespace CSC8503;
 
@@ -151,6 +152,8 @@ void TutorialGame::UpdateMenu(float dt) {
 void TutorialGame::UpdateLevel(float dt) {
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::Q)) {
 		inSelectionMode = !inSelectionMode;
+		if (EnemyStateGameObject* o = dynamic_cast<EnemyStateGameObject*>(selectionObject))
+			o->SetDisplayDirection(inSelectionMode);
 		if (inSelectionMode) {
 			Window::GetWindow()->ShowOSPointer(true);
 			Window::GetWindow()->LockMouseToWindow(false);
@@ -158,6 +161,7 @@ void TutorialGame::UpdateLevel(float dt) {
 		else {
 			Window::GetWindow()->ShowOSPointer(false);
 			Window::GetWindow()->LockMouseToWindow(true);
+			
 		}
 	}
 	inSelectionMode ? renderer->DrawString("Change to play mode(Q)", Vector2(69, 10), Debug::WHITE, textSize) :
@@ -206,15 +210,21 @@ void TutorialGame::DrawDebugInfo() {
 		renderer->DrawString("QuadTree(B):Off", Vector2(0, 40), Debug::WHITE, textSize);
 		renderer->DrawString("Collisions Tested:" + std::to_string(physics->GetBasicCollisionsTested()), Vector2(68, 90), Debug::WHITE, textSize);
 	}
-	
-	renderer->DrawString("Current Collisions:" + std::to_string(physics->GetCollisionsSize()), Vector2(70, 95), Debug::WHITE, textSize);
+	if (lockedObject) {
+		renderer->DrawString("Unlock object(L)", Vector2(0, 50), Debug::WHITE, textSize);
+		lockedOrientation ? renderer->DrawString("Lock object orientation(K): On", Vector2(0, 45), Debug::WHITE, textSize) :
+			renderer->DrawString("Lock object orientation(K): Off", Vector2(0, 45), Debug::WHITE, textSize);
+	}
+	else
+		renderer->DrawString("Lock selected object(L)", Vector2(0, 50), Debug::WHITE, textSize);
+	renderer->DrawString("Current Collisions:" + std::to_string(physics->GetCollisionsSize()), Vector2(68, 95), Debug::WHITE, textSize);
 	renderer->DrawString("Total Objects:" + std::to_string(world->GetTotalWorldObjects()), Vector2(75, 85), Debug::WHITE, textSize);
+
 	if (selectionObject) {
-		if (StateGameObject* g = dynamic_cast<StateGameObject*>(selectionObject))
-			renderer->DrawString("State:" + g->StateToString(), Vector2(0, 45), Debug::WHITE, textSize);
-		renderer->DrawString("Selected Object:" + selectionObject->GetName(), Vector2(0, 50), Debug::WHITE, textSize);
-		if(!lockedObject)
-			renderer->DrawString("Lock selected object(L)", Vector2(0, 55), Debug::WHITE, textSize);
+		if (StateGameObject* g = dynamic_cast<StateGameObject*>(selectionObject)) {
+			renderer->DrawString("State:" + g->StateToString(), Vector2(0, 60), Debug::WHITE, textSize);
+		}
+		renderer->DrawString("Selected Object:" + selectionObject->GetName(), Vector2(0, 55), Debug::WHITE, textSize);
 		renderer->DrawString("Position:" + selectionObject->GetTransform().GetPosition().ToString(), Vector2(0, 65), Debug::WHITE, textSize);
 		renderer->DrawString("Orientation:" + selectionObject->GetTransform().GetOrientation().ToEuler().ToString(), Vector2(0, 70), Debug::WHITE, textSize);
 		renderer->DrawString("Linear Velocity:" + selectionObject->GetPhysicsObject()->GetLinearVelocity().ToString(), Vector2(0, 75), Debug::WHITE, textSize);
@@ -222,11 +232,6 @@ void TutorialGame::DrawDebugInfo() {
 		renderer->DrawString("Inverse Mass:" + std::to_string(selectionObject->GetPhysicsObject()->GetInverseMass()), Vector2(0, 85), Debug::WHITE, textSize);
 		renderer->DrawString("Friction:" + std::to_string(selectionObject->GetPhysicsObject()->GetFriction()), Vector2(0, 90), Debug::WHITE, textSize);
 		renderer->DrawString("Elasticity:" + std::to_string(selectionObject->GetPhysicsObject()->GetElasticity()), Vector2(0, 95), Debug::WHITE, textSize);
-	}
-	if (lockedObject) {
-		renderer->DrawString("Unlock object(L)", Vector2(0, 55), Debug::WHITE, textSize);
-		lockedOrientation ? renderer->DrawString("Lock object orientation(K): On", Vector2(0, 60), Debug::WHITE, textSize) :
-			renderer->DrawString("Lock object orientation(K): Off", Vector2(0, 60), Debug::WHITE, textSize);
 	}
 }
 
@@ -260,9 +265,11 @@ void TutorialGame::UpdateLevel1(float dt) {
 	for (auto& p : platforms) 
 		p->Update(dt);
 	reloadTime += dt;
-	//if (reloadTime > 2.0f)
-	//	FireObjects();
+	if (reloadTime > 2.0f)
+		FireObjects();
 	if (player) {
+		if (player->GetTransform().GetPosition().z >= 0)
+			player->SetSpawnPos({ 0, 10, 0 });
 		if (player->GetTransform().GetPosition().z < -265) 
 			player->SetSpawnPos({ 0, 10, -265 });
 		if (player->GetTransform().GetPosition().z < -600) 
@@ -290,6 +297,9 @@ void TutorialGame::FireObjects() {
 }
 
 void TutorialGame::UpdateLevel2(float dt) {
+	if (player) {
+		player->SetSpawnPos({ 0, 10, 0 });
+	}
 	for (auto& e : enemies) {
 		e->Update(dt);
 		EnemyRaycast(e);
@@ -298,24 +308,25 @@ void TutorialGame::UpdateLevel2(float dt) {
 
 /* Enemies fire 11 rays every 0.5s across a range to detect the player */
 void TutorialGame::EnemyRaycast(EnemyStateGameObject* enemy) {
-	float fov = -1, numRay = 21;
+	float fov = -1, numRay = 13;
 	if (enemy->GetRayTime() < 0.0f) {
 		for (int i = 0; i < numRay; ++i) {
 			Ray ray(enemy->GetTransform().GetPosition(), enemy->GetTransform().GetOrientation() * Vector3(fov, 0, -1));
 			RayCollision closestCollision;
 			if (world->Raycast(ray, closestCollision, enemy, true) && closestCollision.rayDistance < 80.0f) {
-				Debug::DrawLine(ray.GetPosition(), closestCollision.collidedAt, Debug::MAGENTA);
+				if(enemy == selectionObject && inSelectionMode)
+					Debug::DrawLine(ray.GetPosition(), closestCollision.collidedAt, Debug::GREEN);
 				if (dynamic_cast<PlayerObject*>((GameObject*)closestCollision.node) || 
 					dynamic_cast<BonusObject*>((GameObject*)closestCollision.node)) {
 					enemy->AddFollowObject((GameObject*)closestCollision.node);
-					enemy->SetFollowTimeOut(5.0f);		// If sees player reset their timer
+					enemy->SetFollowTimeOut(5.0f);		// If sees object of interest reset their timer
 				}
 			}
-			else
-				Debug::DrawLine(ray.GetPosition(), ray.GetPosition() + (ray.GetDirection() * 80), Debug::YELLOW);
-			fov += 2 / numRay;
+			else if (enemy == selectionObject && inSelectionMode)
+				Debug::DrawLine(ray.GetPosition(), ray.GetPosition() + (ray.GetDirection() * 80), Debug::RED);
+			fov += 2 / (numRay - 1);
 		}
-		enemy->SetRayTime(0.0f);
+		enemy->SetRayTime(0.25f);
 	}
 }
 
@@ -381,9 +392,8 @@ void TutorialGame::InitFloors(int level) {
 		AddFloorToWorld(new FloorObject, Vector3(120, 5, -225), Vector3(1, 5, 30));
 
 		/* Regular Platform */
-		//AddFloorToWorld(new FloorObject, Vector3(0, -10, 0), Vector3(40, 1, 20), Matrix4::Rotation(-30, { 1, 0, 0 }));
 		AddFloorToWorld(new FloorObject, Vector3(0, 0, 0), Vector3(25, 1, 25));
-		//AddFloorToWorld(new FloorObject, Vector3(50, -30, 0), Vector3(40, 1, 20), Matrix4::Rotation(-30, { 1, 0, 0 }));
+		AddFloorToWorld(new FloorObject, Vector3(50, -30, 30), Vector3(40, 1, 20), Matrix4::Rotation(-30, { 1, 0, 0 }));
 		AddFloorToWorld(new FloorObject, Vector3(0, 0, -85), Vector3(25, 1, 10));
 		AddFloorToWorld(new FloorObject, Vector3(-15, 0, -145), Vector3(10, 1, 50));
 		AddFloorToWorld(new FloorObject, Vector3(15, 0, -145), Vector3(10, 1, 50));
@@ -442,8 +452,16 @@ void TutorialGame::InitFloors(int level) {
 		AddFloorToWorld(new FloorObject, Vector3(244, -45, -1065), Vector3(1, 6, 40));
 		break;
 	case 2:
+		/* Lava */
+		AddFloorToWorld(new LavaObject, Vector3(0, -60, -500), Vector3(800, 1, 800));
+
 		/* Regular Platform */
-		AddFloorToWorld(new FloorObject, Vector3(0, 0, 0), Vector3(30, 1, 30));
+		AddFloorToWorld(new FloorObject, Vector3(0, 0, -5), Vector3(30, 1, 25));
+
+		/* Walls*/
+		AddFloorToWorld(new FloorObject, Vector3(-31, 4, 5), Vector3(1, 5, 16));
+		AddFloorToWorld(new FloorObject, Vector3(31, 4, 5), Vector3(1, 5, 16));
+		AddFloorToWorld(new FloorObject, Vector3(0, 4, 21), Vector3(32, 5, 1));
 
 		/* Maze Floor */
 		AddFloorToWorld(new FloorObject, Vector3(0, 0, -240), Vector3(210, 1, 210));
@@ -517,7 +535,7 @@ void TutorialGame::CreateMaze() {
 			}
 			if (grid.GetNodes()[(23 * y) + x].type == ICE_NODE) {
 				if ((grid.GetNodes()[(23 * y) + x + 23].type != ICE_NODE || y == 22) && iceZsize > iceXSize)
-					AddFloorToWorld(new IceObject, icePos - offset - Vector3(0, 20, 0), Vector3(iceXSize, 1.5, iceZsize));
+					AddFloorToWorld(new IceObject, icePos - offset - Vector3(0, 19, 0), Vector3(iceXSize, 0.1, iceZsize));
 				else {
 					icePos.z += 10;
 					iceZsize += 10;
@@ -575,17 +593,15 @@ void TutorialGame::InitGameExamples(int level) {
 		AddBonusToWorld(Vector3(20, 20, -1060))->GetTransform().SetOrientation(Matrix4::Rotation(270, { 0, 1, 0 }));
 		break;
 	case 2:
-		player = (PlayerObject*)AddPlayerToWorld(new PlayerObject, Vector3(-20, 10, -5));
+		player = (PlayerObject*)AddPlayerToWorld(new PlayerObject, Vector3(0, 10, 10));
 		/* One enemy will not take costs into account, the other will, both using A* */
 		if(numEnemies >= 1)
-			enemies.push_back((PathFindingStateGameObject*)AddEnemyToWorld(new PathFindingStateGameObject(player, true), Vector3(5, 10, 20)));
+			enemies.push_back((PathFindingStateGameObject*)AddEnemyToWorld(new PathFindingStateGameObject(true), Vector3(5, 10, 0)));
 		if (numEnemies >= 2)
-			enemies.push_back((PathFindingStateGameObject*)AddEnemyToWorld(new PathFindingStateGameObject(player, true), Vector3(0, 10, 20)));
+			enemies.push_back((PathFindingStateGameObject*)AddEnemyToWorld(new PathFindingStateGameObject(true), Vector3(0, 10, 0)));
 		if (numEnemies == 3)
-			enemies.push_back((PathFindingStateGameObject*)AddEnemyToWorld(new PathFindingStateGameObject(player, false), Vector3(5, 10, 20)));
-		AddBonusToWorld(Vector3(-100, 4, -40))->GetTransform().SetOrientation(Matrix4::Rotation(90, { 0, 1, 0 }));;
-		AddBonusToWorld(Vector3(-110, 4, -45))->GetTransform().SetOrientation(Matrix4::Rotation(90, { 0, 1, 0 }));;
-		AddBonusToWorld(Vector3(-130, 4, -40))->GetTransform().SetOrientation(Matrix4::Rotation(90, { 0, 1, 0 }));;
+			enemies.push_back((PathFindingStateGameObject*)AddEnemyToWorld(new PathFindingStateGameObject(false), Vector3(5, 10, 0)));
+		AddBonusToWorld(Vector3(-180, 4, -40))->GetTransform().SetOrientation(Matrix4::Rotation(90, { 0, 1, 0 }));
 		break;
 	}
 }
@@ -742,7 +758,7 @@ void TutorialGame::AddBridgeToWorld(Vector3 startPos) {
 
 GameObject* TutorialGame::AddPlayerToWorld(GameObject* p, const Vector3& position) {
 	float meshSize = 3.0f;
-	CapsuleVolume* volume = new CapsuleVolume(meshSize * 0.85, 2);
+	SphereVolume* volume = new SphereVolume(meshSize * 0.85);
 	p->SetBoundingVolume((CollisionVolume*)volume);
 	p->GetTransform().SetScale(Vector3(meshSize, meshSize, meshSize)).SetPosition(position);
 	(rand() % 2) ? p->SetRenderObject(new RenderObject(&p->GetTransform(), charMeshA, playerTex, basicShader)) :
@@ -756,7 +772,7 @@ GameObject* TutorialGame::AddPlayerToWorld(GameObject* p, const Vector3& positio
 
 GameObject* TutorialGame::AddEnemyToWorld(GameObject* e, const Vector3& position) {
 	float meshSize = 3.0f;
-	CapsuleVolume* volume = new CapsuleVolume(meshSize * 0.85, 1.5);
+	SphereVolume* volume = new SphereVolume(meshSize * 0.85);
 	e->SetBoundingVolume((CollisionVolume*)volume);
 	e->GetTransform().SetScale(Vector3(meshSize, meshSize, meshSize)).SetPosition(position);
 	e->SetRenderObject(new RenderObject(&e->GetTransform(), enemyMesh, enemyTex, basicShader));
@@ -790,10 +806,14 @@ bool TutorialGame::SelectObject() {
 		RayCollision closestCollision;
 		if (world->Raycast(ray, closestCollision, nullptr, true)) {
 			if (selectionObject) {
+				if (EnemyStateGameObject* o = dynamic_cast<EnemyStateGameObject*>(selectionObject))
+					o->SetDisplayDirection(false);
 				selectionObject->GetRenderObject()->SetColour(Vector4(1, 1, 1, 1));
 				selectionObject->SetSelected(false);
 			}
 			selectionObject = (GameObject*)closestCollision.node;
+			if (EnemyStateGameObject* o = dynamic_cast<EnemyStateGameObject*>(selectionObject))
+				o->SetDisplayDirection(true);
 			selectionObject->GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
 			selectionObject->SetSelected(true);
 			return true;

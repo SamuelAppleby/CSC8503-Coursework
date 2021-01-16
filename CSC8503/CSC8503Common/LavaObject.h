@@ -18,15 +18,16 @@ namespace NCL {
 				if (PlayerObject* o = dynamic_cast<PlayerObject*>(otherObject)) {
 					o->GetTransform().SetPosition(o->GetSpawnPos());
 				}
-				else if (PathFindingStateGameObject* o = dynamic_cast<PathFindingStateGameObject*>(otherObject)) {
-					o->GetTransform().SetPosition(o->GetPath()[0]);
-				}
-				else if (PatrolStateGameObject* o = dynamic_cast<PatrolStateGameObject*>(otherObject)) {
-					o->GetTransform().SetPosition(o->GetRoute()[o->GetCurrentDest()]);
-				}
 				else if (EnemyStateGameObject* o = dynamic_cast<EnemyStateGameObject*>(otherObject)) {
-					o->GetTransform().SetPosition(o->GetCurrentObject()->GetTransform().GetPosition() + Vector3(0, 5, 10));
+					o->ClearFollowObjects();
+					if (PathFindingStateGameObject* p = dynamic_cast<PathFindingStateGameObject*>(otherObject)) {
+						p->GetTransform().SetPosition(p->GetPath()[0] + Vector3(0, 10, 0));
+					}
+					if (PatrolStateGameObject* s = dynamic_cast<PatrolStateGameObject*>(otherObject)) {
+						s->GetTransform().SetPosition(s->GetRoute()[s->GetCurrentDest()]);
+					}
 				}
+				
 				else if (!dynamic_cast<StateGameObject*>(otherObject)) {		// Don't ever delete state objects
 					otherObject->SetIsActive(false);
 				}

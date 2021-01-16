@@ -6,7 +6,7 @@ namespace NCL {
 	namespace CSC8503 {
 		class PathFindingStateGameObject : public EnemyStateGameObject {
 		public:
-			PathFindingStateGameObject(GameObject* follow, bool ignoreCosts);
+			PathFindingStateGameObject(bool ignoreCosts);
 			vector<Vector3> GetPath() const {
 				return path;
 			}

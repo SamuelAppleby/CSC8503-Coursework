@@ -264,7 +264,7 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 
 /* Directly apply spring forces to object */
 void PhysicsSystem::SpringTowardsPoint(SpringObject* a) const {
-	float k = 0.0075;
+	float k = 0.005;
 	Vector3 extension = a->GetTransform().GetPosition() - a->GetRestPosition();
 	Vector3 force = extension * -k;
 	a->GetPhysicsObject()->ApplyLinearImpulse(force);
