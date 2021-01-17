@@ -52,6 +52,16 @@ namespace NCL {
 			void SetSpawnPos(Vector3 val) {
 				spawnPos = val;
 			}
+			void Update(float dt) {
+				if (powerUpTimer > 0.0f) {
+					GetRenderObject()->SetColour(Vector4(0, 1, 10, 1));
+					powerUpTimer -= dt;
+				}
+				else {
+					powerUpTimer -= dt;
+					GetRenderObject()->SetColour(Vector4(0, 0.5, 1, 1));
+				}
+			}
 		protected:
 			float invMass;
 			float elasticity;

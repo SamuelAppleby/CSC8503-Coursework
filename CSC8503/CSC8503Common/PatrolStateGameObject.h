@@ -15,9 +15,11 @@ namespace NCL {
 			}
 		protected:
 			void Patrol(float dt);
+			void DisplayRoute();
 			vector<Vector3> route;
 			State* patrolState;
 			int currentDest;
+			float routeTimeout;
 		};
 	}
 }

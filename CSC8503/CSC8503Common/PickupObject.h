@@ -1,14 +1,13 @@
 #pragma once
 #include "GameObject.h"
 #include "PlayerObject.h"
-#include "EnemyObject.h"
-#include "PatrolStateGameObject.h"
+#include "EnemyStateGameObject.h"
 namespace NCL {
 	namespace CSC8503 {
-		class BonusObject : public GameObject {
+		class PickupObject : public GameObject {
 		public:
-			BonusObject() {
-				name = "Bonus";
+			PickupObject() {
+				name = "Pickup";
 				invMass = 0.0f;
 				elasticity = 0.0;
 				friction = 0.8;
@@ -20,13 +19,6 @@ namespace NCL {
 				physicsObject->SetElasticity(elasticity);
 				physicsObject->SetFriction(friction);
 			}
-			void OnCollisionBegin(GameObject* otherObject) override {
-				if (dynamic_cast<PlayerObject*>(otherObject) || dynamic_cast<EnemyStateGameObject*>(otherObject)) {
-					if (PlayerObject* p = dynamic_cast<PlayerObject*>(otherObject))
-						p->BonusAcquired();
-					isActive = false;
-				}
-			}
 		protected:
 			float invMass;
 			float elasticity;
@@ -34,3 +26,4 @@ namespace NCL {
 		};
 	}
 }
+

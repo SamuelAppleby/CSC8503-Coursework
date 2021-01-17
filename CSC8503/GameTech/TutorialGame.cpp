@@ -21,7 +21,6 @@ TutorialGame::TutorialGame() {
 	lockedOrientation = true;
 	currentLevel = 0;
 	currentlySelected = 1;
-	numEnemies = 0;
 	InitialiseAssets();
 }
 
@@ -53,10 +52,9 @@ void TutorialGame::InitialiseAssets() {
 	iceTex = (OGLTexture*)TextureLoader::LoadAPITexture("ice.png");
 	woodenTex = (OGLTexture*)TextureLoader::LoadAPITexture("wood.png");
 	bonusTex = (OGLTexture*)TextureLoader::LoadAPITexture("bonus.png");
-	playerTex = (OGLTexture*)TextureLoader::LoadAPITexture("player.png");
-	enemyTex = (OGLTexture*)TextureLoader::LoadAPITexture("enemy.png");
 	finishTex = (OGLTexture*)TextureLoader::LoadAPITexture("finish.png");
 	menuTex = (OGLTexture*)TextureLoader::LoadAPITexture("menu.png");
+	plainTex = (OGLTexture*)TextureLoader::LoadAPITexture("plain.png");
 	basicShader = new OGLShader("GameTechVert.glsl", "GameTechFrag.glsl");
 
 	InitCamera();
@@ -79,8 +77,6 @@ TutorialGame::~TutorialGame() {
 	delete iceTex;
 	delete woodenTex;
 	delete bonusTex;
-	delete playerTex;
-	delete enemyTex;
 	delete finishTex;
 	delete menuTex;
 	delete basicShader;
@@ -116,32 +112,32 @@ void TutorialGame::UpdateMenu(float dt) {
 		switch (currentlySelected) {
 		case 1:
 			menuPlayers.at(1)->GetRenderObject()->SetColour({ 0.1,0.1,0.1,1 });
-			menuPlayers.at(0)->GetRenderObject()->SetColour({ 1,1,1,1 });
+			menuPlayers.at(0)->GetRenderObject()->SetColour(Vector4(0, 0.5, 1, 1));
 			menuEnemies.at(0)->GetRenderObject()->SetColour({ 0.1,0.1,0.1,1 });
 			menuEnemies.at(1)->GetRenderObject()->SetColour({ 0.1,0.1,0.1,1 });
 			menuEnemies.at(2)->GetRenderObject()->SetColour({ 0.1,0.1,0.1,1 });
 			break;
 		case 2:
 			menuPlayers.at(0)->GetRenderObject()->SetColour({ 0.1,0.1,0.1,1 });
-			menuPlayers.at(1)->GetRenderObject()->SetColour({ 1,1,1,1 });
+			menuPlayers.at(1)->GetRenderObject()->SetColour(Vector4(0, 0.5, 1, 1));
 			menuEnemies.at(0)->GetRenderObject()->SetColour({ 0.1,0.1,0.1,1 });
 			break;
 		case 3:
-			menuEnemies.at(0)->GetRenderObject()->SetColour({ 1,1,1,1 });
+			menuEnemies.at(0)->GetRenderObject()->SetColour((Vector4(1, 0, 0, 1)));
 			menuEnemies.at(1)->GetRenderObject()->SetColour({ 0.1,0.1,0.1,1 });
 			break;
 		case 4:
-			menuEnemies.at(1)->GetRenderObject()->SetColour({ 1,1,1,1 });
+			menuEnemies.at(1)->GetRenderObject()->SetColour((Vector4(1, 0, 0, 1)));
 			menuEnemies.at(2)->GetRenderObject()->SetColour({ 0.1,0.1,0.1,1 });
 			break;
 		case 5:
 			menuPlayers.at(0)->GetRenderObject()->SetColour({ 0.1,0.1,0.1,1 });
-			menuEnemies.at(0)->GetRenderObject()->SetColour({ 1,1,1,1 });
-			menuEnemies.at(1)->GetRenderObject()->SetColour({ 1,1,1,1 });
-			menuEnemies.at(2)->GetRenderObject()->SetColour({ 1,1,1,1 });
+			menuPlayers.at(1)->GetRenderObject()->SetColour(Vector4(0, 0.5, 1, 1));
+			menuEnemies.at(0)->GetRenderObject()->SetColour((Vector4(1, 0, 0, 1)));
+			menuEnemies.at(1)->GetRenderObject()->SetColour((Vector4(1, 0, 0, 1)));
+			menuEnemies.at(2)->GetRenderObject()->SetColour((Vector4(1, 0, 0, 1)));
 			break;
 		}
-		numEnemies = currentlySelected - 2;
 	}
 	if(Window::GetKeyboard()->KeyPressed(KeyboardKeys::RETURN)) {
 		currentLevel = currentlySelected >= 2 ? 2 : 1;
@@ -175,8 +171,10 @@ void TutorialGame::UpdateLevel(float dt) {
 		world->ShowFacing();
 	}
 	else {
-		if(player)
+		if (player) {
 			renderer->DrawString("Score:" + std::to_string(player->GetScore()), Vector2(0, 10), Debug::WHITE, textSize);
+			player->Update(dt);
+		}
 		world->GetMainCamera()->UpdateCamera(dt);
 	}
 	lockedObject ? LockedObjectMovement() : DebugObjectMovement();
@@ -203,28 +201,34 @@ void TutorialGame::DrawDebugInfo() {
 	renderer->DrawString("Constraint Iteration Count(I/O):" + std::to_string(physics->GetConstraintIterationCount()), Vector2(0, 35), Debug::WHITE, textSize);
 
 	if (physics->GetBroadPhase()) {
-		renderer->DrawString("QuadTree(B):On", Vector2(0, 40), Debug::WHITE, textSize);
+		renderer->DrawString("QuadTree(B):On", Vector2(78, 80), Debug::WHITE, textSize);
 		renderer->DrawString("Collisions Tested:" + std::to_string(physics->GetBroadPhaseCollisionsTested()), Vector2(68, 90), Debug::WHITE, textSize);
 	}
 	else {
-		renderer->DrawString("QuadTree(B):Off", Vector2(0, 40), Debug::WHITE, textSize);
+		renderer->DrawString("QuadTree(B):Off", Vector2(78, 80), Debug::WHITE, textSize);
 		renderer->DrawString("Collisions Tested:" + std::to_string(physics->GetBasicCollisionsTested()), Vector2(68, 90), Debug::WHITE, textSize);
 	}
 	if (lockedObject) {
-		renderer->DrawString("Unlock object(L)", Vector2(0, 50), Debug::WHITE, textSize);
-		lockedOrientation ? renderer->DrawString("Lock object orientation(K): On", Vector2(0, 45), Debug::WHITE, textSize) :
-			renderer->DrawString("Lock object orientation(K): Off", Vector2(0, 45), Debug::WHITE, textSize);
+		renderer->DrawString("Unlock object(L)", Vector2(0, 45), Debug::WHITE, textSize);
+		lockedOrientation ? renderer->DrawString("Lock object orientation(K): On", Vector2(0, 40), Debug::WHITE, textSize) :
+			renderer->DrawString("Lock object orientation(K): Off", Vector2(0, 40), Debug::WHITE, textSize);
 	}
 	else
-		renderer->DrawString("Lock selected object(L)", Vector2(0, 50), Debug::WHITE, textSize);
+		renderer->DrawString("Lock selected object(L)", Vector2(0, 45), Debug::WHITE, textSize);
 	renderer->DrawString("Current Collisions:" + std::to_string(physics->GetCollisionsSize()), Vector2(68, 95), Debug::WHITE, textSize);
 	renderer->DrawString("Total Objects:" + std::to_string(world->GetTotalWorldObjects()), Vector2(75, 85), Debug::WHITE, textSize);
 
 	if (selectionObject) {
 		if (StateGameObject* g = dynamic_cast<StateGameObject*>(selectionObject)) {
-			renderer->DrawString("State:" + g->StateToString(), Vector2(0, 60), Debug::WHITE, textSize);
+			renderer->DrawString("State:" + g->StateToString(), Vector2(0, 55), Debug::WHITE, textSize);
+			g->GetPowerUpTimer() > 0.0f ? renderer->DrawString("Powered Up: Yes", Vector2(0, 50), Debug::WHITE, textSize) :
+				renderer->DrawString("Powered Up: No", Vector2(0, 50), Debug::WHITE, textSize);
 		}
-		renderer->DrawString("Selected Object:" + selectionObject->GetName(), Vector2(0, 55), Debug::WHITE, textSize);
+		else if (dynamic_cast<PlayerObject*>(selectionObject)) {
+			selectionObject->GetPowerUpTimer() > 0.0f ? renderer->DrawString("Powered Up: Yes", Vector2(0, 55), Debug::WHITE, textSize) :
+				renderer->DrawString("Powered Up: No", Vector2(0, 55), Debug::WHITE, textSize);
+		}
+		renderer->DrawString("Selected Object:" + selectionObject->GetName(), Vector2(0, 60), Debug::WHITE, textSize);
 		renderer->DrawString("Position:" + selectionObject->GetTransform().GetPosition().ToString(), Vector2(0, 65), Debug::WHITE, textSize);
 		renderer->DrawString("Orientation:" + selectionObject->GetTransform().GetOrientation().ToEuler().ToString(), Vector2(0, 70), Debug::WHITE, textSize);
 		renderer->DrawString("Linear Velocity:" + selectionObject->GetPhysicsObject()->GetLinearVelocity().ToString(), Vector2(0, 75), Debug::WHITE, textSize);
@@ -264,6 +268,10 @@ void TutorialGame::CheckFinished(float dt) {
 void TutorialGame::UpdateLevel1(float dt) {
 	for (auto& p : platforms) 
 		p->Update(dt);
+	for (auto& e : enemies) {
+		e->Update(dt);
+		EnemyRaycast(e);
+	}
 	reloadTime += dt;
 	if (reloadTime > 2.0f)
 		FireObjects();
@@ -317,7 +325,7 @@ void TutorialGame::EnemyRaycast(EnemyStateGameObject* enemy) {
 				if(enemy == selectionObject && inSelectionMode)
 					Debug::DrawLine(ray.GetPosition(), closestCollision.collidedAt, Debug::GREEN);
 				if (dynamic_cast<PlayerObject*>((GameObject*)closestCollision.node) || 
-					dynamic_cast<BonusObject*>((GameObject*)closestCollision.node)) {
+					dynamic_cast<PickupObject*>((GameObject*)closestCollision.node)) {
 					enemy->AddFollowObject((GameObject*)closestCollision.node);
 					enemy->SetFollowTimeOut(5.0f);		// If sees object of interest reset their timer
 				}
@@ -481,12 +489,17 @@ void TutorialGame::CreateMaze() {
 	zSize = 10;
 	iceZsize = 10;
 	for (int y = 0; y < 23; ++y) {
+		for (int x = 0; x < 23; ++x) {
+			nodePos = grid.GetNodes()[(23 * y) + x + 1].position;
+			if (grid.GetNodes()[(23 * y) + x].type == SPRING_NODE)
+				AddCubeToWorld(new SpringObject(nodePos - offset + Vector3(-20, -15, 0)), nodePos - offset + Vector3(-20, -15, 0), Vector3(8, 5, 1));
+		}
+	}
+	for (int y = 0; y < 23; ++y) {
 		nodePos = grid.GetNodes()[23 * y].position;
 		xSize = 10;
 		iceXSize = 10;
 		for (int x = 0; x < 23; ++x) {
-			if (grid.GetNodes()[(23 * y) + x].type == SPRING_NODE)
-				AddCubeToWorld(new SpringObject(nodePos - offset - Vector3(0, 10, 0)), nodePos - offset - Vector3(0, 10, 0), Vector3(8, 8, 1));
 			if (grid.GetNodes()[(23 * y) + x].type == WALL_NODE) {
 				if ((grid.GetNodes()[(23 * y) + x + 1].type != WALL_NODE || x == 22) && xSize > zSize)
 					AddFloorToWorld(new FloorObject, nodePos - offset, { xSize, 20, zSize });
@@ -550,6 +563,7 @@ void TutorialGame::CreateMaze() {
 }
 
 void TutorialGame::InitGameExamples(int level) {
+	vector<Vector3> positions = { Vector3(0, 0, 0),  Vector3(-200, 0, 0) };
 	switch (level) {
 	case 0:
 		/* Menu Objects */
@@ -572,36 +586,46 @@ void TutorialGame::InitGameExamples(int level) {
 	case 1:
 		AddSphereToWorld(new SphereObject, Vector3(10, 10, 0),3);
 		AddCapsuleToWorld(new CapsuleObject, Vector3(-10, 10, 0), 5.0f, 3);
-		player = (PlayerObject*)AddPlayerToWorld(new PlayerObject, Vector3(0, 10, 0));
+		player = (PlayerObject*)AddPlayerToWorld(new PlayerObject, Vector3(0, 10, -860));
+		lockedObject = player;
+		selectionObject = player;
+		selectionObject->SetSelected(true);
 		platforms.push_back((PlatformStateGameObject*)AddFloorToWorld(
 			new PlatformStateGameObject(Vector3(-12.5, 0, -50), Vector3(12.5, 0, -50)), Vector3(-12.5, 0, -50), { 12.5,1,25 }));
 		platforms.push_back((PlatformStateGameObject*)AddFloorToWorld(
 			new PlatformStateGameObject(Vector3(-45, -20, -1060), Vector3(-45, 20, -1060)), Vector3(-45, -20, -1060), {10,1,10}));
-		AddBonusToWorld(Vector3(-90, 5, -225));
-		AddBonusToWorld(Vector3(90, 5, -225));
-		AddBonusToWorld(Vector3(0, 5, -225));
-		AddBonusToWorld(Vector3(0, 10, -355));
-		AddBonusToWorld(Vector3(60, 5, -465));
-		AddBonusToWorld(Vector3(60, 5, -565));
-		AddBonusToWorld(Vector3(-90, 5, -645));
-		AddBonusToWorld(Vector3(90, 5, -645));
-		AddBonusToWorld(Vector3(-90, 5, -825));
-		AddBonusToWorld(Vector3(90, 5, -825));
-		AddBonusToWorld(Vector3(-30, 5, -900))->GetTransform().SetOrientation(Matrix4::Rotation(90, { 0, 1, 0 }));
-		AddBonusToWorld(Vector3(-60, 5, -915));
-		AddBonusToWorld(Vector3(-60, -15, -1060));
-		AddBonusToWorld(Vector3(20, 20, -1060))->GetTransform().SetOrientation(Matrix4::Rotation(270, { 0, 1, 0 }));
+		AddPickupToWorld(new PowerupObject, Vector3(0, 5, -20))->GetRenderObject()->SetColour(Debug::CYAN);
+		AddPickupToWorld(new CoinObject, Vector3(-90, 5, -225));
+		AddPickupToWorld(new CoinObject, Vector3(90, 5, -225));
+		AddPickupToWorld(new CoinObject, Vector3(0, 5, -225));
+		AddPickupToWorld(new CoinObject, Vector3(0, 10, -355));
+		AddPickupToWorld(new CoinObject, Vector3(60, 5, -465));
+		AddPickupToWorld(new CoinObject, Vector3(60, 5, -565));
+		AddPickupToWorld(new CoinObject, Vector3(-90, 5, -645));
+		AddPickupToWorld(new CoinObject, Vector3(90, 5, -645));
+		AddPickupToWorld(new CoinObject, Vector3(-90, 5, -825));
+		AddPickupToWorld(new CoinObject, Vector3(90, 5, -825));
+		AddPickupToWorld(new CoinObject, Vector3(-30, 5, -900))->GetTransform().SetOrientation(Matrix4::Rotation(90, { 0, 1, 0 }));
+		AddPickupToWorld(new CoinObject, Vector3(-60, 5, -915));
+		AddPickupToWorld(new CoinObject, Vector3(-60, -15, -1060));
+		AddPickupToWorld(new CoinObject, Vector3(20, 20, -1060))->GetTransform().SetOrientation(Matrix4::Rotation(270, { 0, 1, 0 }));
+		enemies.push_back((PatrolStateGameObject*)AddEnemyToWorld(new PatrolStateGameObject(positions), Vector3(0, 10, 0)));
 		break;
 	case 2:
-		player = (PlayerObject*)AddPlayerToWorld(new PlayerObject, Vector3(0, 10, 10));
+		player = (PlayerObject*)AddPlayerToWorld(new PlayerObject, Vector3(0, 10, -10));
+		lockedObject = player;
+		selectionObject = player;
+		selectionObject->SetSelected(true);
+		int numEnemies = currentlySelected - 2;
 		/* One enemy will not take costs into account, the other will, both using A* */
 		if(numEnemies >= 1)
-			enemies.push_back((PathFindingStateGameObject*)AddEnemyToWorld(new PathFindingStateGameObject(true), Vector3(5, 10, 0)));
+			enemies.push_back((PathFindingStateGameObject*)AddEnemyToWorld(new PathFindingStateGameObject(false), Vector3(5, 10, 0)));
 		if (numEnemies >= 2)
 			enemies.push_back((PathFindingStateGameObject*)AddEnemyToWorld(new PathFindingStateGameObject(true), Vector3(0, 10, 0)));
 		if (numEnemies == 3)
 			enemies.push_back((PathFindingStateGameObject*)AddEnemyToWorld(new PathFindingStateGameObject(false), Vector3(5, 10, 0)));
-		AddBonusToWorld(Vector3(-180, 4, -40))->GetTransform().SetOrientation(Matrix4::Rotation(90, { 0, 1, 0 }));
+		AddPickupToWorld(new CoinObject, Vector3(-180, 4, -40))->GetTransform().SetOrientation(Matrix4::Rotation(90, { 0, 1, 0 }));
+		//AddPickupToWorld(new PowerupObject, Vector3(-10, 4, -40))->GetRenderObject()->SetColour(Debug::CYAN);
 		break;
 	}
 }
@@ -758,15 +782,15 @@ void TutorialGame::AddBridgeToWorld(Vector3 startPos) {
 
 GameObject* TutorialGame::AddPlayerToWorld(GameObject* p, const Vector3& position) {
 	float meshSize = 3.0f;
-	SphereVolume* volume = new SphereVolume(meshSize * 0.85);
+	CapsuleVolume* volume = new CapsuleVolume(meshSize * 0.85, 2);
 	p->SetBoundingVolume((CollisionVolume*)volume);
 	p->GetTransform().SetScale(Vector3(meshSize, meshSize, meshSize)).SetPosition(position);
-	(rand() % 2) ? p->SetRenderObject(new RenderObject(&p->GetTransform(), charMeshA, playerTex, basicShader)) :
-		p->SetRenderObject(new RenderObject(&p->GetTransform(), charMeshB, playerTex, basicShader));
+	(rand() % 2) ? p->SetRenderObject(new RenderObject(&p->GetTransform(), charMeshA, plainTex, basicShader)) :
+		p->SetRenderObject(new RenderObject(&p->GetTransform(), charMeshB, plainTex, basicShader));
+	p->GetRenderObject()->SetColour(Vector4(0, 0.5, 1, 1));
 	p->SetPhysicsObject(new PhysicsObject(&p->GetTransform(), p->GetBoundingVolume()));
 	p->GetPhysicsObject()->InitSphereInertia();
 	world->AddGameObject(p);
-	//lockedObject = character;
 	return p;
 }
 
@@ -775,23 +799,23 @@ GameObject* TutorialGame::AddEnemyToWorld(GameObject* e, const Vector3& position
 	SphereVolume* volume = new SphereVolume(meshSize * 0.85);
 	e->SetBoundingVolume((CollisionVolume*)volume);
 	e->GetTransform().SetScale(Vector3(meshSize, meshSize, meshSize)).SetPosition(position);
-	e->SetRenderObject(new RenderObject(&e->GetTransform(), enemyMesh, enemyTex, basicShader));
+	e->SetRenderObject(new RenderObject(&e->GetTransform(), enemyMesh, plainTex, basicShader));
+	e->GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
 	e->SetPhysicsObject(new PhysicsObject(&e->GetTransform(), e->GetBoundingVolume()));
 	e->GetPhysicsObject()->InitSphereInertia();
 	world->AddGameObject(e);
 	return e;
 }
 
-GameObject* TutorialGame::AddBonusToWorld(const Vector3& position) {
-	BonusObject* bonus = new BonusObject;
+GameObject* TutorialGame::AddPickupToWorld(GameObject* e, const Vector3& position) {
 	SphereVolume* volume = new SphereVolume(1.25f);
-	bonus->SetBoundingVolume((CollisionVolume*)volume);
-	bonus->GetTransform().SetScale(Vector3(0.25, 0.25, 0.25)).SetPosition(position);
-	bonus->SetRenderObject(new RenderObject(&bonus->GetTransform(), bonusMesh, bonusTex, basicShader));
-	bonus->SetPhysicsObject(new PhysicsObject(&bonus->GetTransform(), bonus->GetBoundingVolume()));
-	bonus->GetPhysicsObject()->InitSphereInertia();
-	world->AddGameObject(bonus);
-	return bonus;
+	e->SetBoundingVolume((CollisionVolume*)volume);
+	e->GetTransform().SetScale(Vector3(0.25, 0.25, 0.25)).SetPosition(position);
+	e->SetRenderObject(new RenderObject(&e->GetTransform(), bonusMesh, bonusTex, basicShader));
+	e->SetPhysicsObject(new PhysicsObject(&e->GetTransform(), e->GetBoundingVolume()));
+	e->GetPhysicsObject()->InitSphereInertia();
+	world->AddGameObject(e);
+	return e;
 }
 
 /*
@@ -818,18 +842,15 @@ bool TutorialGame::SelectObject() {
 			selectionObject->SetSelected(true);
 			return true;
 		}
-		else {
+		else 
 			return false;
-		}
 	}
 	if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::L)) {
 		if (selectionObject) {
-			if (lockedObject == selectionObject) {
+			if (lockedObject == selectionObject) 
 				lockedObject = nullptr;
-			}
-			else {
+			else 
 				lockedObject = selectionObject;
-			}
 		}
 	}
 	return false;
@@ -839,24 +860,18 @@ void TutorialGame::DebugObjectMovement() {
 	//If we've selected an object, we can manipulate it with some key presses
 	if (inSelectionMode && selectionObject) {
 		//Twist the selected object!
-		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::LEFT)) {
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::LEFT)) 
 			selectionObject->GetPhysicsObject()->AddTorque(Vector3(-10, 0, 0));
-		}
-		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::RIGHT)) {
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::RIGHT)) 
 			selectionObject->GetPhysicsObject()->AddTorque(Vector3(10, 0, 0));
-		}
-		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::UP)) {
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::UP)) 
 			selectionObject->GetPhysicsObject()->AddTorque(Vector3(0, 0, -10));
-		}
-		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::DOWN)) {
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::DOWN)) 
 			selectionObject->GetPhysicsObject()->AddTorque(Vector3(0, 0, 10));
-		}
-		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::NUM2)) {
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::NUM2)) 
 			selectionObject->GetPhysicsObject()->AddTorque(Vector3(0, -10, 0));
-		}
-		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::NUM8)) {
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::NUM8)) 
 			selectionObject->GetPhysicsObject()->AddTorque(Vector3(0, 10, 0));
-		}
 		if (Window::GetMouse()->ButtonPressed(NCL::MouseButtons::RIGHT)) {
 			Ray ray = CollisionDetection::BuildRayFromMouse(*world->GetMainCamera());
 			RayCollision closestCollision;
@@ -879,7 +894,11 @@ void TutorialGame::LockedObjectMovement() {
 	fwdAxis.y = 0.0f;
 	fwdAxis.Normalise();
 	Vector3 charForward = lockedObject->GetTransform().GetOrientation() * Vector3(0, 0, 1);
-	float force = 0.02f;
+	float force = 0.03f;
+	if (lockedObject == player && player->GetPowerUpTimer() > 0.0f) {
+		force = 0.06f;
+		renderer->DrawString("Speed Boost:" + std::to_string((int)player->GetPowerUpTimer()), Vector2(40, 95), Debug::WHITE, textSize);
+	}
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::W))
 		lockedObject->GetPhysicsObject()->ApplyLinearImpulse(fwdAxis * force);
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::A))
@@ -888,8 +907,6 @@ void TutorialGame::LockedObjectMovement() {
 		lockedObject->GetPhysicsObject()->ApplyLinearImpulse(-fwdAxis * force);
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::D))
 		lockedObject->GetPhysicsObject()->ApplyLinearImpulse(rightAxis * force);
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::SPACE)) {
-		if (dynamic_cast<PlayerObject*>(lockedObject))
-			((PlayerObject*)lockedObject)->Jump();
-	}
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::SPACE) && lockedObject == player) 
+		player->Jump();
 }

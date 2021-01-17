@@ -13,6 +13,7 @@ GameObject::GameObject(string objectName)	{
 	selectedObject = false;
 	canCollide = true;
 	timeInSet = 0.0f;
+	powerUpTimer = 0.0f;
 }
 
 GameObject::~GameObject()	{

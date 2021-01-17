@@ -6,8 +6,11 @@ PatrolStateGameObject::PatrolStateGameObject(vector<Vector3> positions) : EnemyS
 	currentState = state::FOLLOWROUTE;
 	route = positions;
 	currentDest = 0;
+	routeTimeout = 0.0f;
 	patrolState = new State([&](float dt)->void {
 		this->Patrol(dt);
+		if (displayPath)
+			this->DisplayRoute();
 	});
 	stateMachine->AddState(patrolState);
 	stateMachine->AddTransition(new StateTransition(followObjectState, patrolState, [&]()->bool {
@@ -42,12 +45,25 @@ PatrolStateGameObject::PatrolStateGameObject(vector<Vector3> positions) : EnemyS
 }
 
 void PatrolStateGameObject::Patrol(float dt) {
-	Vector3 currentPos = { GetTransform().GetPosition().x, 0, GetTransform().GetPosition().z };		// Ignore y axis
-	Vector3 dirStrength = route.at(currentDest) - currentPos;
-	if (dirStrength.Length() < 10.0f) {
-		++currentDest;
+	routeTimeout += dt;
+	if (routeTimeout > 10.0f) {
+		GetTransform().SetPosition(route[currentDest] + Vector3(0, 10, 0));		// If we are following the route and can't reach a position
+		routeTimeout = 0.0f;
+	}
+	travelDir = route[currentDest] - GetTransform().GetPosition();
+	travelDir.y = 0;
+	if (travelDir.Length() < 1.0f) {
+		routeTimeout = 0.0f;
 		if (currentDest == route.size() - 1) 		// Path completed, so go back to start
 			currentDest = 0;
+		else {
+			currentDest++;
+		}
 	}
-	GetPhysicsObject()->ApplyLinearImpulse((route.at(currentDest) - currentPos) * 0.005);
+	GetPhysicsObject()->ApplyLinearImpulse(Vector3(std::clamp(travelDir.x, -speed, speed),
+		std::clamp(travelDir.y, -speed, speed), std::clamp(travelDir.z, -speed, speed)));
+}
+
+void PatrolStateGameObject::DisplayRoute() {
+	Debug::DrawLine(GetTransform().GetPosition(), route[currentDest], Debug::CYAN);
 }

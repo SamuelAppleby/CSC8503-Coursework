@@ -9,7 +9,6 @@
 #include "SpringObject.h"
 #include "RotatingCubeObject.h"
 #include "LavaObject.h"
-#include "BonusObject.h"
 using namespace NCL;
 using namespace CSC8503;
 
@@ -212,7 +211,9 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 		return; // two static objects ??
 	}
 	/* Separate Using Projection */
-	transformA.SetPosition(transformA.GetPosition() - (p.normal * p.penetration * (physA->GetInverseMass() / totalMass)));
+	if(physA->GetInverseMass() != 0.0f)
+		transformA.SetPosition(transformA.GetPosition() - (p.normal * p.penetration * (physA->GetInverseMass() / totalMass)));
+	if (physB->GetInverseMass() != 0.0f)
 	transformB.SetPosition(transformB.GetPosition() + (p.normal * p.penetration * (physB->GetInverseMass() / totalMass)));
 	
 	/* Separate Using Impulse */
@@ -231,10 +232,14 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 	float cRestitution = physA->GetElasticity() * physB->GetElasticity(); // disperse some kinectic energy
 	float j = (-(1.0f + cRestitution) * impulseForce) / (totalMass + angularEffect);
 	Vector3 fullImpulse = p.normal * j;
-	physA->ApplyLinearImpulse(-fullImpulse);
-	physB->ApplyLinearImpulse(fullImpulse);
-	physA->ApplyAngularImpulse(Vector3::Cross(relativeA, -fullImpulse));
-	physB->ApplyAngularImpulse(Vector3::Cross(relativeB, fullImpulse));
+	if (physA->GetInverseMass() != 0.0f) {
+		physA->ApplyLinearImpulse(-fullImpulse);
+		physA->ApplyAngularImpulse(Vector3::Cross(relativeA, -fullImpulse));
+	}
+	if (physB->GetInverseMass() != 0.0f) {
+		physB->ApplyLinearImpulse(fullImpulse);
+		physB->ApplyAngularImpulse(Vector3::Cross(relativeB, fullImpulse));
+	}
 
 	/* Separate Using Friction */
 	Vector3 t = contactVelocity - (p.normal * impulseForce);
@@ -243,23 +248,27 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 	Vector3 fricInertiaA = Vector3::Cross(physA->GetInertiaTensor() * Vector3::Cross(relativeA, t), relativeA);
 	Vector3 fricInertiaB = Vector3::Cross(physB->GetInertiaTensor() * Vector3::Cross(relativeB, t), relativeB);
 	float fricEffect = Vector3::Dot(fricInertiaA + fricInertiaB, t);
-	float fricCoef = physA->GetFriction() * physB->GetFriction();
-	if (fricCoef > 1.0)
-		fricCoef = 1.0;
+	float fricCoef = std::clamp(physA->GetFriction() * physB->GetFriction(), 0.0f, 1.0f);
 	float jT = -(fricCoef * fricForce) / (totalMass + fricEffect);
 	Vector3 fricImpulse = t * jT;
 	/* Frictional effects */
-	physA->ApplyLinearImpulse(-fricImpulse);
-	physB->ApplyLinearImpulse(fricImpulse);		
-	physA->ApplyAngularImpulse(Vector3::Cross(relativeA, -fricImpulse));
-	physB->ApplyAngularImpulse(Vector3::Cross(relativeB, fricImpulse));
+	if (physA->GetInverseMass() != 0.0f) {
+		physA->ApplyLinearImpulse(-fricImpulse);
+		physA->ApplyAngularImpulse(Vector3::Cross(relativeA, -fricImpulse));
+	}
+	if (physB->GetInverseMass() != 0.0f) {
+		physB->ApplyLinearImpulse(fricImpulse);
+		physB->ApplyAngularImpulse(Vector3::Cross(relativeB, fricImpulse));
+	}
 
 	/* Separate Using Penalty */
-	float k = 10;
+	float k = 0.005;
 	float extension = 0 - p.penetration;
 	float force = -k * extension;
-	physA->AddForceAtLocalPosition(p.normal * -force, p.localA);
-	physB->AddForceAtLocalPosition(p.normal * force, p.localB);
+	if (physA->GetInverseMass() != 0.0f) 
+		physA->AddForceAtLocalPosition(p.normal * -force, p.localA);
+	if (physB->GetInverseMass() != 0.0f)
+		physB->AddForceAtLocalPosition(p.normal * force, p.localB);
 }
 
 /* Directly apply spring forces to object */

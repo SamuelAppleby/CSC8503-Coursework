@@ -4,10 +4,13 @@
 using namespace NCL;
 using namespace CSC8503;
 EnemyStateGameObject::EnemyStateGameObject() {
+	invMass = 5;
+	elasticity = 0.2;
+	friction = 0.2;
 	rayTime = 0.5f;
 	finished = false;
 	followTimeout = 0.0f;
-	speed = 0.15f;
+	speed = 0.02f;
 	displayPath = false;
 	followObjectState = new State([&](float dt)->void {
 		this->FollowObject(dt);
@@ -33,16 +36,6 @@ EnemyStateGameObject::EnemyStateGameObject() {
 }
 
 void EnemyStateGameObject::Update(float dt) {
-	if (currentState != state::IDLE) {
-		float speed = 10 * dt;
-		Matrix3 rotMatrix, currentMatrix, finalMatrix, finalMatrix2;
-		Vector3 currentPos = GetTransform().GetPosition();
-		currentPos.y = 0;
-		rotMatrix.SetColumn(0, -Vector3::Cross(Vector3(0, 1, 0), travelDir.Normalised()));
-		rotMatrix.SetColumn(1, Vector3(0, 1, 0));
-		rotMatrix.SetColumn(2, -travelDir.Normalised());
-		GetTransform().SetOrientation(rotMatrix);
-	}
 	/* Sort our objects of interest and follow the closest */
 	for (auto itr = interestObjects.cbegin(); itr != interestObjects.cend();) {
 		GameObject* o = *itr;
@@ -55,8 +48,6 @@ void EnemyStateGameObject::Update(float dt) {
 			currentObject->SetTimeInSet(0.0f);
 		}
 		o->IncreaseTimeInSet(dt);
-		travelDir = currentObject->GetTransform().GetPosition() - this->GetTransform().GetPosition();
-		travelDir.y = 0;
 		/* Erase any objects that have existed too long, no longer exist, or are too far away */
 		if (o->GetTimeInSet() > 10.0f || !o->IsActive() || dir.Length() > 80.0f) {
 			itr = interestObjects.erase(itr);
@@ -69,11 +60,39 @@ void EnemyStateGameObject::Update(float dt) {
 			++itr;
 	}
 	rayTime -= dt;
-	stateMachine->Update(dt);
+	if (powerUpTimer > 0.0f) {
+		speed = 0.04f;
+		powerUpTimer -= dt;
+		GetRenderObject()->SetColour(Vector4(10, 1, 0, 1));
+	}
+	else {
+		speed = 0.02f;
+		GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
+	}
+	Vector3 up = Vector3::Cross(Vector3(0, 1, 0), travelDir.Normalised());
+	/* std::clamp misbehaves here, so apologies for what is below */
+	if (up.x >= 1.0f)
+		up.x = 0.999f;
+	if (up.x <= -1.0f)
+		up.x = -0.999f;
+	if (up.z >= 1.0f)
+		up.z = 0.999f;
+	if (up.z <= -1.0f)
+		up.z = -0.999f;
+	if (currentState != state::IDLE) {
+		Matrix3 rotMatrix;
+		rotMatrix.SetColumn(0, -up);
+		rotMatrix.SetColumn(1, Vector3(0, 1, 0));
+		rotMatrix.SetColumn(2, -travelDir.Normalised());
+		GetTransform().SetOrientation(rotMatrix);
+		stateMachine->Update(dt);
+	}
 }
 
 void EnemyStateGameObject::FollowObject(float dt) {
 	followTimeout -= dt;
+	travelDir = currentObject->GetTransform().GetPosition() - this->GetTransform().GetPosition();
+	travelDir.y = 0;
 	GetPhysicsObject()->ApplyLinearImpulse(Vector3(std::clamp(travelDir.x, -speed, speed), 0, std::clamp(travelDir.z, -speed, speed)));
 }
 

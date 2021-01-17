@@ -63,11 +63,9 @@ namespace NCL {
 			void SetWorldID(int newID) {
 				worldID = newID;
 			}
-
 			int GetWorldID() const {
 				return worldID;
 			}
-
 			void SetIsActive(bool val) {
 				isActive = val;
 			}
@@ -89,6 +87,12 @@ namespace NCL {
 			float GetTimeInSet() const {
 				return timeInSet;
 			}
+			void SetPowerUpTimer(float val) {
+				powerUpTimer = val;
+			}
+			float GetPowerUpTimer() const {
+				return powerUpTimer;
+			}
 		protected:
 			Transform			transform;
 
@@ -96,13 +100,14 @@ namespace NCL {
 			PhysicsObject*		physicsObject;
 			RenderObject*		renderObject;
 
-			bool	isActive;
-			int		worldID;
+			bool isActive;
+			int	worldID;
 			string	name;
 			bool selectedObject;
 			Vector3 broadphaseAABB;
 			bool canCollide;
 			float timeInSet;
+			float powerUpTimer;
 		};
 	}
 }

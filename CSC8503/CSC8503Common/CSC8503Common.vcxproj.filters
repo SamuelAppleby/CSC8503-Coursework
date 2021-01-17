@@ -117,9 +117,6 @@
     <ClInclude Include="RotatingCubeObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BonusObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="EnemyObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -170,6 +167,15 @@
     </ClInclude>
     <ClInclude Include="IntroScreen.h">
       <Filter>AI</Filter>
+    </ClInclude>
+    <ClInclude Include="PickupObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PowerupObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CoinObject.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

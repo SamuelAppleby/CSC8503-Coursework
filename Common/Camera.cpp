@@ -52,7 +52,7 @@ void Camera::UpdateCamera(float dt) {
 }
 
 void Camera::UpdateCameraWithObject(float dt, Camera* cam, Vector3 position) {
-	pitch -= (Window::GetMouse()->GetRelativePosition().y);
+	//pitch -= (Window::GetMouse()->GetRelativePosition().y);
 	yaw -= (Window::GetMouse()->GetRelativePosition().x);
 
 	pitch = std::min(pitch, 90.0f);
@@ -99,7 +99,7 @@ void Camera::UpdateCameraWithObject(float dt, Camera* cam, Vector3 position) {
 	lockedOffset.y = -yPos;
 	Vector3 camPos = position + lockedOffset;
 	cam->SetPosition(camPos);
-	cam->SetPitch(pitch);
+	cam->SetPitch(0);
 	cam->SetYaw(yaw);
 }
 

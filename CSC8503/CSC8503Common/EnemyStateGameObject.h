@@ -37,10 +37,19 @@ namespace NCL {
 			void SetDisplayDirection(float val) {
 				displayPath = val;
 			}
+			void SetPhysicsObject(PhysicsObject* newObject) override {
+				physicsObject = newObject;
+				physicsObject->SetInverseMass(invMass);
+				physicsObject->SetElasticity(elasticity);
+				physicsObject->SetFriction(friction);
+			}
 			void Update(float dt) override;
 			void FollowObject(float dt);
 			void DisplayDirection();
 		protected:
+			float invMass;
+			float elasticity;
+			float friction;
 			State* followObjectState;
 			std::set<GameObject*> interestObjects;
 			GameObject* currentObject;

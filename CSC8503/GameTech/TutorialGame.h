@@ -21,7 +21,8 @@
 #include "../CSC8503Common/SpringObject.h"
 #include "../CSC8503Common/PlayerObject.h"
 #include "../CSC8503Common/EnemyObject.h"
-#include "../CSC8503Common/BonusObject.h"
+#include "../CSC8503Common/CoinObject.h"
+#include "../CSC8503Common/PowerupObject.h"
 #include "../CSC8503Common/CapsuleObject.h"
 #include "../CSC8503Common/FinishObject.h"
 #include "../CSC8503Common/Pushdownstate.h"
@@ -96,7 +97,7 @@ namespace NCL {
 
 			GameObject* AddPlayerToWorld(GameObject* p, const Vector3& position);
 			GameObject* AddEnemyToWorld(GameObject* e, const Vector3& position);
-			GameObject* AddBonusToWorld(const Vector3& position);
+			GameObject* AddPickupToWorld(GameObject* e, const Vector3& position);
 
 			bool SelectObject();
 			void DebugObjectMovement();
@@ -125,10 +126,9 @@ namespace NCL {
 			OGLTexture* obstacleTex = nullptr;
 			OGLTexture* woodenTex = nullptr;
 			OGLTexture* bonusTex = nullptr;
-			OGLTexture* playerTex = nullptr;
-			OGLTexture* enemyTex = nullptr;
 			OGLTexture* finishTex = nullptr;
 			OGLTexture* menuTex = nullptr;
+			OGLTexture* plainTex = nullptr;
 			OGLShader*	basicShader = nullptr;
 
 			//Coursework Meshes
@@ -149,7 +149,6 @@ namespace NCL {
 			float textSize = 15.0f;
 
 			int currentlySelected;
-			int numEnemies;
 			vector<GameObject*> menuEnemies;
 			vector<GameObject*> menuPlayers;
 
