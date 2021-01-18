@@ -24,7 +24,7 @@ namespace NCL {
 			fov			= 45.0f;
 			nearPlane	= 1.0f;
 			farPlane	= 100.0f;
-
+			topDown = false;
 			camType		= CameraType::Perspective;
 		};
 
@@ -64,7 +64,9 @@ namespace NCL {
 		void SetFarPlane(float val) {
 			farPlane = val;
 		}
-
+		void SetTopDown(bool val) {
+			topDown = val;
+		}
 		//Builds a view matrix for the current camera variables, suitable for sending straight
 		//to a vertex shader (i.e it's already an 'inverse camera matrix').
 		Matrix4 BuildViewMatrix() const;
@@ -102,7 +104,7 @@ namespace NCL {
 		float	yaw;
 		float	pitch;
 		Vector3 position;
-
+		bool topDown;
 		Vector3 lockedOffset = Vector3(0, 0, 0);
 	};
 }

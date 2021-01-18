@@ -10,7 +10,7 @@ EnemyStateGameObject::EnemyStateGameObject() {
 	rayTime = 0.5f;
 	finished = false;
 	followTimeout = 0.0f;
-	speed = 0.02f;
+	speed = 0.025f;
 	displayPath = false;
 	followObjectState = new State([&](float dt)->void {
 		this->FollowObject(dt);
@@ -61,13 +61,12 @@ void EnemyStateGameObject::Update(float dt) {
 	}
 	rayTime -= dt;
 	if (powerUpTimer > 0.0f) {
-		speed = 0.04f;
+		speed = 0.05f;
 		powerUpTimer -= dt;
-		GetRenderObject()->SetColour(Vector4(10, 1, 0, 1));
 	}
 	else {
-		speed = 0.02f;
 		GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
+		speed = 0.025f;
 	}
 	Vector3 up = Vector3::Cross(Vector3(0, 1, 0), travelDir.Normalised());
 	/* std::clamp misbehaves here, so apologies for what is below */

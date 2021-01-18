@@ -37,7 +37,15 @@ namespace NCL {
 			~TutorialGame();
 
 			PushdownResult OnUpdate(float dt, PushdownState** newState) override {
-				renderer->DrawString("FPS:" + std::to_string((int)(1 / dt)), Vector2(0, 5), Debug::WHITE, 15.0f);
+				fpsTimer -= dt;
+				++framesPerSecond;
+				if (fpsTimer < 0.0f) {
+					float alpha = 0.1f;
+					avgFps = alpha * avgFps + (1.0 - alpha) * framesPerSecond;
+					framesPerSecond = 0;
+					fpsTimer = 1.0f;
+				}
+				renderer->DrawString("FPS:" + std::to_string(avgFps), Vector2(0, 5), Debug::WHITE, 15.0f);
 				currentLevel == 0 ? UpdateMenu(dt) : UpdateLevel(dt);
 				physics->ClearDeletedCollisions();
 				world->RemoveDeletedObjects();
@@ -147,11 +155,15 @@ namespace NCL {
 			bool lockedOrientation;
 
 			float textSize = 15.0f;
-
 			int currentlySelected;
 			vector<GameObject*> menuEnemies;
 			vector<GameObject*> menuPlayers;
 
+			int avgFps;
+			int framesPerSecond;
+			float fpsTimer;
+
+			bool topDown;
 		};
 	}
 }

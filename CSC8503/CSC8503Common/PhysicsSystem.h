@@ -97,6 +97,8 @@ namespace NCL {
 			float	dampingFactor;
 			std::set<CollisionDetection::CollisionInfo> allCollisions;
 			std::set<CollisionDetection::CollisionInfo> broadphaseCollisions;
+			vector<GameObject*> staticObjects;
+			vector<GameObject*> dynamicObjects;
 			bool useBroadPhase;
 			int numCollisionFrames	= 5;
 			int constraintIterationCount = 10;

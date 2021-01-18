@@ -11,7 +11,6 @@ namespace NCL {
 				invMass = 0.0f;
 				elasticity = 0.0;
 				friction = 0.8;
-				canCollide = false;
 			}
 			void SetPhysicsObject(PhysicsObject* newObject) override {
 				physicsObject = newObject;

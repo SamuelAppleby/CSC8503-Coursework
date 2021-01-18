@@ -9,6 +9,7 @@
 #include "SpringObject.h"
 #include "RotatingCubeObject.h"
 #include "LavaObject.h"
+#include "PickupObject.h"
 using namespace NCL;
 using namespace CSC8503;
 
@@ -187,7 +188,7 @@ void PhysicsSystem::BasicCollisionDetection() {
 			basicCollisionsTested++;
 			if (CollisionDetection::ObjectIntersection(*i, *j, info)) {
 				//std::cout << "Collision between " << (*i)->GetName() << " and " << (*j)->GetName() << std::endl;
-				if (info.a->CanCollide() && info.b->CanCollide())
+				if (!dynamic_cast<PickupObject*>(info.a) && !dynamic_cast<PickupObject*>(info.b))
 					ImpulseResolveCollision(*info.a, *info.b, info.point);
 				info.framesLeft = numCollisionFrames;
 				allCollisions.insert(info);
@@ -292,11 +293,6 @@ void PhysicsSystem::BroadPhase() {
 	std::vector<GameObject*>::const_iterator last;
 	gameWorld.GetObjectIterators(first, last);
 	for (auto i = first; i != last; ++i) {
-		/* Any object with a velocity is not asleep */
-		if ((*i)->GetPhysicsObject()->GetLinearVelocity().Length() == 0.0 && (*i)->GetPhysicsObject()->GetAngularVelocity().Length() == 0.0)
-			(*i)->GetPhysicsObject()->SetIsAsleep(true);
-		else
-			(*i)->GetPhysicsObject()->SetIsAsleep(false);
 		Vector3 halfSizes;
 		if (!(*i)->GetBroadphaseAABB(halfSizes)) {
 			continue;
@@ -307,16 +303,15 @@ void PhysicsSystem::BroadPhase() {
 	}
 	tree.OperateOnContents([&](std::list<QuadTreeEntry<GameObject*>>& data) {
 		CollisionDetection::CollisionInfo info;
-		int x = 0;
 		for (auto i = data.begin(); i != data.end(); ++i) {
 			for (auto j = std::next(i); j != data.end(); ++j) {
-				if (!((*i).object->GetPhysicsObject()->GetIsStatic() && (*j).object->GetPhysicsObject()->GetIsStatic())
-					&& !((*i).object->GetPhysicsObject()->GetIsAsleep() && (*j).object->GetPhysicsObject()->GetIsAsleep())) {
-					// is this pair of items already in the collision set - if the same pair is in another quadtree node together etc
-					info.a = min((*i).object, (*j).object);
-					info.b = max((*i).object, (*j).object);
+				info.a = min((*i).object, (*j).object);
+				info.b = max((*i).object, (*j).object);
+				bool areStatic = info.a->GetPhysicsObject()->GetInverseMass() == 0.0f && info.b->GetPhysicsObject()->GetInverseMass() == 0.0f;
+				bool areSleeping = info.a->GetPhysicsObject()->GetLinearVelocity().Length() == 0.0f && info.b->GetPhysicsObject()->GetLinearVelocity().Length() == 0.0f
+					&& info.a->GetPhysicsObject()->GetAngularVelocity().Length() == 0.0f && info.b->GetPhysicsObject()->GetAngularVelocity().Length() == 0.0f;
+				if (!(areStatic || areSleeping))
 					broadphaseCollisions.insert(info);
-				}
 			}
 		}
 	});
@@ -333,7 +328,7 @@ void PhysicsSystem::NarrowPhase() {
 		if (CollisionDetection::ObjectIntersection(info.a, info.b, info)) {
 			//std::cout << "Collision between " << (*i).a->GetName() << " and " << (*i).b->GetName() << std::endl;
 			info.framesLeft = numCollisionFrames;
-			if (info.a->CanCollide() && info.b->CanCollide())
+			if (!dynamic_cast<PickupObject*>(info.a) && !dynamic_cast<PickupObject*>(info.b))
 				ImpulseResolveCollision(*info.a, *info.b, info.point);
 			allCollisions.insert(info);
 			totalCollisions++;

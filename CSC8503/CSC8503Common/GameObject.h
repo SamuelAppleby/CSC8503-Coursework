@@ -75,9 +75,6 @@ namespace NCL {
 			void SetSelected(bool val) {
 				selectedObject = val;
 			}
-			bool CanCollide() const {
-				return canCollide;
-			}
 			void IncreaseTimeInSet(float dt) {
 				timeInSet += dt;
 			}
@@ -105,7 +102,6 @@ namespace NCL {
 			string	name;
 			bool selectedObject;
 			Vector3 broadphaseAABB;
-			bool canCollide;
 			float timeInSet;
 			float powerUpTimer;
 		};

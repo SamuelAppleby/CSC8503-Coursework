@@ -53,14 +53,10 @@ namespace NCL {
 				spawnPos = val;
 			}
 			void Update(float dt) {
-				if (powerUpTimer > 0.0f) {
-					GetRenderObject()->SetColour(Vector4(0, 1, 10, 1));
+				if (powerUpTimer > 0.0f) 
 					powerUpTimer -= dt;
-				}
-				else {
-					powerUpTimer -= dt;
+				else
 					GetRenderObject()->SetColour(Vector4(0, 0.5, 1, 1));
-				}
 			}
 		protected:
 			float invMass;

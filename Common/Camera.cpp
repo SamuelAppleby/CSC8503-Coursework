@@ -51,8 +51,8 @@ void Camera::UpdateCamera(float dt) {
 	}
 }
 
-void Camera::UpdateCameraWithObject(float dt, Camera* cam, Vector3 position) {
-	//pitch -= (Window::GetMouse()->GetRelativePosition().y);
+void Camera::UpdateCameraWithObject(float dt, Camera* cam, Vector3 objectPos) {
+	pitch -= (Window::GetMouse()->GetRelativePosition().y);
 	yaw -= (Window::GetMouse()->GetRelativePosition().x);
 
 	pitch = std::min(pitch, 90.0f);
@@ -85,22 +85,45 @@ void Camera::UpdateCameraWithObject(float dt, Camera* cam, Vector3 position) {
 		lockedOffset.z = xPos;
 	}
 
-	float yPos = pitch * (radius / 90);
-	if (pitch > 0) 
-		lockedOffset.z += yPos;
-	else 
-		lockedOffset.z += yPos;
+	/*float yPos = pitch * (radius / 90);
+	if (pitch > 0) {
+		if (yaw > 45 && yaw < 135) {
+			lockedOffset.x -= yPos;
+		}
+		else if (yaw > 135 && yaw < 225) {
+			lockedOffset.z += yPos;
+		}
+		else if (yaw > 225 && yaw < 315) {
+			lockedOffset.x += yPos;
+		}
+		else
+			lockedOffset.z -= yPos;
+	}
+	if (pitch < 0) {
+		if (yaw > 45 && yaw < 135) {
+			lockedOffset.x += yPos;
+		}
+		else if (yaw > 135 && yaw < 225) {
+			lockedOffset.z -= yPos;
+		}
+		else if (yaw > 225 && yaw < 315) {
+			lockedOffset.x -= yPos;
+		}
+		else
+			lockedOffset.z += yPos;
+	}
+	std::clamp(lockedOffset.z, -radius, radius);*/
 
-	if (lockedOffset.z > radius)
-		lockedOffset.z = radius;
-	else if (lockedOffset.z < -radius)
-		lockedOffset.z = -radius;
-
-	lockedOffset.y = -yPos;
-	Vector3 camPos = position + lockedOffset;
-	cam->SetPosition(camPos);
-	cam->SetPitch(0);
-	cam->SetYaw(yaw);
+	//lockedOffset.y = -yPos;
+	
+	if (topDown) {
+		position = objectPos + Vector3(0, 40, 0);
+		pitch = -90;
+	}
+	else {
+		position = objectPos + lockedOffset;
+		pitch = 0;
+	}
 }
 
 /*
