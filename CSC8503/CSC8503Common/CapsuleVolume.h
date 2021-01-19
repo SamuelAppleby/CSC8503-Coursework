@@ -2,8 +2,7 @@
 #include "CollisionVolume.h"
 
 namespace NCL {
-    class CapsuleVolume : public CollisionVolume
-    {
+    class CapsuleVolume : public CollisionVolume {
     public:
         CapsuleVolume(float halfHeight, float radius) {
             this->halfHeight    = halfHeight;

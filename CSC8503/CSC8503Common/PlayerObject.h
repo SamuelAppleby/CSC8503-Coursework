@@ -20,16 +20,16 @@ namespace NCL {
 				physicsObject->SetFriction(friction);
 			}
 			void OnCollisionBegin(GameObject* otherObject) override {
-				if(!canJump)
-					canJump = true;
+				canJump = true;
 			}
 			void OnCollisionEnd(GameObject* otherObject) override {
-				if(canJump)
-					canJump = false;
+				
 			}
 			void Jump() {
-				//if (canJump)
+				//if (canJump) {
 					physicsObject->ApplyLinearImpulse(Vector3(0, 5, 0));
+					canJump = false;
+				//}
 			}
 			int GetScore() const {
 				return score;

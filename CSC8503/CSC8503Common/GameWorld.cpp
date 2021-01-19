@@ -67,11 +67,10 @@ void GameWorld::UpdateWorld(float dt) {
 		std::shuffle(gameObjects.begin(), gameObjects.end(), g);
 	if (shuffleConstraints) 
 		std::shuffle(constraints.begin(), constraints.end(), g);
-}
-
-void GameWorld::RemoveDeletedObjects() {
 	for (auto& i : gameObjects) {
-		if (!i->IsActive() && !i->GetSelected())
+		if (i->GetTimeAlive() > 20.0f)		// Objects living longer than 20s are destroyed
+			i->SetIsActive(false);
+		if (i->GetIsSafeForDeletion())
 			RemoveGameObject(i, true);
 	}
 }

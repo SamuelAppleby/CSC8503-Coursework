@@ -90,6 +90,18 @@ namespace NCL {
 			float GetPowerUpTimer() const {
 				return powerUpTimer;
 			}
+			float GetTimeAlive() const {
+				return timeAlive;
+			}
+			void StepTimeAlive(float dt) {
+				timeAlive += dt;
+			}
+			bool GetIsSafeForDeletion() const {
+				return safeForDeletion;
+			}
+			void SetIsSafeForDeletion(bool val) {
+				safeForDeletion = val;
+			}
 		protected:
 			Transform			transform;
 
@@ -103,7 +115,10 @@ namespace NCL {
 			bool selectedObject;
 			Vector3 broadphaseAABB;
 			float timeInSet;
+			float timeAlive;
 			float powerUpTimer;
+
+			bool safeForDeletion;
 		};
 	}
 }

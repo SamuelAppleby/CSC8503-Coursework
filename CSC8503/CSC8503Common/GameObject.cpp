@@ -13,6 +13,8 @@ GameObject::GameObject(string objectName)	{
 	selectedObject = false;
 	timeInSet = 0.0f;
 	powerUpTimer = 0.0f;
+	timeAlive = 0.0f;
+	safeForDeletion = false;
 }
 
 GameObject::~GameObject()	{

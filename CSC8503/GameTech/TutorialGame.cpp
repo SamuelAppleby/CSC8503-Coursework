@@ -24,7 +24,6 @@ TutorialGame::TutorialGame() {
 	avgFps = 1.0f;
 	framesPerSecond = 0;
 	fpsTimer = 1.0f;
-	topDown = false;
 	InitialiseAssets();
 }
 
@@ -163,10 +162,9 @@ void TutorialGame::UpdateLevel(float dt) {
 			Window::GetWindow()->LockMouseToWindow(true);
 		}
 	}
+	/* Debug mode selection */
 	inSelectionMode ? renderer->DrawString("Change to play mode(Q)", Vector2(69, 10), Debug::WHITE, textSize) :
 		renderer->DrawString("Change to debug mode(Q)", Vector2(68, 10), Debug::WHITE, textSize);
-	renderer->DrawString("Exit to Menu (ESC)", Vector2(75, 5), Debug::WHITE, textSize);
-	renderer->DrawString("Pause(P)", Vector2(88, 15), Debug::WHITE, textSize);
 	if (inSelectionMode) {
 		UpdateKeys();
 		SelectObject();
@@ -176,34 +174,73 @@ void TutorialGame::UpdateLevel(float dt) {
 	else {
 		if (player) {
 			renderer->DrawString("Score:" + std::to_string(player->GetScore()), Vector2(0, 10), Debug::WHITE, textSize);
-			renderer->DrawString("Jump[SPACE]", Vector2(84, 90), Debug::WHITE, textSize);
-			renderer->DrawString("Change Camera[1]", Vector2(77, 95), Debug::WHITE, textSize);
 			player->Update(dt);
 		}
-		world->GetMainCamera()->UpdateCamera(dt);
 	}
-	currentLevel == 1 ? UpdateLevel1(dt) : UpdateLevel2(dt);
-	lockedObject ? LockedObjectMovement() : DebugObjectMovement();
-	CheckFinished(dt);
-	physics->Update(dt);
+	/* Camera controls */
+	switch (cameraState) {
+		case CameraState::FREE:
+			renderer->DrawString("Change to Global Camera[1]", Vector2(62, 20), Debug::WHITE, textSize);
+			break;
+		case CameraState::GLOBAL1:
+			renderer->DrawString("Change to Free Camera[1]", Vector2(65, 20), Debug::WHITE, textSize);
+			break;
+		case CameraState::GLOBAL2:
+			renderer->DrawString("Change to Free Camera[1]", Vector2(65, 20), Debug::WHITE, textSize);
+			break;
+		case CameraState::THIRDPERSON:
+			renderer->DrawString("Change to Topdown Camera[1]", Vector2(61, 20), Debug::WHITE, textSize);
+			break;
+		case CameraState::TOPDOWN:
+			renderer->DrawString("Change to Thirdperson Camera[1]", Vector2(56, 20), Debug::WHITE, textSize);
+			break;
+	}
+	if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::NUM1)) {
+		switch (cameraState) {
+			case CameraState::FREE:
+				cameraState = currentLevel == 1 ? CameraState::GLOBAL1 : CameraState::GLOBAL2;
+				break;
+			case CameraState::GLOBAL1:
+				InitCamera();
+				cameraState = CameraState::FREE;
+				break;
+			case CameraState::GLOBAL2:
+				InitCamera();
+				cameraState = CameraState::FREE;
+				break;
+		}
+	}
+
+	physics->Update(dt);		// Update our physics
+
 	if (lockedObject) {
 		world->GetMainCamera()->UpdateCameraWithObject(dt, world->GetMainCamera(), lockedObject->GetTransform().GetPosition());
 		if (lockedOrientation)
 			lockedObject->GetTransform().SetOrientation(Matrix4::Rotation(world->GetMainCamera()->GetYaw(), { 0, 1, 0 }));
 	}
+	else if (!inSelectionMode)
+		world->GetMainCamera()->UpdateCamera(dt);
+	world->GetMainCamera()->SetState(cameraState);
+
+	renderer->DrawString("Exit to Menu (ESC)", Vector2(75, 5), Debug::WHITE, textSize);
+	renderer->DrawString("Pause(P)", Vector2(88, 15), Debug::WHITE, textSize);
+	
+	currentLevel == 1 ? UpdateLevel1(dt) : UpdateLevel2(dt);
+	lockedObject ? LockedObjectMovement(dt) : DebugObjectMovement();
+	CheckFinished(dt);
 }
 
+/* Draws debug information to screen, and will display selected object properties*/
 void TutorialGame::DrawDebugInfo() {
-	renderer->DrawString("Reset Camera(F1)", Vector2(0, 10), Debug::WHITE, textSize);
-	world->GetShuffleObjects() ? renderer->DrawString("Shuffle Objects(F2):On", Vector2(0, 15), Debug::WHITE, textSize) :
-		renderer->DrawString("Shuffle Objects(F2):Off", Vector2(0, 15), Debug::WHITE, textSize);
-	world->GetShuffleConstraints() ? renderer->DrawString("Shuffle Constraints(F3):On", Vector2(0, 20), Debug::WHITE, textSize) :
-		renderer->DrawString("Shuffle Constraints(F3):Off", Vector2(0, 20), Debug::WHITE, textSize);
+	world->GetShuffleObjects() ? renderer->DrawString("Shuffle Objects(F2):On", Vector2(0, 10), Debug::WHITE, textSize) :
+		renderer->DrawString("Shuffle Objects(F2):Off", Vector2(0, 10), Debug::WHITE, textSize);
+	world->GetShuffleConstraints() ? renderer->DrawString("Shuffle Constraints(F3):On", Vector2(0, 15), Debug::WHITE, textSize) :
+		renderer->DrawString("Shuffle Constraints(F3):Off", Vector2(0, 15), Debug::WHITE, textSize);
 
-	useGravity ? renderer->DrawString("Gravity(G):On", Vector2(0, 25), Debug::WHITE, textSize) : 
-		renderer->DrawString("Gravity(G):Off", Vector2(0, 25), Debug::WHITE, textSize);
-	renderer->DrawString("Click Force(Scroll Wheel):" + std::to_string((int)forceMagnitude), Vector2(0, 30), Debug::WHITE, textSize);
-	renderer->DrawString("Constraint Iteration Count(I/O):" + std::to_string(physics->GetConstraintIterationCount()), Vector2(0, 35), Debug::WHITE, textSize);
+	useGravity ? renderer->DrawString("Gravity(G):On", Vector2(0, 20), Debug::WHITE, textSize) : 
+		renderer->DrawString("Gravity(G):Off", Vector2(0, 20), Debug::WHITE, textSize);
+	renderer->DrawString("Click Force(Scroll Wheel):" + std::to_string((int)forceMagnitude), Vector2(0, 25), Debug::WHITE, textSize);
+	renderer->DrawString("Constraint Iteration Count(I/O):" + std::to_string(physics->GetConstraintIterationCount()), Vector2(0, 30), Debug::WHITE, textSize);
 
 	if (physics->GetBroadPhase()) {
 		renderer->DrawString("QuadTree(B):On", Vector2(78, 80), Debug::WHITE, textSize);
@@ -214,19 +251,21 @@ void TutorialGame::DrawDebugInfo() {
 		renderer->DrawString("Collisions Tested:" + std::to_string(physics->GetBasicCollisionsTested()), Vector2(68, 90), Debug::WHITE, textSize);
 	}
 	if (lockedObject) {
-		renderer->DrawString("Unlock object(L)", Vector2(0, 45), Debug::WHITE, textSize);
+		renderer->DrawString("Unlock object(L)", Vector2(0, 35), Debug::WHITE, textSize);
 		lockedOrientation ? renderer->DrawString("Lock object orientation(K): On", Vector2(0, 40), Debug::WHITE, textSize) :
 			renderer->DrawString("Lock object orientation(K): Off", Vector2(0, 40), Debug::WHITE, textSize);
 	}
 	else
-		renderer->DrawString("Lock selected object(L)", Vector2(0, 45), Debug::WHITE, textSize);
+		renderer->DrawString("Lock selected object(L)", Vector2(0, 35), Debug::WHITE, textSize);
 	renderer->DrawString("Current Collisions:" + std::to_string(physics->GetCollisionsSize()), Vector2(68, 95), Debug::WHITE, textSize);
 	renderer->DrawString("Total Objects:" + std::to_string(world->GetTotalWorldObjects()), Vector2(75, 85), Debug::WHITE, textSize);
 
+	/* If selected an object display all its physical properties */
 	if (selectionObject) {
-		if (StateGameObject* g = dynamic_cast<StateGameObject*>(selectionObject)) {
-			renderer->DrawString("State:" + g->StateToString(), Vector2(0, 55), Debug::WHITE, textSize);
-			g->GetPowerUpTimer() > 0.0f ? renderer->DrawString("Powered Up: Yes", Vector2(0, 50), Debug::WHITE, textSize) :
+		/* Display state machine information */
+		if (dynamic_cast<StateGameObject*>(selectionObject)) {
+			renderer->DrawString("State:" + ((StateGameObject*)selectionObject)->StateToString(), Vector2(0, 55), Debug::WHITE, textSize);
+			selectionObject->GetPowerUpTimer() > 0.0f ? renderer->DrawString("Powered Up: Yes", Vector2(0, 50), Debug::WHITE, textSize) :
 				renderer->DrawString("Powered Up: No", Vector2(0, 50), Debug::WHITE, textSize);
 		}
 		else if (dynamic_cast<PlayerObject*>(selectionObject)) {
@@ -244,6 +283,7 @@ void TutorialGame::DrawDebugInfo() {
 	}
 }
 
+/* Checks whether an enemy or the player has reached the finish, or score is 0 */
 void TutorialGame::CheckFinished(float dt) {
 	if (player && !inSelectionMode) {
 		if (player->GetScore() <= 0 || player->GetFinished()) {
@@ -261,15 +301,16 @@ void TutorialGame::CheckFinished(float dt) {
 		if (e->GetFinished()) {
 			timeOut += dt;
 			renderer->DrawString("AI Won - Game Over", Vector2(32, 40), Vector4(1, 0, 0, 1), 25.0f);
-			renderer->DrawString("Score:" + std::to_string(player->GetScore()), Vector2(42, 45), Vector4(1, 1, 0, 1));
+			if(player)
+				renderer->DrawString("Score:" + std::to_string(player->GetScore()), Vector2(42, 45), Vector4(1, 1, 0, 1));
 			renderer->DrawString("Exiting to Menu in:" + std::to_string((int)(5.0f - timeOut)) + "s", Vector2(30, 50));
 		}
 	}
-	
 	if (timeOut == 0.0f && player)
 		player->DecreaseScore(dt);
 }
 
+/* Updates the obstacle course level */
 void TutorialGame::UpdateLevel1(float dt) {
 	for (auto& p : platforms) 
 		p->Update(dt);
@@ -277,49 +318,69 @@ void TutorialGame::UpdateLevel1(float dt) {
 		e->Update(dt);
 		EnemyRaycast(e);
 	}
+
 	reloadTime += dt;
-	if (reloadTime > 2.0f)
+	if (reloadTime > 2.0f) {
 		FireObjects();
+		reloadTime = 0.0f;
+	}
+	for (auto& o : projectiles) 
+		o->StepTimeAlive(dt);
+
+	/* Setting checkpoints and camera switches */
 	if (player) {
-		if (player->GetTransform().GetPosition().z >= 0)
+		if ((int)player->GetTransform().GetPosition().z == 0)
 			player->SetSpawnPos({ 0, 10, 0 });
-		if (player->GetTransform().GetPosition().z < -265) 
+		if ((int)player->GetTransform().GetPosition().z == -265) {
 			player->SetSpawnPos({ 0, 10, -265 });
-		if (player->GetTransform().GetPosition().z < -600) 
-			player->SetSpawnPos({ 0, 10, -600 });
-		if (player->GetTransform().GetPosition().z < -850) 
-			player->SetSpawnPos({ 0, 10, -850 });
-		if (player->GetTransform().GetPosition().z < -1060) {
-			player->SetSpawnPos({ -30, 50, -1060 });
-			player->GetTransform().SetOrientation(Matrix4::Rotation(-90, { 0, 1, 0 }));
+			cameraState = CameraState::TOPDOWN;
 		}
+		if ((int)player->GetTransform().GetPosition().z == -445) 
+			cameraState = CameraState::THIRDPERSON;
+		if ((int)player->GetTransform().GetPosition().z == -620) 
+			player->SetSpawnPos({ 0, 10, -620 });
+		if ((int)player->GetTransform().GetPosition().z == -840) {
+			player->SetSpawnPos({ 0, 10, -840 });
+			cameraState = CameraState::TOPDOWN;
+		}
+		if ((int)player->GetTransform().GetPosition().z < -980 && (int)player->GetTransform().GetPosition().x == -30) {
+			player->SetSpawnPos({ -30, 50, -990 });
+			player->GetTransform().SetOrientation(Matrix4::Rotation(-90, { 0, 1, 0 }));
+			cameraState = CameraState::THIRDPERSON;
+		}
+		if ((int)player->GetTransform().GetPosition().z < -980 && (int)player->GetTransform().GetPosition().x == 125) 
+			cameraState = CameraState::TOPDOWN;
 	}
 }
 
+/* Fires objects across the platform */
 void TutorialGame::FireObjects() {
-	CubeObject* cube = new CubeObject;
-	AddCubeToWorld(cube, Vector3(-40, 8, ((rand() % (100 - 180 + 1)) + 100) * -1), Vector3(2, 2, 2));
-	cube->GetPhysicsObject()->SetLinearVelocity(Vector3(150, 0, 0));
-	cube->GetPhysicsObject()->SetAngularVelocity(Vector3(10, 10, 10));
-
 	SphereObject* sphere = new SphereObject;
-	rand() % 2 ? AddSphereToWorld(sphere, Vector3(90, 5, ((rand() % (200 - 210 + 1)) + 200) * -1), 3) :
-		AddSphereToWorld(sphere, Vector3(90, 5, ((rand() % (250 - 240 + 1)) + 240) * -1), 3);
+	rand() % 2 ? projectiles.push_back(AddSphereToWorld(sphere, Vector3(90, 5, ((rand() % (200 - 210 + 1)) + 200) * -1), 3)) :
+		projectiles.push_back(AddSphereToWorld(sphere, Vector3(90, 5, ((rand() % (250 - 240 + 1)) + 240) * -1), 3));
 	sphere->GetPhysicsObject()->SetLinearVelocity(Vector3(-150, 0, 0));
-	reloadTime = 0.0f;
+
+	switch (rand() % 2) {
+		case 0:
+			projectiles.push_back(AddSphereToWorld(new SphereObject, platforms.at(1)->GetTransform().GetPosition() - Vector3(0, 10, 0), 2));
+			break;
+		case 1:
+			projectiles.push_back(AddCapsuleToWorld(new CapsuleObject, platforms.at(1)->GetTransform().GetPosition() - Vector3(0, 10, 0), 3, 2));
+			break;
+	}
 }
 
+/* Updates the maze level */
 void TutorialGame::UpdateLevel2(float dt) {
-	if (player) {
+	if (player) 
 		player->SetSpawnPos({ 0, 10, 0 });
-	}
 	for (auto& e : enemies) {
 		e->Update(dt);
 		EnemyRaycast(e);
 	}
 }
 
-/* Enemies fire 11 rays every 0.5s across a range to detect the player */
+/* Enemies fire 13 rays every 0.25s across a range to detect objects of interest */
 void TutorialGame::EnemyRaycast(EnemyStateGameObject* enemy) {
 	float fov = -1, numRay = 13;
 	if (enemy->GetRayTime() < 0.0f) {
@@ -327,25 +388,24 @@ void TutorialGame::EnemyRaycast(EnemyStateGameObject* enemy) {
 			Ray ray(enemy->GetTransform().GetPosition(), enemy->GetTransform().GetOrientation() * Vector3(fov, 0, -1));
 			RayCollision closestCollision;
 			if (world->Raycast(ray, closestCollision, enemy, true) && closestCollision.rayDistance < 80.0f) {
-				if(enemy == selectionObject && inSelectionMode)
-					Debug::DrawLine(ray.GetPosition(), closestCollision.collidedAt, Debug::GREEN);
+				/* If enemy sees a player or pickup item */
 				if (dynamic_cast<PlayerObject*>((GameObject*)closestCollision.node) || 
 					dynamic_cast<PickupObject*>((GameObject*)closestCollision.node)) {
 					enemy->AddFollowObject((GameObject*)closestCollision.node);
-					enemy->SetFollowTimeOut(5.0f);		// If sees object of interest reset their timer
+					enemy->SetFollowTimeOut(5.0f);	
 				}
 			}
-			else if (enemy == selectionObject && inSelectionMode)
-				Debug::DrawLine(ray.GetPosition(), ray.GetPosition() + (ray.GetDirection() * 80), Debug::RED);
+			if (enemy == selectionObject && inSelectionMode) 
+				closestCollision.node ? Debug::DrawLine(ray.GetPosition(), closestCollision.collidedAt, Debug::GREEN) : 
+					Debug::DrawLine(ray.GetPosition(), ray.GetPosition() + (ray.GetDirection() * 80), Debug::RED);
 			fov += 2 / (numRay - 1);
 		}
 		enemy->SetRayTime(0.25f);
 	}
 }
 
+/* In debug mode we can change some of the backend physics engine with some key presses */
 void TutorialGame::UpdateKeys() {
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::K))
-		lockedOrientation = !lockedOrientation;
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::G)) {
 		useGravity = !useGravity; //Toggle gravity!
 		physics->UseGravity(useGravity);
@@ -358,8 +418,6 @@ void TutorialGame::UpdateKeys() {
 		physics->IncreaseIterationCount();
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::O)) 
 		physics->DecreaseIterationCount();
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F1)) 
-		InitCamera(); //F2 will reset the camera to a specific default place
 
 	/*Running certain physics updates in a consistent order might cause some
 	bias in the calculations - the same objects might keep 'winning' the constraint
@@ -376,42 +434,48 @@ void TutorialGame::UpdateKeys() {
 	forceMagnitude += Window::GetMouse()->GetWheelMovement() * 10.0f;
 }
 
+/* Initialise camera to default location */
 void TutorialGame::InitCamera() {
-	world->GetMainCamera()->SetNearPlane(0.1f);
-	world->GetMainCamera()->SetFarPlane(1200.0f);
+	world->GetMainCamera()->SetNearPlane(0.5f);
+	world->GetMainCamera()->SetFarPlane(1500.0f);
 	world->GetMainCamera()->SetPosition(Vector3(0, 50, 80));
+	world->GetMainCamera()->SetYaw(0);
+	world->GetMainCamera()->SetPitch(0);
 	lockedObject = nullptr;
 }
 
+/* Initialise all the elements contained within the world */
 void TutorialGame::InitWorld() {
 	world->ClearAndErase();
 	physics->Clear();
+	//cameraState = CameraState::FREE;
 	InitFloors(currentLevel);
 	InitGameExamples(currentLevel);
 	InitGameObstacles(currentLevel);
 }
 
+/* Place all the levels solid floors */
 void TutorialGame::InitFloors(int level) {
 	switch (level) {
 	case 0:
 		AddFloorToWorld(new FloorObject, Vector3(0, 50, 0), Vector3(80, 40, 1))->GetRenderObject()->SetDefaultTexture(menuTex);
 		break;
 	case 1:
-		///* Lava */
+		/* Lava */
 		AddFloorToWorld(new LavaObject, Vector3(0, -60, -400), Vector3(500, 1, 1000));
 
-		/* Projectile Walls */
-		AddFloorToWorld(new FloorObject, Vector3(-50, 5, -140), Vector3(1, 5, 40));
-		AddFloorToWorld(new FloorObject, Vector3(120, 5, -225), Vector3(1, 5, 30));
-
-		///* Regular Platform */
+		/* Regular Platform */
 		AddFloorToWorld(new FloorObject, Vector3(0, 0, 0), Vector3(25, 1, 25));
-		AddFloorToWorld(new FloorObject, Vector3(0, 0, -85), Vector3(25, 1, 10));
-		AddFloorToWorld(new FloorObject, Vector3(-15, 0, -145), Vector3(10, 1, 50));
-		AddFloorToWorld(new FloorObject, Vector3(15, 0, -145), Vector3(10, 1, 50));
+		AddFloorToWorld(new FloorObject, Vector3(0, 10, -107), Vector3(25, 1, 40), Matrix4::Rotation(15, { 1, 0, 0 }));
+		AddFloorToWorld(new FloorObject, Vector3(0, 20.4, -150.2), Vector3(25, 1, 5));
+		AddFloorToWorld(new IceObject, Vector3(0, 10, -175), Vector3(25, 1, 23), Matrix4::Rotation(-27, { 1, 0, 0 }));
+
 		AddFloorToWorld(new FloorObject, Vector3(0, 0, -205), Vector3(100, 1, 10));
 		AddFloorToWorld(new FloorObject, Vector3(-90, 0, -225), Vector3(10, 1, 10));
 		AddFloorToWorld(new FloorObject, Vector3(90, 0, -225), Vector3(10, 1, 10));
+
+		/* Projectile Wall */
+		AddFloorToWorld(new FloorObject, Vector3(120, 5, -225), Vector3(1, 5, 30));
 
 		/* Ice Shortcut */
 		AddFloorToWorld(new IceObject, Vector3(0, 0, -225), Vector3(5, 1, 5));
@@ -423,12 +487,13 @@ void TutorialGame::InitFloors(int level) {
 		AddFloorToWorld(new TrampolineObject, Vector3(0, -30, -315), Vector3(10, 1, 10));
 		AddFloorToWorld(new TrampolineObject, Vector3(0, -30, -395), Vector3(10, 1, 10));
 
+		/* Regular Platform*/
 		AddFloorToWorld(new FloorObject, Vector3(0, 0, -445), Vector3(10, 1, 10));
 
 		/* Low Friction Ice */
-		AddFloorToWorld(new IceObject, Vector3(30, 0, -465), Vector3(40, 1, 10));
-		AddFloorToWorld(new IceObject, Vector3(60, 0, -515), Vector3(10, 1, 40));
-		AddFloorToWorld(new IceObject, Vector3(30, 0, -565), Vector3(40, 1, 10));
+		AddFloorToWorld(new IceObject, Vector3(40, 0, -475), Vector3(30, 1, 5), Matrix4::Rotation(30, { 0, 1, 0 }));
+		AddFloorToWorld(new IceObject, Vector3(0, 0, -515), Vector3(5, 1, 60), Matrix4::Rotation(75, { 0, 1, 0 }));
+		AddFloorToWorld(new IceObject, Vector3(-40, 0, -555), Vector3(30, 1, 5), Matrix4::Rotation(150, { 0, -1, 0 }));
 
 		/* Regular Platform */
 		AddFloorToWorld(new FloorObject, Vector3(0, 0, -605), Vector3(10, 1, 30));
@@ -440,7 +505,21 @@ void TutorialGame::InitFloors(int level) {
 		AddFloorToWorld(new FloorObject, Vector3(-25, 0, -900), Vector3(30, 1, 5));
 		AddFloorToWorld(new FloorObject, Vector3(-60, 0, -915), Vector3(5, 1, 20));
 		AddFloorToWorld(new FloorObject, Vector3(-60, -20, -990), Vector3(5, 1, 10));
-		
+
+		/* Spring Walls */
+		AddFloorToWorld(new FloorObject, Vector3(-5, 2, -865.5), Vector3(1, 3, 30.5));
+		AddFloorToWorld(new FloorObject, Vector3(5, 2, -869.5), Vector3(1, 3, 34.5));
+		AddFloorToWorld(new FloorObject, Vector3(-65.5, 2, -915.5), Vector3(1, 3, 20));
+		AddFloorToWorld(new FloorObject, Vector3(-36.25, 2, -895), Vector3(30.25, 3, 1));
+		AddFloorToWorld(new FloorObject, Vector3(-25.25, 2, -905), Vector3(31.25, 3, 1));
+		AddFloorToWorld(new FloorObject, Vector3(-55.5, 2, -920.5), Vector3(1, 3, 14.5));
+
+		/* Springboard Walls */
+		AddFloorToWorld(new FloorObject, Vector3(-71, -30, -955), Vector3(1, 15, 15));
+		AddFloorToWorld(new FloorObject, Vector3(-49, -30, -955), Vector3(1, 15, 15));
+		AddFloorToWorld(new FloorObject, Vector3(-60, -30, -939), Vector3(12, 15, 1));
+		AddFloorToWorld(new FloorObject, Vector3(-60, -46, -954), Vector3(12, 1, 16));
+
 		/* Rotated Platform */
 		AddFloorToWorld(new FloorObject, Vector3(102, 30, -990), Vector3(20, 1, 5), Matrix4::Rotation(30, { 0, 0, 1 }));
 		AddFloorToWorld(new FloorObject, Vector3(124, 40, -995), Vector3(5, 1, 35));
@@ -452,17 +531,9 @@ void TutorialGame::InitFloors(int level) {
 
 		/* Finish Platform */
 		AddFloorToWorld(new FinishObject, Vector3(204, -50, -995), Vector3(39, 1, 38));
-
 		AddFloorToWorld(new FloorObject, Vector3(204, -52, -995), Vector3(41, 1, 40));
 
-		/* Walls */
-		AddFloorToWorld(new FloorObject, Vector3(-5, 2, -865.5), Vector3(1, 3, 30.5));
-		AddFloorToWorld(new FloorObject, Vector3(5, 2, -869.5), Vector3(1, 3, 34.5));
-		AddFloorToWorld(new FloorObject, Vector3(-65.5, 2, -915.5), Vector3(1, 3, 20));
-		AddFloorToWorld(new FloorObject, Vector3(-36.25, 2, -895), Vector3(30.25, 3, 1));
-		AddFloorToWorld(new FloorObject, Vector3(-25.25, 2, -905), Vector3(31.25, 3, 1));
-		AddFloorToWorld(new FloorObject, Vector3(-55.5, 2, -920.5), Vector3(1, 3, 14.5));
-
+		/* Finish Walls */
 		AddFloorToWorld(new FloorObject, Vector3(205, -45, -956), Vector3(40, 6, 1));
 		AddFloorToWorld(new FloorObject, Vector3(205, -45, -1034), Vector3(40, 6, 1));
 		AddFloorToWorld(new FloorObject, Vector3(164, -45, -995), Vector3(1, 6, 40));
@@ -493,17 +564,16 @@ void TutorialGame::InitFloors(int level) {
 void TutorialGame::CreateMaze() {
 	NavigationGrid grid("MazePath.txt");
 	Vector3 offset(220, -20, 460), nodePos, icePos;
-	float xSize, zSize, iceXSize, iceZsize;
-	/* Place all horizontally efficient walls and obstacles */
-	zSize = 10;
-	iceZsize = 10;
+	float xSize = 10, zSize = 10, iceXSize = 10, iceZsize = 10;
+	/* Place our spring nodes */
 	for (int y = 0; y < 23; ++y) {
 		for (int x = 0; x < 23; ++x) {
 			nodePos = grid.GetNodes()[(23 * y) + x + 1].position;
 			if (grid.GetNodes()[(23 * y) + x].type == SPRING_NODE)
-				AddCubeToWorld(new SpringObject(nodePos - offset + Vector3(-20, -15, 0)), nodePos - offset + Vector3(-20, -15, 0), Vector3(8, 5, 1));
+				AddCubeToWorld(new SpringObject(nodePos - offset + Vector3(-20, -15, 0), 0.005f), nodePos - offset + Vector3(-20, -15, 0), Vector3(8, 5, 1));
 		}
 	}
+	/* Place all horizontally efficient walls and obstacles */
 	for (int y = 0; y < 23; ++y) {
 		nodePos = grid.GetNodes()[23 * y].position;
 		xSize = 10;
@@ -556,7 +626,7 @@ void TutorialGame::CreateMaze() {
 				nodePos = grid.GetNodes()[(23 * y) + x + 23].position;
 			}
 			if (grid.GetNodes()[(23 * y) + x].type == ICE_NODE) {
-				if ((grid.GetNodes()[(23 * y) + x + 23].type != ICE_NODE || y == 22) && iceZsize > iceXSize)
+				if ((grid.GetNodes()[(23 * y) + x + 23].type != ICE_NODE || y == 22) && iceZsize >= iceXSize)
 					AddFloorToWorld(new IceObject, icePos - offset - Vector3(0, 19, 0), Vector3(iceXSize, 0.1, iceZsize));
 				else {
 					icePos.z += 10;
@@ -571,8 +641,9 @@ void TutorialGame::CreateMaze() {
 	}
 }
 
+/* Initialises all game objects, enemies etc */
 void TutorialGame::InitGameExamples(int level) {
-	vector<Vector3> positions = { Vector3(0, 0, 0),  Vector3(-200, 0, 0) };
+	vector<Vector3> positions = { Vector3(-15, 5, -85), Vector3(-15, 5, -185),  Vector3(15, 5, -185), Vector3(15, 5, -85) };
 	switch (level) {
 	case 0:
 		/* Menu Objects */
@@ -593,16 +664,19 @@ void TutorialGame::InitGameExamples(int level) {
 		}
 		break;
 	case 1:
-		player = (PlayerObject*)AddPlayerToWorld(new PlayerObject, Vector3(0, 10, -900));
-		lockedObject = player;
-		selectionObject = player;
-		selectionObject->SetSelected(true);
-		AddCubeToWorld(new CubeObject, Vector3(-10, 10, 0), Vector3(1, 1, 1));
-		AddCubeToWorld(new CubeObject, Vector3(-10, 10, -10), Vector3(1, 1, 1));
+		/* Player */
+		player = (PlayerObject*)AddPlayerToWorld(new PlayerObject, Vector3(0, 10, 0));
+		InitPlayer();
+
+		/* Moving state machine platforms*/
 		platforms.push_back((PlatformStateGameObject*)AddFloorToWorld(
-			new PlatformStateGameObject(Vector3(-12.5, 0, -50), Vector3(12.5, 0, -50)), Vector3(-12.5, 0, -50), { 12.5,1,25 }));
+			new PlatformStateGameObject(Vector3(-12.5, 0, -49), Vector3(12.5, 0, -49)), Vector3(-12.5, 0, -49), { 12.5,1,24 }));
+		platforms.push_back((PlatformStateGameObject*)AddFloorToWorld(
+			new PlatformStateGameObject(Vector3(-12.5, 40, -130), Vector3(12.5, 40, -130)), Vector3(-12.5, 40, -130), { 5,1,5 }));
 		platforms.push_back((PlatformStateGameObject*)AddFloorToWorld(
 			new PlatformStateGameObject(Vector3(-45, -20, -990), Vector3(-45, 20, -990)), Vector3(-45, -20, -990), {10,1,10}));
+
+		/* Bonus items */
 		AddPickupToWorld(new PowerupObject, Vector3(0, 5, -20))->GetRenderObject()->SetColour(Debug::CYAN);
 		AddPickupToWorld(new CoinObject, Vector3(-90, 5, -225));
 		AddPickupToWorld(new CoinObject, Vector3(90, 5, -225));
@@ -618,27 +692,40 @@ void TutorialGame::InitGameExamples(int level) {
 		AddPickupToWorld(new CoinObject, Vector3(-60, 5, -915));
 		AddPickupToWorld(new CoinObject, Vector3(-60, -15, -990));
 		AddPickupToWorld(new CoinObject, Vector3(20, 20, -990))->GetTransform().SetOrientation(Matrix4::Rotation(270, { 0, 1, 0 }));
-		enemies.push_back((PatrolStateGameObject*)AddEnemyToWorld(new PatrolStateGameObject(positions), Vector3(0, 10, 0)));
+
+		/* Patrol enemy state machine */
+		//enemies.push_back((PatrolStateGameObject*)AddEnemyToWorld(new PatrolStateGameObject(positions), positions[0]));
 		break;
 	case 2:
+		/* Player */
 		player = (PlayerObject*)AddPlayerToWorld(new PlayerObject, Vector3(0, 10, -10));
-		lockedObject = player;
-		selectionObject = player;
-		selectionObject->SetSelected(true);
+		InitPlayer();
+
+		/* Pathfinding enemy state machien; one will not take costs into account, the others will, both using A* */
 		int numEnemies = currentlySelected - 2;
-		/* One enemy will not take costs into account, the other will, both using A* */
 		if(numEnemies >= 1)
 			enemies.push_back((PathFindingStateGameObject*)AddEnemyToWorld(new PathFindingStateGameObject(false), Vector3(5, 10, 0)));
 		if (numEnemies >= 2)
 			enemies.push_back((PathFindingStateGameObject*)AddEnemyToWorld(new PathFindingStateGameObject(true), Vector3(0, 10, 0)));
 		if (numEnemies == 3)
 			enemies.push_back((PathFindingStateGameObject*)AddEnemyToWorld(new PathFindingStateGameObject(false), Vector3(5, 10, 0)));
+
+		/* Bonus items */
 		AddPickupToWorld(new CoinObject, Vector3(-180, 4, -40))->GetTransform().SetOrientation(Matrix4::Rotation(90, { 0, 1, 0 }));
 		AddPickupToWorld(new PowerupObject, Vector3(-10, 4, -40))->GetRenderObject()->SetColour(Debug::CYAN);
 		break;
 	}
 }
 
+/* Sets the locked and selected object to the player and enter third person mode */
+void TutorialGame::InitPlayer() {
+	lockedObject = player;
+	selectionObject = player;
+	selectionObject->SetSelected(true);
+	cameraState == CameraState::THIRDPERSON;
+}
+
+/* This method will initialise any other moveable obstacles we want */
 void TutorialGame::InitGameObstacles(int level) {
 	switch (level) {
 	case 1:
@@ -646,14 +733,12 @@ void TutorialGame::InitGameObstacles(int level) {
 		AddCubeToWorld(new RotatingCubeObject, Vector3(0, 3, -735), Vector3(1, 1, 100));
 
 		/* Spring Platforms*/
-		AddCubeToWorld(new SpringObject(Vector3(0, 5, -890)), Vector3(0, 5, -890), Vector3(4, 4, 1));
-		AddCubeToWorld(new SpringObject(Vector3(-50, 5, -900)), Vector3(-50, 5, -900), Vector3(1, 4, 4));
-		AddCubeToWorld(new SpringObject(Vector3(-60, -15, -955)), Vector3(-60, -15, -955), Vector3(10, 1, 15));
+		AddCubeToWorld(new SpringObject(Vector3(0, 5, -890), 0.0075f), Vector3(0, 5, -890), Vector3(4, 4, 1));
+		AddCubeToWorld(new SpringObject(Vector3(-50, 5, -900), 0.0075f), Vector3(-50, 5, -900), Vector3(1, 4, 4));
+		AddCubeToWorld(new SpringObject(Vector3(-60, -15, -955), 0.0075f), Vector3(-60, -15, -955), Vector3(10, 1, 15));
 
 		/* Bridge */
 		AddBridgeToWorld(Vector3(-30, 20, -990));
-		break;
-	case 2:
 		break;
 	}
 }
@@ -693,9 +778,7 @@ void TutorialGame::InitMixedGridWorld(int numRows, int numCols, float rowSpacing
 	}
 }
 
-/*
-A single function to add a large immoveable cube to the bottom of our world
-*/
+/* Adds a large immoveable cube to the world */
 GameObject* TutorialGame::AddFloorToWorld(GameObject* floor, const Vector3& position, const Vector3& size, const Matrix4& orientation) {
 	/* Checking if oriented (need OBB) */
 	if (Vector3(1, 1, 1) != orientation * Vector3(1, 1, 1)) {
@@ -722,11 +805,7 @@ GameObject* TutorialGame::AddFloorToWorld(GameObject* floor, const Vector3& posi
 	return floor;
 }
 
-/*
-Builds a game object that uses a sphere mesh for its graphics, and a bounding sphere for its
-rigid body representation. This and the cube function will let you build a lot of 'simple'
-physics worlds. You'll probably need another function for the creation of OBB cubes too.
-*/
+/* Builds a sphere object, both mesh and collision volume */
 GameObject* TutorialGame::AddSphereToWorld(GameObject* sphere, const Vector3& position, float radius) {
 	Vector3 sphereSize = Vector3(radius, radius, radius);
 	SphereVolume* volume = new SphereVolume(radius);
@@ -739,15 +818,11 @@ GameObject* TutorialGame::AddSphereToWorld(GameObject* sphere, const Vector3& po
 	return sphere;
 }
 
+/* Builds a cube object, depending on object type collision volume will be either AABB or OBB */
 GameObject* TutorialGame::AddCubeToWorld(GameObject* cube, const Vector3& position, Vector3 dimensions) {
-	if (dynamic_cast<RotatingCubeObject*>(cube)) {
-		OBBVolume* volume = new OBBVolume(dimensions);
-		cube->SetBoundingVolume((CollisionVolume*)volume);
-	}
-	else {
-		AABBVolume* volume = new AABBVolume(dimensions);
-		cube->SetBoundingVolume((CollisionVolume*)volume);
-	}
+	CollisionVolume* volume;
+	dynamic_cast<RotatingCubeObject*>(cube) ? volume = new OBBVolume(dimensions): volume = new AABBVolume(dimensions);
+	cube->SetBoundingVolume((CollisionVolume*)volume);
 	cube->GetTransform().SetPosition(position).SetScale(dimensions * 2);
 	cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, obstacleTex, basicShader));
 	cube->SetPhysicsObject(new PhysicsObject(&cube->GetTransform(), cube->GetBoundingVolume()));
@@ -756,6 +831,7 @@ GameObject* TutorialGame::AddCubeToWorld(GameObject* cube, const Vector3& positi
 	return cube;
 }
 
+/* Builds a capsule object, both mesh and collision volume */
 GameObject* TutorialGame::AddCapsuleToWorld(GameObject* capsule, const Vector3& position, float halfHeight, float radius) {
 	CapsuleVolume* volume = new CapsuleVolume(halfHeight, radius);
 	capsule->SetBoundingVolume((CollisionVolume*)volume);
@@ -767,12 +843,13 @@ GameObject* TutorialGame::AddCapsuleToWorld(GameObject* capsule, const Vector3& 
 	return capsule;
 }
 
+/* Adds a bridge to our world, held by constraints */
 void TutorialGame::AddBridgeToWorld(Vector3 startPos) {
-	Vector3 cubeSize(1, 0.5, 5);
+	Vector3 cubeSize(0.5, 0.5, 5);
 	Vector3 baseSize(5, 1, 5);
 	float bridgeWidth = 110;
 	float invCubeMass = 5; // how heavy the middle pieces are
-	int numLinks = 22;
+	int numLinks = 30;
 	float maxDistance = (bridgeWidth / (numLinks + 2)); // constraint distance
 	float cubeDistance = (bridgeWidth / (numLinks + 2)); // distance between links
 	GameObject* start = AddFloorToWorld(new FloorObject, startPos + Vector3(0, 0, 0), baseSize);
@@ -789,9 +866,10 @@ void TutorialGame::AddBridgeToWorld(Vector3 startPos) {
 	world->AddConstraint(constraint);
 }
 
+/* Add our player character with a capsule collision volume */
 GameObject* TutorialGame::AddPlayerToWorld(GameObject* p, const Vector3& position) {
 	float meshSize = 3.0f;
-	CapsuleVolume* volume = new CapsuleVolume(meshSize * 0.85, 2);
+	CapsuleVolume* volume = new CapsuleVolume(meshSize * 0.85, 2.0f);
 	p->SetBoundingVolume((CollisionVolume*)volume);
 	p->GetTransform().SetScale(Vector3(meshSize, meshSize, meshSize)).SetPosition(position);
 	(rand() % 2) ? p->SetRenderObject(new RenderObject(&p->GetTransform(), charMeshA, plainTex, basicShader)) :
@@ -803,6 +881,7 @@ GameObject* TutorialGame::AddPlayerToWorld(GameObject* p, const Vector3& positio
 	return p;
 }
 
+/* Add an enemy character with a capsule collision volume */
 GameObject* TutorialGame::AddEnemyToWorld(GameObject* e, const Vector3& position) {
 	float meshSize = 3.0f;
 	CapsuleVolume* volume = new CapsuleVolume(meshSize * 0.85, 2.0f);
@@ -816,6 +895,7 @@ GameObject* TutorialGame::AddEnemyToWorld(GameObject* e, const Vector3& position
 	return e;
 }
 
+/* Add a pickup item, either a coin or a boost, with a sphere collision volume */
 GameObject* TutorialGame::AddPickupToWorld(GameObject* e, const Vector3& position) {
 	SphereVolume* volume = new SphereVolume(1.25f);
 	e->SetBoundingVolume((CollisionVolume*)volume);
@@ -827,12 +907,7 @@ GameObject* TutorialGame::AddPickupToWorld(GameObject* e, const Vector3& positio
 	return e;
 }
 
-/*
-Every frame, this code will let you perform a raycast, to see if there's an object
-underneath the cursor, and if so 'select it' into a pointer, so that it can be
-manipulated later. Pressing Q will let you toggle between this behaviour and instead
-letting you move the camera around.
-*/
+/* If in debug mode we can select an object with the cursor, displaying its properties and allowing us to take control */
 bool TutorialGame::SelectObject() {
 	if (Window::GetMouse()->ButtonDown(NCL::MouseButtons::LEFT)) {
 		Ray ray = CollisionDetection::BuildRayFromMouse(*world->GetMainCamera());
@@ -852,24 +927,29 @@ bool TutorialGame::SelectObject() {
 			selectionObject->SetSelected(true);
 			return true;
 		}
-		else 
-			return false;
+		return false;
 	}
+
+	/* We can lock the object and move it around */
 	if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::L)) {
 		if (selectionObject) {
-			if (lockedObject == selectionObject) 
+			if (lockedObject == selectionObject) {
+				cameraState = CameraState::FREE;
 				lockedObject = nullptr;
-			else 
+			}
+			else {
+				cameraState = CameraState::THIRDPERSON;
 				lockedObject = selectionObject;
+			}
 		}
 	}
 	return false;
 }
 
+/* If we've selected an object, we can manipulate it with some key presses */
 void TutorialGame::DebugObjectMovement() {
-	//If we've selected an object, we can manipulate it with some key presses
 	if (inSelectionMode && selectionObject) {
-		//Twist the selected object!
+		/* Using the arrow keys and numpad we can twist the object with torque*/
 		selectionObject->GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
 		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::LEFT))
 			selectionObject->GetPhysicsObject()->AddTorque(Vector3(-10, 0, 0));
@@ -894,23 +974,31 @@ void TutorialGame::DebugObjectMovement() {
 	}
 }
 
-void TutorialGame::LockedObjectMovement() {
+/* If we have control of an object we can move it around and perform certain actions */
+void TutorialGame::LockedObjectMovement(float dt) {
 	if(inSelectionMode && selectionObject)
 		selectionObject->GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
 	Matrix4 view = world->GetMainCamera()->BuildViewMatrix();
 	Matrix4 camWorld = view.Inverse();
 	Vector3 rightAxis = Vector3(camWorld.GetColumn(0)); //view is inverse of model!
-	//forward is more tricky -  camera forward is 'into' the screen...
-	//so we can take a guess, and use the cross of straight up, and
-	//the right axis, to hopefully get a vector that's good enough!
+
+	/* Forward is more tricky -  camera forward is 'into' the screen...so we can take a guess, and use 
+	the cross of straight up, and the right axis, to hopefully get a vector that's good enough! */
 	Vector3 fwdAxis = Vector3::Cross(Vector3(0, 1, 0), rightAxis);
 	fwdAxis.y = 0.0f;
 	fwdAxis.Normalise();
 	Vector3 charForward = lockedObject->GetTransform().GetOrientation() * Vector3(0, 0, 1);
-	float force = 0.03f;
-	if (lockedObject == player && player->GetPowerUpTimer() > 0.0f) {
-		force = 0.06f;
-		renderer->DrawString("Speed Boost:" + std::to_string((int)player->GetPowerUpTimer()), Vector2(40, 95), Debug::WHITE, textSize);
+	float force = 3.0f * dt;
+
+	/* If controlling the player we can jump or move faster with bonuses */
+	if (lockedObject == player) {
+		renderer->DrawString("Jump[SPACE]", Vector2(84, 25), Debug::WHITE, textSize);
+		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::SPACE))
+			player->Jump();
+		if (player->GetPowerUpTimer() > 0.0f) {
+			force = 6.0f * dt;
+			renderer->DrawString("Speed Boost:" + std::to_string((int)player->GetPowerUpTimer()), Vector2(40, 95), Debug::WHITE, textSize);
+		}
 	}
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::W))
 		lockedObject->GetPhysicsObject()->ApplyLinearImpulse(fwdAxis * force);
@@ -920,10 +1008,18 @@ void TutorialGame::LockedObjectMovement() {
 		lockedObject->GetPhysicsObject()->ApplyLinearImpulse(-fwdAxis * force);
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::D))
 		lockedObject->GetPhysicsObject()->ApplyLinearImpulse(rightAxis * force);
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::SPACE) && lockedObject == player) 
-		player->Jump();
+
+	/* We can lock the objects orientation with K or swap between camera positons with 1 */
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::K))
+		lockedOrientation = !lockedOrientation;
 	if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::NUM1)) {
-		topDown = !topDown;
-		world->GetMainCamera()->SetTopDown(topDown);
+		switch (cameraState) {
+			case CameraState::THIRDPERSON:
+				cameraState = CameraState::TOPDOWN;
+				break;
+			case CameraState::TOPDOWN:
+				cameraState = CameraState::THIRDPERSON;
+				break;
+		}
 	}
 }

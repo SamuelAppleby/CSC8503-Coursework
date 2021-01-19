@@ -7,6 +7,7 @@ PatrolStateGameObject::PatrolStateGameObject(vector<Vector3> positions) : EnemyS
 	route = positions;
 	currentDest = 0;
 	routeTimeout = 0.0f;
+	backwards = false;
 	patrolState = new State([&](float dt)->void {
 		this->Patrol(dt);
 		if (displayPath)
@@ -54,10 +55,23 @@ void PatrolStateGameObject::Patrol(float dt) {
 	travelDir.y = 0;
 	if (travelDir.Length() < 1.0f) {
 		routeTimeout = 0.0f;
-		if (currentDest == route.size() - 1) 		// Path completed, so go back to start
-			currentDest = 0;
+		if (!backwards) {
+			if (currentDest == route.size() - 1) {// Path completed, so go back to start
+				currentDest = route.size() - 2;
+				backwards = !backwards;
+			}
+			else {
+				currentDest++;
+			}
+		}
 		else {
-			currentDest++;
+			if (currentDest == 0) {
+				currentDest = 1;
+				backwards = !backwards;
+			}
+			else {
+				currentDest--;
+			}
 		}
 	}
 	GetPhysicsObject()->ApplyLinearImpulse(Vector3(std::clamp(travelDir.x, -speed, speed),
@@ -65,5 +79,18 @@ void PatrolStateGameObject::Patrol(float dt) {
 }
 
 void PatrolStateGameObject::DisplayRoute() {
-	Debug::DrawLine(GetTransform().GetPosition(), route[currentDest], Debug::CYAN);
+	for (int i = 0; i < route.size() - 1; ++i) {
+		if (!backwards) {
+			if (i + 1 == currentDest)
+				Debug::DrawLine(route[i], route[i + 1], Debug::CYAN);
+			else
+				Debug::DrawLine(route[i], route[i + 1], Debug::WHITE);
+		}
+		else {
+			if (i == currentDest)
+				Debug::DrawLine(route[i], route[i + 1], Debug::CYAN);
+			else
+				Debug::DrawLine(route[i], route[i + 1], Debug::WHITE);
+		}
+	}
 }

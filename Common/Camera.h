@@ -9,7 +9,7 @@ namespace NCL {
 		Orthographic,
 		Perspective
 	};
-
+	enum class CameraState { THIRDPERSON, TOPDOWN, FREE, GLOBAL1, GLOBAL2 };
 	class Camera {
 	public:
 		Camera(void) {
@@ -24,8 +24,8 @@ namespace NCL {
 			fov			= 45.0f;
 			nearPlane	= 1.0f;
 			farPlane	= 100.0f;
-			topDown = false;
 			camType		= CameraType::Perspective;
+			currentState = CameraState::FREE;
 		};
 
 		Camera(float pitch, float yaw, const Vector3& position) : Camera() {
@@ -64,8 +64,8 @@ namespace NCL {
 		void SetFarPlane(float val) {
 			farPlane = val;
 		}
-		void SetTopDown(bool val) {
-			topDown = val;
+		void SetState(CameraState val) {
+			currentState = val;
 		}
 		//Builds a view matrix for the current camera variables, suitable for sending straight
 		//to a vertex shader (i.e it's already an 'inverse camera matrix').
@@ -104,7 +104,8 @@ namespace NCL {
 		float	yaw;
 		float	pitch;
 		Vector3 position;
-		bool topDown;
 		Vector3 lockedOffset = Vector3(0, 0, 0);
+
+		CameraState currentState;
 	};
 }

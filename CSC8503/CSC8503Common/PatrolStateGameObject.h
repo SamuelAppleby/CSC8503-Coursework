@@ -20,6 +20,7 @@ namespace NCL {
 			State* patrolState;
 			int currentDest;
 			float routeTimeout;
+			bool backwards;
 		};
 	}
 }

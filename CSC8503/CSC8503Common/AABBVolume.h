@@ -2,8 +2,7 @@
 #include "CollisionVolume.h"
 #include "../../Common/Vector3.h"
 namespace NCL {
-	class AABBVolume : CollisionVolume
-	{
+	class AABBVolume : public CollisionVolume {
 	public:
 		AABBVolume(const Vector3& halfDims) {
 			type		= VolumeType::AABB;

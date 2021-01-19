@@ -1,4 +1,4 @@
-#include "PhysicsSystem.h"
+﻿#include "PhysicsSystem.h"
 #include "PhysicsObject.h"
 #include "GameObject.h"
 #include "CollisionDetection.h"
@@ -45,8 +45,13 @@ void PhysicsSystem::Clear() {
 
 void PhysicsSystem::ClearDeletedCollisions() {
 	for (std::set<CollisionDetection::CollisionInfo>::iterator i = allCollisions.begin(); i != allCollisions.end();) {
-		if ((!i->a->IsActive() && !i->a->GetSelected()) || (!i->b->IsActive() && !i->b->GetSelected()))
+		if ((!i->a->IsActive() && !i->a->GetSelected()) || (!i->b->IsActive() && !i->b->GetSelected())) {
+			if (!i->a->IsActive())
+				i->a->SetIsSafeForDeletion(true);
+			if (!i->b->IsActive())
+				i->b->SetIsSafeForDeletion(true);
 			i = allCollisions.erase(i);
+		}
 		else
 			++i;
 	}
@@ -274,9 +279,8 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 
 /* Directly apply spring forces to object */
 void PhysicsSystem::SpringTowardsPoint(SpringObject* a) const {
-	float k = 0.005;
 	Vector3 extension = a->GetTransform().GetPosition() - a->GetRestPosition();
-	Vector3 force = extension * -k;
+	Vector3 force = extension * -a->GetK();
 	a->GetPhysicsObject()->ApplyLinearImpulse(force);
 }
 
@@ -360,7 +364,7 @@ void PhysicsSystem::IntegrateAccel(float dt) {
 		Vector3 force = object->GetForce();
 		Vector3 accel = force * inverseMass;
 		if (applyGravity && inverseMass > 0) {
-			accel += gravity * 3; // don �t move infinitely heavy things
+			accel += gravity * 3; // don ’t move infinitely heavy things
 		}
 		linearVel += accel * dt; // integrate accel !
 		object->SetLinearVelocity(linearVel);

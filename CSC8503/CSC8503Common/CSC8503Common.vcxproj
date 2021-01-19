@@ -134,6 +134,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AABBVolume.h" />
+    <ClInclude Include="BehaviourAction.h" />
+    <ClInclude Include="BehaviourNode.h" />
+    <ClInclude Include="BehaviourNodeWithChildren.h" />
+    <ClInclude Include="BehaviourSelector.h" />
+    <ClInclude Include="BehaviourSequence.h" />
     <ClInclude Include="CapsuleObject.h" />
     <ClInclude Include="CapsuleVolume.h" />
     <ClInclude Include="CoinObject.h" />
@@ -199,7 +204,6 @@
     <ClCompile Include="PlatformStateGameObject.cpp" />
     <ClCompile Include="PositionConstraint.cpp" />
     <ClCompile Include="PushdownMachine.cpp" />
-    <ClCompile Include="QuadTree.cpp" />
     <ClCompile Include="RenderObject.cpp" />
     <ClCompile Include="StateGameObject.cpp" />
     <ClCompile Include="StateMachine.cpp" />

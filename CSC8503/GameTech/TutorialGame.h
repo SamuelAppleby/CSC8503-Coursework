@@ -48,10 +48,10 @@ namespace NCL {
 				renderer->DrawString("FPS:" + std::to_string(avgFps), Vector2(0, 5), Debug::WHITE, 15.0f);
 				currentLevel == 0 ? UpdateMenu(dt) : UpdateLevel(dt);
 				physics->ClearDeletedCollisions();
-				world->RemoveDeletedObjects();
 				Debug::FlushRenderables(dt);
 				renderer->Update(dt);
 				renderer->Render();
+				world->UpdateWorld(dt);
 				if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::P)) {
 					if (currentLevel != 0) {
 						*newState = new PauseScreen();
@@ -92,6 +92,7 @@ namespace NCL {
 			void InitFloors(int level);
 			void CreateMaze();
 			void InitGameExamples(int level);
+			void InitPlayer();
 			void InitGameObstacles(int level);
 			void InitSphereGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, float radius);
 			void InitCubeGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, const Vector3& cubeDims);
@@ -109,7 +110,7 @@ namespace NCL {
 
 			bool SelectObject();
 			void DebugObjectMovement();
-			void LockedObjectMovement();
+			void LockedObjectMovement(float dt);
 
 			GameTechRenderer* renderer;
 			PhysicsSystem* physics;
@@ -163,7 +164,8 @@ namespace NCL {
 			int framesPerSecond;
 			float fpsTimer;
 
-			bool topDown;
+			CameraState cameraState;
+			vector<GameObject*> projectiles;
 		};
 	}
 }

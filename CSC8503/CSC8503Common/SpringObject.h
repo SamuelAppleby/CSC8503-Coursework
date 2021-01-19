@@ -4,10 +4,11 @@ namespace NCL {
 	namespace CSC8503 {
 		class SpringObject : public GameObject {
 		public:
-			SpringObject(Vector3 rest) {
+			SpringObject(Vector3 rest, float springK) {
 				invMass = 20.0f;
 				elasticity = 0.2;
 				friction = 0.0;
+				k = springK;
 				name = "SpringCube";
 				restPosition = rest;
 			}
@@ -23,10 +24,14 @@ namespace NCL {
 			void SetRestPosition(Vector3 val) {
 				restPosition = val;
 			}
+			float GetK() const {
+				return k;
+			}
 		protected:
 			float invMass;
 			float elasticity;
 			float friction;
+			float k;
 			Vector3 restPosition;
 		};
 	}

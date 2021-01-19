@@ -44,8 +44,6 @@ namespace NCL {
 
 			virtual void UpdateWorld(float dt);
 
-			void RemoveDeletedObjects();
-
 			void OperateOnContents(GameObjectFunc f);
 
 			void GetObjectIterators(GameObjectIterator& first, GameObjectIterator& last) const;
