@@ -1,8 +1,8 @@
-#include "PatrolStateGameObject.h"
+#include "PatrolEnemyStateGameObject.h"
 #include <algorithm>
 using namespace NCL;
 using namespace CSC8503;
-PatrolStateGameObject::PatrolStateGameObject(vector<Vector3> positions) : EnemyStateGameObject() {
+PatrolEnemyStateGameObject::PatrolEnemyStateGameObject(vector<Vector3> positions) : EnemyStateGameObject() {
 	currentState = state::FOLLOWROUTE;
 	route = positions;
 	currentDest = 0;
@@ -12,7 +12,7 @@ PatrolStateGameObject::PatrolStateGameObject(vector<Vector3> positions) : EnemyS
 		this->Patrol(dt);
 		if (displayPath)
 			this->DisplayRoute();
-	});
+		});
 	stateMachine->AddState(patrolState);
 	stateMachine->AddTransition(new StateTransition(followObjectState, patrolState, [&]()->bool {
 		if (this->followTimeout < 0.0f) {
@@ -20,32 +20,32 @@ PatrolStateGameObject::PatrolStateGameObject(vector<Vector3> positions) : EnemyS
 			return true;
 		}
 		return false;
-	}));
+		}));
 	stateMachine->AddTransition(new StateTransition(patrolState, followObjectState, [&]()->bool {
 		if (this->followTimeout > 0.0f) {
 			currentState = state::FOLLOWOBJECT;
 			return true;
 		}
 		return false;
-	}));
+		}));
 	stateMachine->AddTransition(new StateTransition(idleState, patrolState, [&]()->bool {
 		if (this->route.size() > 0) {
 			currentState = state::FOLLOWROUTE;
 			return true;
 		}
 		return false;
-	}));
+		}));
 	stateMachine->AddTransition(new StateTransition(patrolState, idleState, [&]()->bool {
 		if (this->route.size() == 0) {
 			currentState = state::IDLE;
 			return true;
 		}
 		return false;
-	}));
+		}));
 	name = "PatrolAI";
 }
 
-void PatrolStateGameObject::Patrol(float dt) {
+void PatrolEnemyStateGameObject::Patrol(float dt) {
 	routeTimeout += dt;
 	if (routeTimeout > 10.0f) {
 		GetTransform().SetPosition(route[currentDest] + Vector3(0, 10, 0));		// If we are following the route and can't reach a position
@@ -53,7 +53,8 @@ void PatrolStateGameObject::Patrol(float dt) {
 	}
 	travelDir = route[currentDest] - GetTransform().GetPosition();
 	travelDir.y = 0;
-	if (travelDir.Length() < 1.0f) {
+	if (travelDir.Length() < 10.0f) {
+		GetPhysicsObject()->ClearForces();
 		routeTimeout = 0.0f;
 		if (!backwards) {
 			if (currentDest == route.size() - 1) {// Path completed, so go back to start
@@ -78,7 +79,7 @@ void PatrolStateGameObject::Patrol(float dt) {
 		std::clamp(travelDir.y, -speed, speed), std::clamp(travelDir.z, -speed, speed)));
 }
 
-void PatrolStateGameObject::DisplayRoute() {
+void PatrolEnemyStateGameObject::DisplayRoute() {
 	for (int i = 0; i < route.size() - 1; ++i) {
 		if (!backwards) {
 			if (i + 1 == currentDest)

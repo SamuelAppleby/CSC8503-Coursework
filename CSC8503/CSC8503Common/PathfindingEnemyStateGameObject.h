@@ -4,9 +4,9 @@
 #include "NavigationGrid.h"
 namespace NCL {
 	namespace CSC8503 {
-		class PathFindingStateGameObject : public EnemyStateGameObject {
+		class PathFindingEnemyStateGameObject : public EnemyStateGameObject {
 		public:
-			PathFindingStateGameObject(bool ignoreCosts);
+			PathFindingEnemyStateGameObject(bool ignoreCosts);
 			vector<Vector3> GetPath() const {
 				return path;
 			}

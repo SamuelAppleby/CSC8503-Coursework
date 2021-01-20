@@ -26,10 +26,10 @@ namespace NCL {
 				
 			}
 			void Jump() {
-				//if (canJump) {
+				if (canJump) {
 					physicsObject->ApplyLinearImpulse(Vector3(0, 5, 0));
 					canJump = false;
-				//}
+				}
 			}
 			int GetScore() const {
 				return score;

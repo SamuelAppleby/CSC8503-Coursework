@@ -138,17 +138,11 @@
     <ClInclude Include="StateGameObject.h">
       <Filter>AI</Filter>
     </ClInclude>
-    <ClInclude Include="PatrolStateGameObject.h">
-      <Filter>AI</Filter>
-    </ClInclude>
     <ClInclude Include="SpringObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="FinishObject.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PathFindingStateGameObject.h">
-      <Filter>AI</Filter>
     </ClInclude>
     <ClInclude Include="EnemyStateGameObject.h">
       <Filter>AI</Filter>
@@ -190,6 +184,12 @@
       <Filter>AI</Filter>
     </ClInclude>
     <ClInclude Include="BehaviourAction.h">
+      <Filter>AI</Filter>
+    </ClInclude>
+    <ClInclude Include="PatrolEnemyStateGameObject.h">
+      <Filter>AI</Filter>
+    </ClInclude>
+    <ClInclude Include="PathfindingEnemyStateGameObject.h">
       <Filter>AI</Filter>
     </ClInclude>
   </ItemGroup>
@@ -236,16 +236,16 @@
     <ClCompile Include="StateGameObject.cpp">
       <Filter>AI</Filter>
     </ClCompile>
-    <ClCompile Include="PatrolStateGameObject.cpp">
-      <Filter>AI</Filter>
-    </ClCompile>
-    <ClCompile Include="PathFindingStateGameObject.cpp">
-      <Filter>AI</Filter>
-    </ClCompile>
     <ClCompile Include="EnemyStateGameObject.cpp">
       <Filter>AI</Filter>
     </ClCompile>
     <ClCompile Include="PlatformStateGameObject.cpp">
+      <Filter>AI</Filter>
+    </ClCompile>
+    <ClCompile Include="PatrolEnemyStateGameObject.cpp">
+      <Filter>AI</Filter>
+    </ClCompile>
+    <ClCompile Include="PathfindingEnemyStateGameObject.cpp">
       <Filter>AI</Filter>
     </ClCompile>
   </ItemGroup>

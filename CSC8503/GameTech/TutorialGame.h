@@ -3,7 +3,8 @@
 #include "../CSC8503Common/PhysicsSystem.h"
 #include "../CSC8503Common/StateGameObject.h"
 #include "../CSC8503Common/NavigationGrid.h"
-#include "../CSC8503Common/PathFindingStateGameObject.h"
+#include "../CSC8503Common/PathFindingEnemyStateGameObject.h"
+#include "../CSC8503Common/PatrolEnemyStateGameObject.h"
 #include "../CSC8503Common/PlatformStateGameObject.h"
 #include "../CSC8503Common/GameWorld.h"
 #include "../../Plugins/OpenGLRendering/OGLMesh.h"
@@ -31,6 +32,7 @@
 namespace NCL {
 	namespace CSC8503 {
 		class PlayerObject;
+		enum class FinishType { INGAME, TIMEOUT, WIN, LOSE };
 		class TutorialGame : public PushdownState {
 		public:
 			TutorialGame();
@@ -49,9 +51,9 @@ namespace NCL {
 				currentLevel == 0 ? UpdateMenu(dt) : UpdateLevel(dt);
 				physics->ClearDeletedCollisions();
 				Debug::FlushRenderables(dt);
+				world->UpdateWorld(dt);
 				renderer->Update(dt);
 				renderer->Render();
-				world->UpdateWorld(dt);
 				if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::P)) {
 					if (currentLevel != 0) {
 						*newState = new PauseScreen();
@@ -134,7 +136,6 @@ namespace NCL {
 			OGLTexture* trampolineTex = nullptr;
 			OGLTexture* obstacleTex = nullptr;
 			OGLTexture* woodenTex = nullptr;
-			OGLTexture* bonusTex = nullptr;
 			OGLTexture* finishTex = nullptr;
 			OGLTexture* menuTex = nullptr;
 			OGLTexture* plainTex = nullptr;
@@ -164,8 +165,9 @@ namespace NCL {
 			int framesPerSecond;
 			float fpsTimer;
 
-			CameraState cameraState;
+			CameraState camState;
 			vector<GameObject*> projectiles;
+			FinishType finish;
 		};
 	}
 }

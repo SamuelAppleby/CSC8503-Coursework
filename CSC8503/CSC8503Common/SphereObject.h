@@ -7,7 +7,7 @@ namespace NCL {
 			SphereObject() {
 				invMass = 5.0f;
 				elasticity = 0.2;
-				friction = 0.4;
+				friction = 0.2;
 				name = "Sphere";
 			}
 			void SetPhysicsObject(PhysicsObject* newObject) override {

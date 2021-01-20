@@ -126,6 +126,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -156,8 +157,8 @@
     <ClInclude Include="NavigationMesh.h" />
     <ClInclude Include="NavigationPath.h" />
     <ClInclude Include="OBBVolume.h" />
-    <ClInclude Include="PathFindingStateGameObject.h" />
-    <ClInclude Include="PatrolStateGameObject.h" />
+    <ClInclude Include="PathfindingEnemyStateGameObject.h" />
+    <ClInclude Include="PatrolEnemyStateGameObject.h" />
     <ClInclude Include="PauseScreen.h" />
     <ClInclude Include="PickupObject.h" />
     <ClInclude Include="PlatformStateGameObject.h" />
@@ -197,8 +198,8 @@
     <ClCompile Include="GameWorld.cpp" />
     <ClCompile Include="NavigationGrid.cpp" />
     <ClCompile Include="NavigationMesh.cpp" />
-    <ClCompile Include="PathFindingStateGameObject.cpp" />
-    <ClCompile Include="PatrolStateGameObject.cpp" />
+    <ClCompile Include="PathfindingEnemyStateGameObject.cpp" />
+    <ClCompile Include="PatrolEnemyStateGameObject.cpp" />
     <ClCompile Include="PhysicsObject.cpp" />
     <ClCompile Include="PhysicsSystem.cpp" />
     <ClCompile Include="PlatformStateGameObject.cpp" />

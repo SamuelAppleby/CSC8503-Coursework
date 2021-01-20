@@ -5,8 +5,6 @@
 #include "../../Common/Camera.h"
 #include <algorithm>
 #include <random>
-#include "PatrolStateGameObject.h"
-#include "PathFindingStateGameObject.h"
 #include "PlayerObject.h"
 
 using namespace NCL;

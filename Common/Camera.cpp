@@ -50,7 +50,8 @@ void Camera::UpdateCamera(float dt) {
 	}
 }
 
-void Camera::UpdateCameraWithObject(float dt, Camera* cam, Vector3 objectPos) {
+/* Lock the camera to an object */
+void Camera::UpdateCameraWithObject(float dt, NCL::CSC8503::GameObject* o) {
 	pitch -= (Window::GetMouse()->GetRelativePosition().y);
 	yaw -= (Window::GetMouse()->GetRelativePosition().x);
 
@@ -83,44 +84,13 @@ void Camera::UpdateCameraWithObject(float dt, Camera* cam, Vector3 objectPos) {
 		lockedOffset.x = -radius + xPos;
 		lockedOffset.z = xPos;
 	}
-
-	/*float yPos = pitch * (radius / 90);
-	if (pitch > 0) {
-		if (yaw > 45 && yaw < 135) {
-			lockedOffset.x -= yPos;
-		}
-		else if (yaw > 135 && yaw < 225) {
-			lockedOffset.z += yPos;
-		}
-		else if (yaw > 225 && yaw < 315) {
-			lockedOffset.x += yPos;
-		}
-		else
-			lockedOffset.z -= yPos;
-	}
-	if (pitch < 0) {
-		if (yaw > 45 && yaw < 135) {
-			lockedOffset.x += yPos;
-		}
-		else if (yaw > 135 && yaw < 225) {
-			lockedOffset.z -= yPos;
-		}
-		else if (yaw > 225 && yaw < 315) {
-			lockedOffset.x -= yPos;
-		}
-		else
-			lockedOffset.z += yPos;
-	}
-	std::clamp(lockedOffset.z, -radius, radius);*/
-
-	//lockedOffset.y = -yPos;
 	
 	if (currentState == CameraState::TOPDOWN) {
-		position = objectPos + Vector3(0, 40, 0);
+		position = o->GetTransform().GetPosition() + Vector3(0, 40, 0);
 		pitch = -90;
 	}
 	else if(currentState == CameraState::THIRDPERSON) {
-		position = objectPos + lockedOffset;
+		position = o->GetTransform().GetPosition() + lockedOffset;
 		pitch = 0;
 	}
 }

@@ -1,8 +1,8 @@
 #pragma once
 #include "FloorObject.h"
 #include "PlayerObject.h"
-#include "PathFindingStateGameObject.h"
-#include "PatrolStateGameObject.h"
+#include "PathFindingEnemyStateGameObject.h"
+#include "PatrolEnemyStateGameObject.h"
 
 namespace NCL {
 	namespace CSC8503 {
@@ -19,9 +19,9 @@ namespace NCL {
 					o->GetTransform().SetPosition(o->GetSpawnPos());
 				else if (EnemyStateGameObject* o = dynamic_cast<EnemyStateGameObject*>(otherObject)) {
 					o->ClearFollowObjects();
-					if (PathFindingStateGameObject* p = dynamic_cast<PathFindingStateGameObject*>(otherObject)) 
+					if (PathFindingEnemyStateGameObject* p = dynamic_cast<PathFindingEnemyStateGameObject*>(otherObject))
 						p->GetTransform().SetPosition(p->GetPath()[0] + Vector3(0, 10, 0));
-					if (PatrolStateGameObject* s = dynamic_cast<PatrolStateGameObject*>(otherObject)) 
+					if (PatrolEnemyStateGameObject* s = dynamic_cast<PatrolEnemyStateGameObject*>(otherObject))
 						s->GetTransform().SetPosition(s->GetRoute()[s->GetCurrentDest()] + Vector3(0, 10, 0));
 				}
 				else if (!dynamic_cast<StateGameObject*>(otherObject))		// Don't ever delete state objects

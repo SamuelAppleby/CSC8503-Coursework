@@ -2,6 +2,7 @@
 #include "Matrix4.h"
 #include "Vector3.h"
 #include "Quaternion.h"
+#include "../CSC8503/CSC8503Common/GameObject.h"
 
 namespace NCL {
 	using namespace NCL::Maths;
@@ -9,7 +10,7 @@ namespace NCL {
 		Orthographic,
 		Perspective
 	};
-	enum class CameraState { THIRDPERSON, TOPDOWN, FREE, GLOBAL1, GLOBAL2 };
+	enum class CameraState {FREE, TOPDOWN, GLOBAL1, GLOBAL2, THIRDPERSON};
 	class Camera {
 	public:
 		Camera(void) {
@@ -43,7 +44,7 @@ namespace NCL {
 		~Camera(void) {};
 
 		void UpdateCamera(float dt);
-		void UpdateCameraWithObject(float dt, Camera* camera, Vector3 position);
+		void UpdateCameraWithObject(float dt, NCL::CSC8503::GameObject* o);
 
 		float GetFieldOfVision() const {
 			return fov;

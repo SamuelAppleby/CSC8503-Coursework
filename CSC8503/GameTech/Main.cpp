@@ -119,10 +119,10 @@ void TestBehaviourTree() {
 	else if (state == Ongoing) {
 		bool found = rand() % 2;
 		if (found) {
-			std::cout << "I found some treasure !\n";
+			std::cout << "I found some treasure!\n";
 			return Success;
 		}
-		std::cout << "No treasure in here ...\ n";
+		std::cout << "No treasure in here...\ n";
 		return Failure;
 	}
 	return state;
@@ -130,13 +130,13 @@ void TestBehaviourTree() {
 
 	BehaviourAction* lookForItems = new BehaviourAction("Look For Items", [&](float dt, BehaviourState state)->BehaviourState{
 	if (state == Initialise) {
-		std::cout << " Looking for items !\n";
+		std::cout << "Looking for items!\n";
 		return Ongoing;
 	}
 	else if (state == Ongoing) {
 		 bool found = rand() % 2;
 		 if (found) {
-			std::cout << "I found some items !\n";
+			std::cout << "I found some items!\n";
 			return Success;
 		 }
 	std::cout << "No items in here ...\ n";
@@ -168,17 +168,17 @@ void TestBehaviourTree() {
 			state = rootSequence->Execute(1.0f); // fake dt
 		}
 		if (state == Success) {
-			std::cout << " What a successful adventure !\n";
+			std::cout << "What a successful adventure!\n";
 		}
 		else if (state == Failure) {
-			std::cout << " What a waste of time !\n";
+			std::cout << "What a waste of time!\n";
 		}
 	}
 	std::cout << "All done !\n";
 }
 
 int main() {
-	Window* w = Window::CreateGameWindow("Fall Guys!", 1280, 720);
+	Window* w = Window::CreateGameWindow("Fall Guys!", 1920, 1080, true);
 	if (!w->HasInitialised()) 
 		return -1;
 

@@ -1,9 +1,9 @@
-#include "PathFindingStateGameObject.h"
+#include "PathFindingEnemyStateGameObject.h"
 #include <algorithm>
 #include "../../Common/Maths.h"
 using namespace NCL;
 using namespace CSC8503;
-PathFindingStateGameObject::PathFindingStateGameObject(bool ignore) : EnemyStateGameObject() {
+PathFindingEnemyStateGameObject::PathFindingEnemyStateGameObject(bool ignore) : EnemyStateGameObject() {
 	currentState = state::FOLLOWPATH;
 	ignoreCosts = ignore;
 	mazeStart = { 220, 0, 440 };
@@ -12,9 +12,9 @@ PathFindingStateGameObject::PathFindingStateGameObject(bool ignore) : EnemyState
 	FindPath();
 	followPathState = new State([&](float dt)->void {
 		this->FollowPath(dt);
-		if(displayPath)
+		if (displayPath)
 			this->DisplayPath();
-	});
+		});
 	stateMachine->AddState(followPathState);
 	stateMachine->AddTransition(new StateTransition(idleState, followPathState, [&]()->bool {
 		if (this->path.size() > 0) {
@@ -22,14 +22,14 @@ PathFindingStateGameObject::PathFindingStateGameObject(bool ignore) : EnemyState
 			return true;
 		}
 		return false;
-	}));
+		}));
 	stateMachine->AddTransition(new StateTransition(followPathState, idleState, [&]()->bool {
 		if (this->path.size() == 0) {
 			currentState = state::IDLE;
 			return true;
 		}
 		return false;
-	}));
+		}));
 	stateMachine->AddTransition(new StateTransition(followObjectState, followPathState, [&]()->bool {
 		if (this->followTimeout < 0.0f) {
 			interestObjects.erase(currentObject);
@@ -37,18 +37,18 @@ PathFindingStateGameObject::PathFindingStateGameObject(bool ignore) : EnemyState
 			return true;
 		}
 		return false;
-	}));
+		}));
 	stateMachine->AddTransition(new StateTransition(followPathState, followObjectState, [&]()->bool {
 		if (this->followTimeout > 0.0f) {
 			currentState = state::FOLLOWOBJECT;
 			return true;
 		}
 		return false;
-	}));
+		}));
 	name = "PathfindingAI";
 }
 
-void PathFindingStateGameObject::FindPath() {
+void PathFindingEnemyStateGameObject::FindPath() {
 	NavigationPath outPath;
 	NavigationGrid grid("MazePath.txt");
 	bool found = grid.FindPath(mazeStart, mazeEnd, outPath, ignoreCosts);
@@ -58,13 +58,13 @@ void PathFindingStateGameObject::FindPath() {
 	}
 }
 
-void PathFindingStateGameObject::DisplayPath() {
+void PathFindingEnemyStateGameObject::DisplayPath() {
 	for (int i = 1; i < path.size(); ++i) {
 		Debug::DrawLine(path[i - 1] + Vector3(0, 10, 0), path[i] + Vector3(0, 10, 0), Debug::WHITE);
 	}
 }
 
-void PathFindingStateGameObject::FollowPath(float dt) {
+void PathFindingEnemyStateGameObject::FollowPath(float dt) {
 	pathTimeout += dt;
 	if (pathTimeout > 10.0f) {
 		GetTransform().SetPosition(path[0] + Vector3(0, 10, 0));		// If we are following the path and can't reach a node
@@ -74,12 +74,13 @@ void PathFindingStateGameObject::FollowPath(float dt) {
 		travelDir = path[0] - GetTransform().GetPosition();
 		travelDir.y = 0;
 		if (travelDir.Length() < 10.0f) {
+			GetPhysicsObject()->ClearForces();
 			pathTimeout = 0.0f;
 			path.erase(path.begin());
 			if (path.size() == 0)		// Path completed
 				return;
 		}
-		GetPhysicsObject()->ApplyLinearImpulse(Vector3(std::clamp(travelDir.x, -speed, speed), 
+		GetPhysicsObject()->ApplyLinearImpulse(Vector3(std::clamp(travelDir.x, -speed, speed),
 			std::clamp(travelDir.y, -speed, speed), std::clamp(travelDir.z, -speed, speed)));
 	}
 }

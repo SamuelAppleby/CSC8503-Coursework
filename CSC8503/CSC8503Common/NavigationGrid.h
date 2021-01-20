@@ -9,6 +9,8 @@ namespace NCL {
 		const char FLOOR_NODE = '.';
 		const char ICE_NODE = '-';
 		const char SPRING_NODE = '~';
+		const char COIN_NODE = 'c';
+		const char POWERUP_NODE = 'p';
 		struct GridNode {
 			GridNode* parent;
 

@@ -4,9 +4,9 @@
 #include "NavigationGrid.h"
 namespace NCL {
 	namespace CSC8503 {
-		class PatrolStateGameObject : public EnemyStateGameObject {
+		class PatrolEnemyStateGameObject : public EnemyStateGameObject {
 		public:
-			PatrolStateGameObject(vector<Vector3> positions);
+			PatrolEnemyStateGameObject(vector<Vector3> positions);
 			vector<Vector3> GetRoute() const {
 				return route;
 			}

@@ -1,6 +1,6 @@
 #pragma once
 #include "FloorObject.h"
-#include "PathFindingStateGameObject.h"
+#include "PathFindingEnemyStateGameObject.h"
 namespace NCL {
 	namespace CSC8503 {
 		class FinishObject : public FloorObject {
@@ -12,7 +12,7 @@ namespace NCL {
 				if (PlayerObject* p = dynamic_cast<PlayerObject*>(otherObject)) {
 					p->SetFinished(true);
 				}
-				else if (PathFindingStateGameObject* p = dynamic_cast<PathFindingStateGameObject*>(otherObject)) {
+				else if (PathFindingEnemyStateGameObject* p = dynamic_cast<PathFindingEnemyStateGameObject*>(otherObject)) {
 					p->SetFinished(true);
 				}
 			}
