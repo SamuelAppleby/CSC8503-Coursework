@@ -1,3 +1,8 @@
+/*			Created By Rich Davison
+ *			Edited By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			Position Constraint Definition		 */
 #pragma once
 #include "Constraint.h"
 #include "GameObject.h"

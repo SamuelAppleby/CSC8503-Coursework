@@ -1,3 +1,7 @@
+/*		 Created By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			Player Object Definition		 */
 #pragma once
 #include "GameObject.h"
 namespace NCL {
@@ -37,8 +41,9 @@ namespace NCL {
 			void BonusAcquired() {
 				score += 25;
 			}
+			/* Governs the gameplay timer for the play, 5 points are lost per second */
 			void DecreaseScore(float dt) {
-				score -= (10 * dt);
+				score -= (5 * dt);
 			}
 			bool GetFinished() const {
 				return finished;

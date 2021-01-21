@@ -1,3 +1,8 @@
+/*			Created By Rich Davison
+ *			Edited By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			Game Tech Renderer Implementation */
 #include "GameTechRenderer.h"
 #include "../CSC8503Common/GameObject.h"
 #include "../../Common/Camera.h"

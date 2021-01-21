@@ -1,3 +1,8 @@
+/*			Created By Rich Davison
+ *			Edited By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			Navigation Mesh Implementation		 */
 #include "NavigationMesh.h"
 #include "../../Common/Assets.h"
 #include <fstream>
@@ -9,12 +14,12 @@ NavigationMesh::NavigationMesh()
 {
 }
 
-NavigationMesh::NavigationMesh(const std::string&filename)
+NavigationMesh::NavigationMesh(const std::string& filename)
 {
 	ifstream file(Assets::DATADIR + filename);
 
 	int numVertices = 0;
-	int numIndices	= 0;
+	int numIndices = 0;
 
 	file >> numVertices;
 	file >> numIndices;

@@ -1,3 +1,7 @@
+/*			 Created By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			State Game Object Implementation	 */
 #include "StateGameObject.h"
 using namespace NCL;
 using namespace CSC8503;

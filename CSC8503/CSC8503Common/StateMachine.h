@@ -1,3 +1,8 @@
+/*			  Created By Rich Davison
+*			Edited By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			State Machine Definition		 */
 #include <map>
 #include <vector>
 #include "State.h"

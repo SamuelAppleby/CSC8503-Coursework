@@ -1,3 +1,7 @@
+/*         Created By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *		Pathfinding Enemy State Game Object Implementation	 */
 #include "PatrolEnemyStateGameObject.h"
 #include <algorithm>
 using namespace NCL;
@@ -61,22 +65,18 @@ void PatrolEnemyStateGameObject::Patrol(float dt) {
 				currentDest = route.size() - 2;
 				backwards = !backwards;
 			}
-			else {
+			else 
 				currentDest++;
-			}
 		}
 		else {
-			if (currentDest == 0) {
+			if (currentDest == 0) {		// We now going forwards again 
 				currentDest = 1;
 				backwards = !backwards;
 			}
-			else {
+			else 
 				currentDest--;
-			}
 		}
 	}
-	GetPhysicsObject()->ApplyLinearImpulse(Vector3(std::clamp(travelDir.x, -speed, speed),
-		std::clamp(travelDir.y, -speed, speed), std::clamp(travelDir.z, -speed, speed)));
 }
 
 void PatrolEnemyStateGameObject::DisplayRoute() {

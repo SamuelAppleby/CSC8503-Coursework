@@ -1,11 +1,16 @@
+/*			  Created By Rich Davison
+*			Edited By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			Game World Definition		 */
 #pragma once
 #include <vector>
 #include "Ray.h"
 #include "CollisionDetection.h"
 #include "QuadTree.h"
 namespace NCL {
-		class Camera;
-		using Maths::Ray;
+	class Camera;
+	using Maths::Ray;
 	namespace CSC8503 {
 		class GameObject;
 		class Constraint;
@@ -13,7 +18,7 @@ namespace NCL {
 		typedef std::function<void(GameObject*)> GameObjectFunc;
 		typedef std::vector<GameObject*>::const_iterator GameObjectIterator;
 
-		class GameWorld	{
+		class GameWorld {
 		public:
 			GameWorld();
 			~GameWorld();

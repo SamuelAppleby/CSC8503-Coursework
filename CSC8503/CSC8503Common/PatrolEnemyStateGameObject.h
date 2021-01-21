@@ -1,3 +1,7 @@
+/*         Created By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *		Pathfinding Enemy State Game Object Definition	 */
 #pragma once
 #include "EnemyStateGameObject.h"
 #include "Debug.h"

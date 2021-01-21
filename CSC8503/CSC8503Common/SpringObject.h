@@ -1,3 +1,7 @@
+/*		 Created By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			Spring Object Definition		 */
 #pragma once
 #include "GameObject.h"
 namespace NCL {
@@ -5,7 +9,7 @@ namespace NCL {
 		class SpringObject : public GameObject {
 		public:
 			SpringObject(Vector3 rest, float springK) {
-				invMass = 20.0f;
+				invMass = 20.0f;		// Lighter than regular objects
 				elasticity = 0.2;
 				friction = 0.0;
 				k = springK;

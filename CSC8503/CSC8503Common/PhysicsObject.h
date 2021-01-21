@@ -1,3 +1,8 @@
+/*			Created By Rich Davison
+ *			Edited By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			Physics Object Definition		 */
 #pragma once
 #include "../../Common/Vector3.h"
 #include "../../Common/Matrix3.h"
@@ -10,7 +15,7 @@ namespace NCL {
 	namespace CSC8503 {
 		class Transform;
 
-		class PhysicsObject	{
+		class PhysicsObject {
 		public:
 			PhysicsObject(Transform* parentTransform, const CollisionVolume* parentVolume);
 			~PhysicsObject();
@@ -57,7 +62,7 @@ namespace NCL {
 
 			void ApplyAngularImpulse(const Vector3& force);
 			void ApplyLinearImpulse(const Vector3& force);
-			
+
 			void AddForce(const Vector3& force);
 
 			void AddForceAtPosition(const Vector3& force, const Vector3& position);
@@ -85,9 +90,21 @@ namespace NCL {
 				return inverseInteriaTensor;
 			}
 
+			void SetIsStatic(bool val) {
+				isStatic = val;
+			}
+			bool GetIsStatic() const {
+				return isStatic;
+			}
+			void SetIsAsleep(bool val) {
+				isAsleep = val;
+			}
+			bool GetIsAsleep() const {
+				return isAsleep;
+			}
 		protected:
 			const CollisionVolume* volume;
-			Transform*		transform;
+			Transform* transform;
 			float inverseMass;
 			float elasticity;
 			float friction;
@@ -95,13 +112,16 @@ namespace NCL {
 			//linear stuff
 			Vector3 linearVelocity;
 			Vector3 force;
-			
+
 
 			//angular stuff
 			Vector3 angularVelocity;
 			Vector3 torque;
 			Vector3 inverseInertia;
 			Matrix3 inverseInteriaTensor;
+
+			bool isAsleep;
+			bool isStatic;
 
 		};
 	}

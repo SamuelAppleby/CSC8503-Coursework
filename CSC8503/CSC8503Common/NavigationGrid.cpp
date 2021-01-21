@@ -1,3 +1,8 @@
+/*			Created By Rich Davison
+ *			Edited By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			Navigation Grid Implementation		 */
 #include "NavigationGrid.h"
 #include "../../Common/Assets.h"
 
@@ -55,6 +60,7 @@ NavigationGrid::NavigationGrid(const std::string&filename) : NavigationGrid() {
 				n.connected[3] = &allNodes[(gridWidth * (y)) + (x + 1)];
 			}
 			for (int i = 0; i < 4; ++i) {
+				/* Here we change our costs based on what we find */
 				if (n.connected[i]) {
 					if (n.connected[i]->type == FLOOR_NODE) {
 						n.costs[i] = 10;

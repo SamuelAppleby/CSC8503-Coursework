@@ -1,3 +1,7 @@
+/*		 Created By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			Pickup Object Definition		 */
 #pragma once
 #include "GameObject.h"
 #include "PlayerObject.h"
@@ -8,7 +12,7 @@ namespace NCL {
 		public:
 			PickupObject() {
 				name = "Pickup";
-				invMass = 0.0f;
+				invMass = 0.0f;		// We don't have mass
 				elasticity = 0.0;
 				friction = 0.8;
 			}

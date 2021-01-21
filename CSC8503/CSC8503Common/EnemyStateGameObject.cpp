@@ -1,3 +1,7 @@
+/*         Created By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *		Enemy State Game Object Implementation	 */
 #include "EnemyStateGameObject.h"
 #include <algorithm>
 #include "../../Common/Maths.h"
@@ -14,9 +18,9 @@ EnemyStateGameObject::EnemyStateGameObject() {
 	displayPath = false;
 	followObjectState = new State([&](float dt)->void {
 		this->FollowObject(dt);
-		if(displayPath)
+		if (displayPath)
 			this->DisplayDirection();
-	});
+		});
 	stateMachine->AddState(followObjectState);
 	stateMachine->AddTransition(new StateTransition(idleState, followObjectState, [&]()->bool {
 		if (this->followTimeout > 0.0f) {
@@ -24,14 +28,14 @@ EnemyStateGameObject::EnemyStateGameObject() {
 			return true;
 		}
 		return false;
-	}));
+		}));
 	stateMachine->AddTransition(new StateTransition(followObjectState, idleState, [&]()->bool {
 		if (this->followTimeout < 0.0f) {
 			currentState = state::IDLE;
 			return true;
 		}
 		return false;
-	}));
+		}));
 	name = "EnemyAI";
 }
 
@@ -43,7 +47,7 @@ void EnemyStateGameObject::Update(float dt) {
 		dir.y = 0;
 		if (!currentObject)
 			currentObject = o;
-		else if (dir.Length() < travelDir.Length()) {
+		else if (dir.Length() < travelDir.Length()) {		// If there is a closer object, prioritise it 
 			currentObject = o;
 			currentObject->SetTimeInSet(0.0f);
 		}
@@ -60,6 +64,7 @@ void EnemyStateGameObject::Update(float dt) {
 			++itr;
 	}
 	rayTime -= dt;
+	/* Set our speed if we have picked up a powerup */
 	if (powerUpTimer > 0.0f) {
 		speed = 5.0f * dt;
 		powerUpTimer -= dt;
@@ -68,22 +73,19 @@ void EnemyStateGameObject::Update(float dt) {
 		GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
 		speed = 2.5f * dt;
 	}
+	/* Manipulating rotation matrix to face current direction */
 	Vector3 up = Vector3::Cross(Vector3(0, 1, 0), travelDir.Normalised());
-	/* std::clamp misbehaves here, so apologies for what is below */
-	if (up.x >= 1.0f)
-		up.x = 0.999f;
-	if (up.x <= -1.0f)
-		up.x = -0.999f;
-	if (up.z >= 1.0f)
-		up.z = 0.999f;
-	if (up.z <= -1.0f)
-		up.z = -0.999f;
 	if (currentState != state::IDLE) {
-		Matrix3 rotMatrix;
-		rotMatrix.SetColumn(0, -up);
-		rotMatrix.SetColumn(1, Vector3(0, 1, 0));
-		rotMatrix.SetColumn(2, -travelDir.Normalised());
-		GetTransform().SetOrientation(rotMatrix);
+		if (up.x >= 0.999 && (up.z <= 0.001 || (up.z >= -0.001 && up.z < 0)))
+			GetTransform().SetOrientation(Matrix4::Rotation(180, Vector3(0, 1, 0)));
+		else {
+			Matrix3 rotMatrix;
+			rotMatrix.SetColumn(0, -up.Normalised());
+			rotMatrix.SetColumn(1, Vector3(0, 1, 0));
+			rotMatrix.SetColumn(2, -travelDir.Normalised());
+			GetTransform().SetOrientation(rotMatrix);
+		}
+		GetPhysicsObject()->ApplyLinearImpulse(Vector3(std::clamp(travelDir.x, -speed, speed), 0, std::clamp(travelDir.z, -speed, speed)));
 		stateMachine->Update(dt);
 	}
 }
@@ -92,7 +94,6 @@ void EnemyStateGameObject::FollowObject(float dt) {
 	followTimeout -= dt;
 	travelDir = currentObject->GetTransform().GetPosition() - this->GetTransform().GetPosition();
 	travelDir.y = 0;
-	GetPhysicsObject()->ApplyLinearImpulse(Vector3(std::clamp(travelDir.x, -speed, speed), 0, std::clamp(travelDir.z, -speed, speed)));
 }
 
 void EnemyStateGameObject::DisplayDirection() {

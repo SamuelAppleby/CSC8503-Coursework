@@ -1,3 +1,8 @@
+/*			Created By Rich Davison
+ *			Edited By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			Tutorial Game Implementation		 */
 #include "TutorialGame.h"
 using namespace NCL;
 using namespace CSC8503;
@@ -27,11 +32,9 @@ TutorialGame::TutorialGame() {
 	InitialiseAssets();
 }
 
-/*
-Each of the little demo scenarios used in the game uses the same 2 meshes,
+/* Each of the little demo scenarios used in the game uses the same 2 meshes,
 and the same texture and shader. There's no need to ever load in anything else
-for this module, even in the coursework, but you can add it if you like!
-*/
+for this module, even in the coursework, but you can add it if you like! */
 void TutorialGame::InitialiseAssets() {
 	auto loadFunc = [](const string& name, OGLMesh** into) {
 		*into = new OGLMesh(name);
@@ -57,6 +60,7 @@ void TutorialGame::InitialiseAssets() {
 	finishTex = (OGLTexture*)TextureLoader::LoadAPITexture("finish.png");
 	menuTex = (OGLTexture*)TextureLoader::LoadAPITexture("menu.png");
 	plainTex = (OGLTexture*)TextureLoader::LoadAPITexture("plain.png");
+	wallTex = (OGLTexture*)TextureLoader::LoadAPITexture("wall.png");
 	basicShader = new OGLShader("GameTechVert.glsl", "GameTechFrag.glsl");
 
 	InitCamera();
@@ -87,7 +91,9 @@ TutorialGame::~TutorialGame() {
 	delete world;
 }
 
+/* Updates all menu items */
 void TutorialGame::UpdateMenu(float dt) {
+	/* Update our menu objects */
 	renderer->DrawString("Choose Level", Vector2(35, 5), Debug::WHITE, 30.0f);
 	currentlySelected == 1 ? renderer->DrawString("Level 1: Single Player Obstacle Course", Vector2(0, 15), { 0,1,0,1 }) :
 		renderer->DrawString("Level 1: Single Player Obstacle Course", Vector2(0, 15), Debug::WHITE);
@@ -105,6 +111,8 @@ void TutorialGame::UpdateMenu(float dt) {
 	renderer->DrawString("Exit(ESC)", Vector2(80, 5));
 	renderer->DrawString("Choose[UP][DOWN]", Vector2(70, 90));
 	renderer->DrawString("Select[ENTER]", Vector2(75, 95));
+
+	/* Change what is currently highlighted depending on the current values */
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::UP) || Window::GetKeyboard()->KeyPressed(KeyboardKeys::DOWN)) {
 		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::UP))
 			currentlySelected = currentlySelected == 1 ? 5 : currentlySelected - 1;
@@ -140,19 +148,21 @@ void TutorialGame::UpdateMenu(float dt) {
 			break;
 		}
 	}
-	if(Window::GetKeyboard()->KeyPressed(KeyboardKeys::RETURN)) {
-		std::cout << "change" << std::endl;
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::RETURN)) {
 		currentLevel = currentlySelected >= 2 ? 2 : 1;
 		InitWorld();		// Clears all objects and resets to new level
-		std::cout << world->GetMainCamera()->GetPosition() << std::endl;
 	}
 }
 
+/* Logic for updating level 1 or level 2 */
 void TutorialGame::UpdateLevel(float dt) {
+	/* Enter debug mode? */
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::Q)) {
 		inSelectionMode = !inSelectionMode;
-		if (EnemyStateGameObject* o = dynamic_cast<EnemyStateGameObject*>(selectionObject))
-			o->SetDisplayDirection(inSelectionMode);
+		if (dynamic_cast<EnemyStateGameObject*>(selectionObject))
+			((EnemyStateGameObject*)selectionObject)->SetDisplayDirection(inSelectionMode);
+		if (dynamic_cast<BehaviourTreeEnemy*>(selectionObject))
+			((BehaviourTreeEnemy*)selectionObject)->SetDisplayRoute(inSelectionMode);
 		if (inSelectionMode) {
 			Window::GetWindow()->ShowOSPointer(true);
 			Window::GetWindow()->LockMouseToWindow(false);
@@ -162,6 +172,7 @@ void TutorialGame::UpdateLevel(float dt) {
 			Window::GetWindow()->LockMouseToWindow(true);
 		}
 	}
+
 	/* Debug mode selection */
 	inSelectionMode ? renderer->DrawString("Change to play mode(Q)", Vector2(69, 10), Debug::WHITE, textSize) :
 		renderer->DrawString("Change to debug mode(Q)", Vector2(68, 10), Debug::WHITE, textSize);
@@ -177,43 +188,47 @@ void TutorialGame::UpdateLevel(float dt) {
 			player->Update(dt);
 		}
 	}
-	/* Camera controls */
+
+	/* Camera state displayed to user */
 	switch (camState) {
-		case CameraState::FREE:
-			renderer->DrawString("Change to Global Camera[1]", Vector2(62, 20), Debug::WHITE, textSize);
-			break;
-		case CameraState::GLOBAL1:
-			renderer->DrawString("Change to Free Camera[1]", Vector2(65, 20), Debug::WHITE, textSize);
-			break;
-		case CameraState::GLOBAL2:
-			renderer->DrawString("Change to Free Camera[1]", Vector2(65, 20), Debug::WHITE, textSize);
-			break;
-		case CameraState::THIRDPERSON:
-			renderer->DrawString("Change to Topdown Camera[1]", Vector2(61, 20), Debug::WHITE, textSize);
-			break;
-		case CameraState::TOPDOWN:
-			renderer->DrawString("Change to Thirdperson Camera[1]", Vector2(56, 20), Debug::WHITE, textSize);
-			break;
+	case CameraState::FREE:
+		renderer->DrawString("Change to Global Camera[1]", Vector2(62, 20), Debug::WHITE, textSize);
+		break;
+	case CameraState::GLOBAL1:
+		renderer->DrawString("Change to Free Camera[1]", Vector2(65, 20), Debug::WHITE, textSize);
+		break;
+	case CameraState::GLOBAL2:
+		renderer->DrawString("Change to Free Camera[1]", Vector2(65, 20), Debug::WHITE, textSize);
+		break;
+	case CameraState::THIRDPERSON:
+		renderer->DrawString("Change to Topdown Camera[1]", Vector2(61, 20), Debug::WHITE, textSize);
+		break;
+	case CameraState::TOPDOWN:
+		renderer->DrawString("Change to Thirdperson Camera[1]", Vector2(56, 20), Debug::WHITE, textSize);
+		break;
 	}
+
+	/* Change Camera */
 	if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::NUM1)) {
 		switch (camState) {
-			case CameraState::FREE:
-				camState = currentLevel == 1 ? CameraState::GLOBAL1 : CameraState::GLOBAL2;
-				break;
-			case CameraState::GLOBAL1:
-				InitCamera();
-				camState = CameraState::FREE;
-				break;
-			case CameraState::GLOBAL2:
-				InitCamera();
-				camState = CameraState::FREE;
-				break;
+		case CameraState::FREE:
+			camState = currentLevel == 1 ? CameraState::GLOBAL1 : CameraState::GLOBAL2;
+			break;
+		case CameraState::GLOBAL1:
+			InitCamera();
+			camState = CameraState::FREE;
+			break;
+		case CameraState::GLOBAL2:
+			InitCamera();
+			camState = CameraState::FREE;
+			break;
 		}
 		world->GetMainCamera()->SetState(camState);
 	}
 
 	physics->Update(dt);		// Update our physics
 
+	/* Change how we move the camera dependng if we have a locked object */
 	if (lockedObject) {
 		world->GetMainCamera()->UpdateCameraWithObject(dt, lockedObject);
 		if (lockedOrientation)
@@ -224,21 +239,21 @@ void TutorialGame::UpdateLevel(float dt) {
 
 	renderer->DrawString("Exit to Menu (ESC)", Vector2(75, 5), Debug::WHITE, textSize);
 	renderer->DrawString("Pause(P)", Vector2(88, 15), Debug::WHITE, textSize);
-	
-	currentLevel == 1 ? UpdateLevel1(dt) : UpdateLevel2(dt);
+
+	currentLevel == 1 ? UpdateLevel1(dt) : UpdateLevel2(dt);		// Update level specific game logic 
 
 	lockedObject ? LockedObjectMovement(dt) : DebugObjectMovement();
-	CheckFinished(dt);
+	CheckFinished(dt);		// Should the game have ended? 
 }
 
-/* Draws debug information to screen, and will display selected object properties*/
+/* Draws debug information to screen, and will display selected object properties */
 void TutorialGame::DrawDebugInfo() {
 	world->GetShuffleObjects() ? renderer->DrawString("Shuffle Objects(F1):On", Vector2(0, 10), Debug::WHITE, textSize) :
 		renderer->DrawString("Shuffle Objects(F1):Off", Vector2(0, 10), Debug::WHITE, textSize);
 	world->GetShuffleConstraints() ? renderer->DrawString("Shuffle Constraints(F2):On", Vector2(0, 15), Debug::WHITE, textSize) :
 		renderer->DrawString("Shuffle Constraints(F2):Off", Vector2(0, 15), Debug::WHITE, textSize);
 
-	useGravity ? renderer->DrawString("Gravity(G):On", Vector2(0, 20), Debug::WHITE, textSize) : 
+	useGravity ? renderer->DrawString("Gravity(G):On", Vector2(0, 20), Debug::WHITE, textSize) :
 		renderer->DrawString("Gravity(G):Off", Vector2(0, 20), Debug::WHITE, textSize);
 	renderer->DrawString("Click Force(Scroll Wheel):" + std::to_string((int)forceMagnitude), Vector2(0, 25), Debug::WHITE, textSize);
 	renderer->DrawString("Constraint Iteration Count(I/O):" + std::to_string(physics->GetConstraintIterationCount()), Vector2(0, 30), Debug::WHITE, textSize);
@@ -269,6 +284,11 @@ void TutorialGame::DrawDebugInfo() {
 			selectionObject->GetPowerUpTimer() > 0.0f ? renderer->DrawString("Powered Up: Yes", Vector2(0, 50), Debug::WHITE, textSize) :
 				renderer->DrawString("Powered Up: No", Vector2(0, 50), Debug::WHITE, textSize);
 		}
+		else if (dynamic_cast<BehaviourTreeEnemy*>(selectionObject)) {
+			renderer->DrawString("Current Behaviour:" + ((BehaviourTreeEnemy*)selectionObject)->BehaviourToString(), Vector2(0, 55), Debug::WHITE, textSize);
+			selectionObject->GetPowerUpTimer() > 0.0f ? renderer->DrawString("Powered Up: Yes", Vector2(0, 50), Debug::WHITE, textSize) :
+				renderer->DrawString("Powered Up: No", Vector2(0, 50), Debug::WHITE, textSize);
+		}
 		else if (dynamic_cast<PlayerObject*>(selectionObject)) {
 			selectionObject->GetPowerUpTimer() > 0.0f ? renderer->DrawString("Powered Up: Yes", Vector2(0, 55), Debug::WHITE, textSize) :
 				renderer->DrawString("Powered Up: No", Vector2(0, 55), Debug::WHITE, textSize);
@@ -290,45 +310,57 @@ void TutorialGame::CheckFinished(float dt) {
 		if (player->GetScore() <= 0 || player->GetFinished()) {
 			if (player->GetScore() <= 0)
 				finish = FinishType::TIMEOUT;
-			else if (player->GetFinished()) 
+			else if (player->GetFinished())
 				finish = FinishType::WIN;
 		}
 	}
+
 	for (auto& e : enemies) {
-		if (e->GetFinished()) 
-			finish = FinishType::LOSE;
+		if (e->GetFinished())
+			finish = FinishType::LOSE;		// If any of our pathfinding enemies have won
 	}
+
 	switch (finish) {
-		case FinishType::INGAME:
-			if(player && !inSelectionMode)
-				player->DecreaseScore(dt);
-			break;
-		case FinishType::TIMEOUT:
-			renderer->DrawString("Time Up - Game Over", Vector2(30, 40), Vector4(1, 0, 0, 1), 25.0f);
-			break;
-		case FinishType::WIN:
-			renderer->DrawString("Level Finished", Vector2(34, 40), Vector4(0, 1, 0, 1), 25.0f);
-			renderer->DrawString("Score: " + std::to_string(player->GetScore()), Vector2(42, 45), Vector4(1, 1, 0, 1));
-			break;
-		case FinishType::LOSE:
-			renderer->DrawString("AI Won - Game Over", Vector2(32, 40), Vector4(1, 0, 0, 1), 25.0f);
-			if (player)
-				renderer->DrawString("Score:" + std::to_string(player->GetScore()), Vector2(42, 45), Vector4(1, 1, 0, 1));
-			break;
+	case FinishType::INGAME:
+		if (player && !inSelectionMode)
+			player->DecreaseScore(dt);
+		break;
+	case FinishType::TIMEOUT:
+		renderer->DrawString("Time Up - Game Over", Vector2(30, 40), Vector4(1, 0, 0, 1), 25.0f);
+		break;
+	case FinishType::WIN:
+		renderer->DrawString("Level Finished", Vector2(34, 40), Vector4(0, 1, 0, 1), 25.0f);
+		renderer->DrawString("Score: " + std::to_string(player->GetScore()), Vector2(42, 45), Vector4(1, 1, 0, 1));
+		lockedOrientation = false;
+		break;
+	case FinishType::LOSE:
+		renderer->DrawString("AI Won - Game Over", Vector2(32, 40), Vector4(1, 0, 0, 1), 25.0f);
+		if (player)
+			renderer->DrawString("Score:" + std::to_string(player->GetScore()), Vector2(42, 45), Vector4(1, 1, 0, 1));
+		break;
 	}
+
 	if (finish != FinishType::INGAME) {
 		timeOut += dt;
 		renderer->DrawString("Exiting to Menu in:" + std::to_string((int)(5.0f - timeOut)) + "s", Vector2(30, 50));
 	}
 }
 
-/* Updates the obstacle course level */
+/* Updates specific logic for obstacle course */
 void TutorialGame::UpdateLevel1(float dt) {
-	for (auto& p : platforms) 
+	for (auto& p : platforms)
 		p->Update(dt);
+
 	for (auto& e : enemies) {
 		e->Update(dt);
-		EnemyRaycast(e);
+		currentEnemy = e;
+		EnemyRaycast();
+	}
+
+	for (auto& e : behaviourEnemies) {
+		e->Update(dt);
+		currentEnemy = e;
+		EnemyRaycast();
 	}
 
 	reloadTime += dt;
@@ -336,46 +368,47 @@ void TutorialGame::UpdateLevel1(float dt) {
 		FireObjects();
 		reloadTime = 0.0f;
 	}
-	for (auto& o : projectiles) 
-		o->StepTimeAlive(dt);
+
+	for (auto& o : projectiles)
+		o->StepTimeAlive(dt);		// Any objects that have been dynamically added should be removed eventually
 
 	/* Setting checkpoints and camera switches */
 	if (player) {
 		switch ((int)player->GetTransform().GetPosition().z) {
-			case 0:
-				player->SetSpawnPos({ 0, 10, 0 });
-				break;
-			case -150:
+		case 0:
+			player->SetSpawnPos({ 0, 10, 50 });
+			break;
+		case -150:
+			camState = CameraState::TOPDOWN;
+			world->GetMainCamera()->SetState(camState);
+			break;
+		case -265:
+			player->SetSpawnPos({ 0, 10, -265 });
+			break;
+		case -445:
+			camState = CameraState::THIRDPERSON;
+			world->GetMainCamera()->SetState(camState);
+			break;
+		case -620:
+			player->SetSpawnPos({ 0, 10, -620 });
+			break;
+		case -840:
+			player->SetSpawnPos({ 0, 10, -840 });
+			camState = CameraState::TOPDOWN;
+			world->GetMainCamera()->SetState(camState);
+			break;
+		case -990:
+			if ((int)player->GetTransform().GetPosition().x == -30 && (int)player->GetTransform().GetPosition().y > 20)
+				player->SetSpawnPos({ -30, 50, -990 });
+			else if ((int)player->GetTransform().GetPosition().x >= 120 && (int)player->GetTransform().GetPosition().y > 20) {
 				camState = CameraState::TOPDOWN;
 				world->GetMainCamera()->SetState(camState);
-				break;
-			case -265:
-				player->SetSpawnPos({ 0, 10, -265 });
-				break;
-			case -445:
+			}
+			else {
 				camState = CameraState::THIRDPERSON;
 				world->GetMainCamera()->SetState(camState);
-				break;
-			case -620:
-				player->SetSpawnPos({ 0, 10, -620 });
-				break;
-			case -840:
-				player->SetSpawnPos({ 0, 10, -840 });
-				camState = CameraState::TOPDOWN;
-				world->GetMainCamera()->SetState(camState);
-				break;
-			case -990:
-				if ((int)player->GetTransform().GetPosition().x == -30 && (int)player->GetTransform().GetPosition().y > 20)
-					player->SetSpawnPos({ -30, 50, -990 });
-				else if ((int)player->GetTransform().GetPosition().x >= 120 && (int)player->GetTransform().GetPosition().y > 20) {
-					camState = CameraState::TOPDOWN;
-					world->GetMainCamera()->SetState(camState);
-				}
-				else {
-					camState = CameraState::THIRDPERSON;
-					world->GetMainCamera()->SetState(camState);
-				}
-				break;
+			}
+			break;
 		}
 	}
 }
@@ -388,48 +421,73 @@ void TutorialGame::FireObjects() {
 	sphere->GetPhysicsObject()->SetLinearVelocity(Vector3(-150, 0, 0));
 
 	switch (rand() % 2) {
-		case 0:
-			projectiles.push_back(AddSphereToWorld(new SphereObject, platforms.at(1)->GetTransform().GetPosition() - Vector3(0, 10, 0), 2));
-			break;
-		case 1:
-			CapsuleObject * capsule = new CapsuleObject;
-			projectiles.push_back(AddCapsuleToWorld(capsule, platforms.at(1)->GetTransform().GetPosition() - Vector3(0, 10, 0), 4, 2));
-			capsule->GetTransform().SetOrientation(Matrix4::Rotation(90, Vector3(0, 0, 1)));
-			break;
+	case 0:
+		projectiles.push_back(AddSphereToWorld(new SphereObject, platforms.at(1)->GetTransform().GetPosition() - Vector3(0, 10, 0), 2));
+		break;
+	case 1:
+		CapsuleObject * capsule = new CapsuleObject;
+		projectiles.push_back(AddCapsuleToWorld(capsule, platforms.at(1)->GetTransform().GetPosition() - Vector3(0, 10, 0), 4, 2));
+		capsule->GetTransform().SetOrientation(Matrix4::Rotation(90, Vector3(0, 0, 1)));
+		break;
 	}
 }
 
 /* Updates the maze level */
 void TutorialGame::UpdateLevel2(float dt) {
-	if (player) 
+	if (player)
 		player->SetSpawnPos({ 0, 10, 0 });
 	for (auto& e : enemies) {
 		e->Update(dt);
-		EnemyRaycast(e);
+		currentEnemy = e;
+		EnemyRaycast();
 	}
 }
 
 /* Enemies fire 13 rays every 0.25s across a range to detect objects of interest */
-void TutorialGame::EnemyRaycast(EnemyStateGameObject* enemy) {
+void TutorialGame::EnemyRaycast() {
 	float fov = -1, numRay = 13;
-	if (enemy->GetRayTime() < 0.0f) {
-		for (int i = 0; i < numRay; ++i) {
-			Ray ray(enemy->GetTransform().GetPosition(), enemy->GetTransform().GetOrientation() * Vector3(fov, 0, -1));
-			RayCollision closestCollision;
-			if (world->Raycast(ray, closestCollision, enemy, true) && closestCollision.rayDistance < 80.0f) {
-				/* If enemy sees a player or pickup item */
-				if (dynamic_cast<PlayerObject*>((GameObject*)closestCollision.node) || 
-					dynamic_cast<PickupObject*>((GameObject*)closestCollision.node)) {
-					enemy->AddFollowObject((GameObject*)closestCollision.node);
-					enemy->SetFollowTimeOut(5.0f);	
+	if (dynamic_cast<EnemyStateGameObject*>(currentEnemy)) {
+		if (((EnemyStateGameObject*)currentEnemy)->GetRayTime() < 0.0f) {
+			for (int i = 0; i < numRay; ++i) {
+				Ray ray(((EnemyStateGameObject*)currentEnemy)->GetTransform().GetPosition(),
+					((EnemyStateGameObject*)currentEnemy)->GetTransform().GetOrientation() * Vector3(fov, 0, -1));
+				RayCollision closestCollision;
+				if (world->Raycast(ray, closestCollision, currentEnemy, true) && closestCollision.rayDistance < 80.0f) {
+					/* If enemy sees a player or pickup item */
+					if (dynamic_cast<PlayerObject*>((GameObject*)closestCollision.node) ||
+						dynamic_cast<PickupObject*>((GameObject*)closestCollision.node)) {
+						((EnemyStateGameObject*)currentEnemy)->AddFollowObject((GameObject*)closestCollision.node);
+						((EnemyStateGameObject*)currentEnemy)->SetFollowTimeOut(5.0f);
+					}
 				}
-			}
-			if (enemy == selectionObject && inSelectionMode) 
-				closestCollision.node ? Debug::DrawLine(ray.GetPosition(), closestCollision.collidedAt, Debug::GREEN) : 
+				if (currentEnemy == selectionObject && inSelectionMode)
+					closestCollision.node ? Debug::DrawLine(ray.GetPosition(), closestCollision.collidedAt, Debug::GREEN) :
 					Debug::DrawLine(ray.GetPosition(), ray.GetPosition() + (ray.GetDirection() * 80), Debug::RED);
-			fov += 2 / (numRay - 1);
+				fov += 2 / (numRay - 1);
+			}
+			((EnemyStateGameObject*)currentEnemy)->SetRayTime(0.25f);
 		}
-		enemy->SetRayTime(0.25f);
+	}
+	else if (dynamic_cast<BehaviourTreeEnemy*>(currentEnemy)) {
+		if (((BehaviourTreeEnemy*)currentEnemy)->GetRayTime() < 0.0f && ((BehaviourTreeEnemy*)currentEnemy)->GetRayCast()) {
+			for (int i = 0; i < numRay; ++i) {
+				Ray ray(((BehaviourTreeEnemy*)currentEnemy)->GetTransform().GetPosition(),
+					((BehaviourTreeEnemy*)currentEnemy)->GetTransform().GetOrientation() * Vector3(fov, 0, -1));
+				RayCollision closestCollision;
+				if (world->Raycast(ray, closestCollision, currentEnemy, true) && closestCollision.rayDistance < 80.0f) {
+					/* If enemy sees a player or pickup item */
+					if (dynamic_cast<PlayerObject*>((GameObject*)closestCollision.node) ||
+						dynamic_cast<PickupObject*>((GameObject*)closestCollision.node)) {
+						((BehaviourTreeEnemy*)currentEnemy)->SetFoundObject((GameObject*)closestCollision.node);
+					}
+				}
+				if (currentEnemy == selectionObject && inSelectionMode)
+					closestCollision.node ? Debug::DrawLine(ray.GetPosition(), closestCollision.collidedAt, Debug::GREEN) :
+					Debug::DrawLine(ray.GetPosition(), ray.GetPosition() + (ray.GetDirection() * 80), Debug::RED);
+				fov += 2 / (numRay - 1);
+			}
+			((BehaviourTreeEnemy*)currentEnemy)->SetRayTime(0.25f);
+		}
 	}
 }
 
@@ -443,9 +501,9 @@ void TutorialGame::UpdateKeys() {
 		useBroadphase = !useBroadphase;
 		physics->UseBroadphase(useBroadphase);
 	}
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::I)) 
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::I))
 		physics->IncreaseIterationCount();
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::O)) 
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::O))
 		physics->DecreaseIterationCount();
 
 	/*Running certain physics updates in a consistent order might cause some
@@ -454,10 +512,9 @@ void TutorialGame::UpdateKeys() {
 	is random every frame can help reduce such bias. */
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F1))
 		world->ShuffleObjects(!world->GetShuffleObjects());
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F2)) 
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F2))
 		world->ShuffleConstraints(!world->GetShuffleConstraints());
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F5)) 
-		world->ShuffleConstraints(false);
+
 	/* If an object has been clicked, it can be pushed with the right mouse button, by an amount
 	determined by the scroll wheel. */
 	forceMagnitude += Window::GetMouse()->GetWheelMovement() * 10.0f;
@@ -466,7 +523,7 @@ void TutorialGame::UpdateKeys() {
 /* Initialise camera to default location */
 void TutorialGame::InitCamera() {
 	world->GetMainCamera()->SetNearPlane(0.5f);
-	world->GetMainCamera()->SetFarPlane(1500.0f);
+	world->GetMainCamera()->SetFarPlane(1600.0f);
 	world->GetMainCamera()->SetPosition(Vector3(0, 50, 80));
 	world->GetMainCamera()->SetYaw(0);
 	world->GetMainCamera()->SetPitch(0);
@@ -486,30 +543,42 @@ void TutorialGame::InitWorld() {
 void TutorialGame::InitFloors(int level) {
 	switch (level) {
 	case 0:
+		/* Background object */
 		AddFloorToWorld(new FloorObject, Vector3(0, 50, 0), Vector3(80, 40, 1))->GetRenderObject()->SetDefaultTexture(menuTex);
 		break;
 	case 1:
 		/* Lava */
 		AddFloorToWorld(new LavaObject, Vector3(0, -60, -400), Vector3(500, 1, 1000));
 
-		/* Regular Platform */
+		/* Starting Platform */
+		AddFloorToWorld(new FloorObject, Vector3(0, 0, 50), Vector3(25, 1, 25));
+
+		/* Walls */
+		AddFloorToWorld(new FloorObject, Vector3(-25, 2, 0), Vector3(1, 2, 24));
+		AddFloorToWorld(new FloorObject, Vector3(25, 2, 0), Vector3(1, 2, 24));
+		AddFloorToWorld(new FloorObject, Vector3(-15, 2, 25), Vector3(11, 2, 1));
+		AddFloorToWorld(new FloorObject, Vector3(15, 2, 25), Vector3(11, 2, 1));
+		AddFloorToWorld(new FloorObject, Vector3(-15, 2, -25), Vector3(11, 2, 1));
+		AddFloorToWorld(new FloorObject, Vector3(15, 2, -25), Vector3(11, 2, 1));
+
+		/* First platforms */
 		AddFloorToWorld(new FloorObject, Vector3(0, 0, 0), Vector3(25, 1, 25));
 		AddFloorToWorld(new FloorObject, Vector3(0, 10, -107), Vector3(25, 1, 40), Matrix4::Rotation(15, { 1, 0, 0 }));
 		AddFloorToWorld(new FloorObject, Vector3(0, 20.4, -150.2), Vector3(25, 1, 5));
 		AddFloorToWorld(new IceObject, Vector3(0, 10, -175), Vector3(25, 1, 23), Matrix4::Rotation(-27, { 1, 0, 0 }));
 
-		AddFloorToWorld(new FloorObject, Vector3(0, 0, -205), Vector3(100, 1, 10));
-		AddFloorToWorld(new FloorObject, Vector3(-90, 0, -225), Vector3(10, 1, 10));
-		AddFloorToWorld(new FloorObject, Vector3(90, 0, -225), Vector3(10, 1, 10));
-
 		/* Projectile Wall */
 		AddFloorToWorld(new FloorObject, Vector3(120, 5, -225), Vector3(1, 5, 30));
 
-		/* Ice Shortcut */
-		AddFloorToWorld(new IceObject, Vector3(0, 0, -225), Vector3(5, 1, 5));
-
+		/* Sphere rolling floors */
+		AddFloorToWorld(new FloorObject, Vector3(0, 0, -205), Vector3(100, 1, 10));
+		AddFloorToWorld(new FloorObject, Vector3(-90, 0, -225), Vector3(10, 1, 10));
+		AddFloorToWorld(new FloorObject, Vector3(90, 0, -225), Vector3(10, 1, 10));
 		AddFloorToWorld(new FloorObject, Vector3(0, 0, -245), Vector3(100, 1, 10));
 		AddFloorToWorld(new FloorObject, Vector3(0, 0, -265), Vector3(10, 1, 10));
+
+		/* Ice Shortcut */
+		AddFloorToWorld(new IceObject, Vector3(0, 0, -225), Vector3(5, 1, 5));
 
 		/* High elasticity trampoline */
 		AddFloorToWorld(new TrampolineObject, Vector3(0, -30, -315), Vector3(10, 1, 10));
@@ -531,11 +600,13 @@ void TutorialGame::InitFloors(int level) {
 		AddFloorToWorld(new FloorObject, Vector3(0, 0, -825), Vector3(80, 1, 10));
 		AddFloorToWorld(new FloorObject, Vector3(0, 0, -865), Vector3(5, 1, 30));
 		AddFloorToWorld(new FloorObject, Vector3(-25, 0, -900), Vector3(30, 1, 5));
+
 		AddFloorToWorld(new FloorObject, Vector3(-60, 0, -915), Vector3(5, 1, 20));
 		AddFloorToWorld(new FloorObject, Vector3(-60, -20, -1005), Vector3(5, 1, 25));
 		AddFloorToWorld(new FloorObject, Vector3(-59, -20, -1055), Vector3(25, 1, 25));
 		AddFloorToWorld(new FloorObject, Vector3(-59, -18, -1055), Vector3(5, 2, 5));
 
+		/* Patrol Enemy Walls */
 		AddFloorToWorld(new FloorObject, Vector3(-85, -18, -1055), Vector3(1, 3, 25));
 		AddFloorToWorld(new FloorObject, Vector3(-35, -18, -1055), Vector3(1, 3, 25));
 		AddFloorToWorld(new FloorObject, Vector3(-75.5, -18, -1029), Vector3(10.5, 3, 1));
@@ -581,7 +652,7 @@ void TutorialGame::InitFloors(int level) {
 
 		/* Regular Platform */
 		AddFloorToWorld(new FloorObject, Vector3(0, 0, 10), Vector3(30, 1, 40));
-		AddFloorToWorld(new FloorObject, Vector3(0, 10, 30), Vector3(3, 1, 3));
+		AddFloorToWorld(new FloorObject, Vector3(0, 10, 30), Vector3(3, 1, 3))->GetRenderObject()->SetDefaultTexture(wallTex);		// Starting platform
 
 		/* Walls*/
 		AddFloorToWorld(new FloorObject, Vector3(-31, 4, 20), Vector3(1, 5, 31));
@@ -603,6 +674,7 @@ void TutorialGame::CreateMaze() {
 	NavigationGrid grid("MazePath.txt");
 	Vector3 offset(220, -20, 460), nodePos, objectPos, icePos;
 	float xSize = 10, zSize = 10, iceXSize = 10, iceZsize = 10;
+
 	/* Place all horizontally efficient walls and obstacles */
 	for (int y = 0; y < 23; ++y) {
 		nodePos = grid.GetNodes()[23 * y].position;
@@ -611,6 +683,7 @@ void TutorialGame::CreateMaze() {
 		for (int x = 0; x < 23; ++x) {
 			objectPos = grid.GetNodes()[(23 * y) + x + 1].position;
 
+			/* Place items and obstacles */
 			if (grid.GetNodes()[(23 * y) + x].type == SPRING_NODE)
 				AddCubeToWorld(new SpringObject(objectPos - offset + Vector3(-20, -15, 0), 0.002f), objectPos - offset + Vector3(-20, -15, 0), Vector3(8, 5, 1));
 			if (grid.GetNodes()[(23 * y) + x].type == COIN_NODE)
@@ -620,7 +693,7 @@ void TutorialGame::CreateMaze() {
 
 			if (grid.GetNodes()[(23 * y) + x].type == WALL_NODE) {
 				if ((grid.GetNodes()[(23 * y) + x + 1].type != WALL_NODE || x == 22) && xSize > zSize)
-					AddFloorToWorld(new FloorObject, nodePos - offset, { xSize, 20, zSize });
+					AddFloorToWorld(new FloorObject, nodePos - offset, { xSize, 20, zSize })->GetRenderObject()->SetDefaultTexture(wallTex);
 				else {
 					nodePos.x += 10;
 					xSize += 10;
@@ -641,9 +714,10 @@ void TutorialGame::CreateMaze() {
 			else {
 				iceXSize = 10;
 				icePos = grid.GetNodes()[(23 * y) + x + 1].position;
-			}	
+			}
 		}
 	}
+
 	/* Place all vertically efficient walls and obstacles */
 	xSize = 10;
 	iceXSize = 10;
@@ -654,7 +728,7 @@ void TutorialGame::CreateMaze() {
 		for (int y = 0; y < 23; ++y) {
 			if (grid.GetNodes()[(23 * y) + x].type == WALL_NODE) {
 				if ((grid.GetNodes()[(23 * y) + x + 23].type != WALL_NODE || y == 22) && zSize > xSize)
-					AddFloorToWorld(new FloorObject, nodePos - offset, { xSize, 20, zSize });
+					AddFloorToWorld(new FloorObject, nodePos - offset, { xSize, 20, zSize })->GetRenderObject()->SetDefaultTexture(wallTex);
 				else {
 					nodePos.z += 10;
 					zSize += 10;
@@ -682,8 +756,8 @@ void TutorialGame::CreateMaze() {
 
 /* Initialises all game objects, enemies etc */
 void TutorialGame::InitGameExamples(int level) {
-	vector<Vector3> positions = { Vector3(-59, -15, -1035), Vector3(-75, -15, -1055),  Vector3(-59, -15, -1075), 
-		Vector3(-43, -15, -1055), Vector3(-59, -15, -1035) };
+	vector<Vector3> positions = { Vector3(-59, -15, -1035), Vector3(-75, -15, -1055),  Vector3(-59, -15, -1075),
+		Vector3(-43, -15, -1055), Vector3(-59, -15, -1035) };		// Coordinates for patrol enemy
 	switch (level) {
 	case 0:
 		/* Menu Objects */
@@ -698,7 +772,7 @@ void TutorialGame::InitGameExamples(int level) {
 		}
 		for (int i = 0; i < menuPlayers.size(); ++i) {
 			GameObject* o = menuPlayers.at(i);
-			if(i == 1)
+			if (i == 1)
 				o->GetRenderObject()->SetColour({ 0.1,0.1,0.1,1 });
 			o->GetTransform().SetOrientation(Matrix4::Rotation(180, Vector3(0, 1, 0)));
 		}
@@ -713,36 +787,39 @@ void TutorialGame::InitGameExamples(int level) {
 		platforms.push_back((PlatformStateGameObject*)AddFloorToWorld(
 			new PlatformStateGameObject(Vector3(-12.5, 40, -130), Vector3(12.5, 40, -130)), Vector3(-12.5, 40, -130), { 5,1,5 }));
 		platforms.push_back((PlatformStateGameObject*)AddFloorToWorld(
-			new PlatformStateGameObject(Vector3(-45, -20, -990), Vector3(-45, 20, -990)), Vector3(-45, -20, -990), {10,1,10}));
+			new PlatformStateGameObject(Vector3(-45, -20, -990), Vector3(-45, 20, -990)), Vector3(-45, -20, -990), { 10,1,10 }));
 
 		/* Bonus items */
-		AddPickupToWorld(new PowerupObject, Vector3(0, 5, -20));
-		AddPickupToWorld(new CoinObject, Vector3(-90, 5, -225));
-		AddPickupToWorld(new CoinObject, Vector3(90, 5, -225));
-		AddPickupToWorld(new CoinObject, Vector3(0, 5, -225));
-		AddPickupToWorld(new CoinObject, Vector3(0, 10, -355));
+		AddPickupToWorld(new PowerupObject, Vector3(0, 4, -20));
+		AddPickupToWorld(new CoinObject, Vector3(-90, 4, -225));
+		AddPickupToWorld(new CoinObject, Vector3(90, 4, -225));
+		AddPickupToWorld(new CoinObject, Vector3(0, 4, -225));
+		AddPickupToWorld(new CoinObject, Vector3(0, 25, -355));
 
-		AddPickupToWorld(new CoinObject, Vector3(40, 5, -475))->GetTransform().SetOrientation(Matrix4::Rotation(-60, { 0, 1, 0 }));
-		AddPickupToWorld(new CoinObject, Vector3(0, 5, -515))->GetTransform().SetOrientation(Matrix4::Rotation(-110, { 0, 1, 0 }));;;
-		AddPickupToWorld(new CoinObject, Vector3(-40, 5, -555))->GetTransform().SetOrientation(Matrix4::Rotation(-60, { 0, 1, 0 }));
+		AddPickupToWorld(new CoinObject, Vector3(40, 4, -475))->GetTransform().SetOrientation(Matrix4::Rotation(-60, { 0, 1, 0 }));
+		AddPickupToWorld(new CoinObject, Vector3(0, 4, -515))->GetTransform().SetOrientation(Matrix4::Rotation(-110, { 0, 1, 0 }));;;
+		AddPickupToWorld(new CoinObject, Vector3(-40, 4, -555))->GetTransform().SetOrientation(Matrix4::Rotation(-60, { 0, 1, 0 }));
 
-		AddPickupToWorld(new CoinObject, Vector3(-90, 5, -645));
-		AddPickupToWorld(new CoinObject, Vector3(90, 5, -645));
-		AddPickupToWorld(new CoinObject, Vector3(-90, 5, -825));
-		AddPickupToWorld(new CoinObject, Vector3(90, 5, -825));
-		AddPickupToWorld(new CoinObject, Vector3(-30, 5, -900))->GetTransform().SetOrientation(Matrix4::Rotation(90, { 0, 1, 0 }));
-		AddPickupToWorld(new CoinObject, Vector3(-60, 5, -915));
-		AddPickupToWorld(new PowerupObject, Vector3(-59, -14, -1055));
-		AddPickupToWorld(new CoinObject, Vector3(-61, -14, -1057));
-		AddPickupToWorld(new CoinObject, Vector3(-61, -14, -1053));
-		AddPickupToWorld(new CoinObject, Vector3(-57, -14, -1053));
-		AddPickupToWorld(new CoinObject, Vector3(-57, -14, -1057));
+		AddPickupToWorld(new CoinObject, Vector3(-90, 4, -645));
+		AddPickupToWorld(new CoinObject, Vector3(90, 4, -645));
+		AddPickupToWorld(new CoinObject, Vector3(-90, 4, -825));
+		AddPickupToWorld(new CoinObject, Vector3(90, 4, -825));
+		AddPickupToWorld(new CoinObject, Vector3(-30, 4, -900))->GetTransform().SetOrientation(Matrix4::Rotation(90, { 0, 1, 0 }));
+		AddPickupToWorld(new CoinObject, Vector3(-60, 4, -915));
+		AddPickupToWorld(new PowerupObject, Vector3(-59, -13, -1055));
+		AddPickupToWorld(new CoinObject, Vector3(-61, -13, -1057));
+		AddPickupToWorld(new CoinObject, Vector3(-61, -13, -1053));
+		AddPickupToWorld(new CoinObject, Vector3(-57, -13, -1053));
+		AddPickupToWorld(new CoinObject, Vector3(-57, -13, -1057));
 
-		AddPickupToWorld(new CoinObject, Vector3(-60, -15, -990));
+		AddPickupToWorld(new CoinObject, Vector3(-60, -14, -990));
 		AddPickupToWorld(new CoinObject, Vector3(20, 20, -990))->GetTransform().SetOrientation(Matrix4::Rotation(270, { 0, 1, 0 }));
 
 		/* Patrol enemy state machine */
 		enemies.push_back((PatrolEnemyStateGameObject*)AddEnemyToWorld(new PatrolEnemyStateGameObject(positions), positions[0]));
+
+		/* Behaviour tree enemy*/
+		behaviourEnemies.push_back((BehaviourTreeEnemy*)AddEnemyToWorld(new BehaviourTreeEnemy(Vector3(0, 5, 0)), Vector3(0, 5, 0)));
 		break;
 	case 2:
 		/* Player */
@@ -750,10 +827,10 @@ void TutorialGame::InitGameExamples(int level) {
 
 		/* Pathfinding enemy state machien; one will not take costs into account, the others will, both using A* */
 		int numEnemies = currentlySelected - 2;
-		if(numEnemies >= 1)
-			enemies.push_back((PathFindingEnemyStateGameObject*)AddEnemyToWorld(new PathFindingEnemyStateGameObject(false), Vector3(-5, 10, 0)));
+		if (numEnemies >= 1)
+			enemies.push_back((PathFindingEnemyStateGameObject*)AddEnemyToWorld(new PathFindingEnemyStateGameObject(true), Vector3(-5, 10, 0)));
 		if (numEnemies >= 2)
-			enemies.push_back((PathFindingEnemyStateGameObject*)AddEnemyToWorld(new PathFindingEnemyStateGameObject(true), Vector3(0, 10, 0)));
+			enemies.push_back((PathFindingEnemyStateGameObject*)AddEnemyToWorld(new PathFindingEnemyStateGameObject(false), Vector3(0, 10, 0)));
 		if (numEnemies == 3)
 			enemies.push_back((PathFindingEnemyStateGameObject*)AddEnemyToWorld(new PathFindingEnemyStateGameObject(false), Vector3(5, 10, 0)));
 
@@ -763,7 +840,7 @@ void TutorialGame::InitGameExamples(int level) {
 
 /* Sets the locked and selected object to the player and enter third person mode */
 void TutorialGame::InitPlayer() {
-	Vector3 position = currentLevel == 1 ? Vector3(0, 10, 0) : Vector3(0, 15, 30);
+	Vector3 position = currentLevel == 1 ? Vector3(0, 10, 50) : Vector3(0, 15, 30);
 	player = (PlayerObject*)AddPlayerToWorld(new PlayerObject, position);
 	lockedObject = player;
 	selectionObject = player;
@@ -820,15 +897,15 @@ void TutorialGame::InitMixedGridWorld(int numRows, int numCols, float rowSpacing
 			Vector3 position = Vector3(x * colSpacing, 10.0f, z * rowSpacing);
 			int type = rand() % 3;
 			switch (type) {
-				case 0:
-					(rand() % 2) ? AddCubeToWorld(new CubeObject, position, cubeDims * Vector3(1, 4, 1)) : AddCubeToWorld(new CubeObject, position, cubeDims);
-					break;
-				case 1:
-					(rand() % 2) ? AddSphereToWorld(new SphereObject, position, sphereRadius / 2) : AddSphereToWorld(new SphereObject, position, sphereRadius);
-					break;
-				case 2:
-					(rand() % 2) ? AddCapsuleToWorld(new CapsuleObject, position, 3.0f, sphereRadius * 1.5) : AddCapsuleToWorld(new CapsuleObject, position, 2.0f, sphereRadius);
-					break;
+			case 0:
+				(rand() % 2) ? AddCubeToWorld(new CubeObject, position, cubeDims * Vector3(1, 4, 1)) : AddCubeToWorld(new CubeObject, position, cubeDims);
+				break;
+			case 1:
+				(rand() % 2) ? AddSphereToWorld(new SphereObject, position, sphereRadius / 2) : AddSphereToWorld(new SphereObject, position, sphereRadius);
+				break;
+			case 2:
+				(rand() % 2) ? AddCapsuleToWorld(new CapsuleObject, position, 3.0f, sphereRadius * 1.5) : AddCapsuleToWorld(new CapsuleObject, position, 2.0f, sphereRadius);
+				break;
 			}
 		}
 	}
@@ -845,8 +922,10 @@ GameObject* TutorialGame::AddFloorToWorld(GameObject* floor, const Vector3& posi
 		AABBVolume* volume = new AABBVolume(size);
 		floor->SetBoundingVolume((CollisionVolume*)volume);
 	}
+
 	floor->GetTransform().SetScale(size * 2).SetPosition(position).SetOrientation(orientation);
 	floor->SetRenderObject(new RenderObject(&floor->GetTransform(), cubeMesh, floorTex, basicShader));
+
 	if (dynamic_cast<LavaObject*>(floor))
 		floor->GetRenderObject()->SetDefaultTexture(lavaTex);
 	else if (dynamic_cast<IceObject*>(floor))
@@ -855,6 +934,7 @@ GameObject* TutorialGame::AddFloorToWorld(GameObject* floor, const Vector3& posi
 		floor->GetRenderObject()->SetDefaultTexture(trampolineTex);
 	else if (dynamic_cast<FinishObject*>(floor))
 		floor->GetRenderObject()->SetDefaultTexture(finishTex);
+
 	floor->SetPhysicsObject(new PhysicsObject(&floor->GetTransform(), floor->GetBoundingVolume()));
 	floor->GetPhysicsObject()->InitCubeInertia();
 	world->AddGameObject(floor);
@@ -877,7 +957,7 @@ GameObject* TutorialGame::AddSphereToWorld(GameObject* sphere, const Vector3& po
 /* Builds a cube object, depending on object type collision volume will be either AABB or OBB */
 GameObject* TutorialGame::AddCubeToWorld(GameObject* cube, const Vector3& position, Vector3 dimensions) {
 	CollisionVolume* volume;
-	dynamic_cast<RotatingCubeObject*>(cube) ? volume = new OBBVolume(dimensions): volume = new AABBVolume(dimensions);
+	dynamic_cast<RotatingCubeObject*>(cube) ? volume = new OBBVolume(dimensions) : volume = new AABBVolume(dimensions);
 	cube->SetBoundingVolume((CollisionVolume*)volume);
 	cube->GetTransform().SetPosition(position).SetScale(dimensions * 2);
 	cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, obstacleTex, basicShader));
@@ -969,17 +1049,25 @@ bool TutorialGame::SelectObject() {
 	if (Window::GetMouse()->ButtonDown(NCL::MouseButtons::LEFT)) {
 		Ray ray = CollisionDetection::BuildRayFromMouse(*world->GetMainCamera());
 		RayCollision closestCollision;
+
 		if (world->Raycast(ray, closestCollision, nullptr, true)) {
 			if (selectionObject) {
-				if (EnemyStateGameObject* o = dynamic_cast<EnemyStateGameObject*>(selectionObject))
-					o->SetDisplayDirection(false);
+				/* Don't display where AI is going if not selected */
+				if (dynamic_cast<EnemyStateGameObject*>(selectionObject))
+					((EnemyStateGameObject*)selectionObject)->SetDisplayDirection(false);
+				if (dynamic_cast<BehaviourTreeEnemy*>(selectionObject))
+					((BehaviourTreeEnemy*)selectionObject)->SetDisplayRoute(false);
 				selectionObject == player ? selectionObject->GetRenderObject()->SetColour(Vector4(0, 0.5, 1, 1)) :
 					selectionObject->GetRenderObject()->SetColour(Vector4(1, 1, 1, 1));
 				selectionObject->SetSelected(false);
 			}
+
 			selectionObject = (GameObject*)closestCollision.node;
-			if (EnemyStateGameObject* o = dynamic_cast<EnemyStateGameObject*>(selectionObject))
-				o->SetDisplayDirection(true);
+			/* Display AI directions */
+			if (dynamic_cast<EnemyStateGameObject*>(selectionObject))
+				((EnemyStateGameObject*)selectionObject)->SetDisplayDirection(true);
+			if (dynamic_cast<BehaviourTreeEnemy*>(selectionObject))
+				((BehaviourTreeEnemy*)selectionObject)->SetDisplayRoute(true);
 			selectionObject->GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
 			selectionObject->SetSelected(true);
 			return true;
@@ -1034,13 +1122,13 @@ void TutorialGame::DebugObjectMovement() {
 
 /* If we have control of an object we can move it around and perform certain actions */
 void TutorialGame::LockedObjectMovement(float dt) {
-	if(inSelectionMode && selectionObject)
+	if (inSelectionMode && selectionObject)
 		selectionObject->GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
 	Matrix4 view = world->GetMainCamera()->BuildViewMatrix();
 	Matrix4 camWorld = view.Inverse();
 	Vector3 rightAxis = Vector3(camWorld.GetColumn(0)); //view is inverse of model!
 
-	/* Forward is more tricky -  camera forward is 'into' the screen...so we can take a guess, and use 
+	/* Forward is more tricky -  camera forward is 'into' the screen...so we can take a guess, and use
 	the cross of straight up, and the right axis, to hopefully get a vector that's good enough! */
 	Vector3 fwdAxis = Vector3::Cross(Vector3(0, 1, 0), rightAxis);
 	fwdAxis.y = 0.0f;
@@ -1072,12 +1160,12 @@ void TutorialGame::LockedObjectMovement(float dt) {
 		lockedOrientation = !lockedOrientation;
 	if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::NUM1)) {
 		switch (camState) {
-			case CameraState::THIRDPERSON:
-				camState = CameraState::TOPDOWN;
-				break;
-			case CameraState::TOPDOWN:
-				camState = CameraState::THIRDPERSON;
-				break;
+		case CameraState::THIRDPERSON:
+			camState = CameraState::TOPDOWN;
+			break;
+		case CameraState::TOPDOWN:
+			camState = CameraState::THIRDPERSON;
+			break;
 		}
 		world->GetMainCamera()->SetState(camState);
 	}

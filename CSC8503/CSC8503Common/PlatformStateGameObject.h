@@ -1,3 +1,7 @@
+/*         Created By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *		Platform State Game Object Definition	 */
 #pragma once
 #include "StateGameObject.h"
 namespace NCL {

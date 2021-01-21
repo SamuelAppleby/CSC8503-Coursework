@@ -1,3 +1,7 @@
+/*			 Created By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			State Game Object Definition	 */
 #pragma once
 #include "GameObject.h"
 #include "StateMachine.h"

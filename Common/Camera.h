@@ -1,3 +1,8 @@
+/*         Created By Rich Davison,
+		Edited by Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			Camera Definition			 */
 #pragma once
 #include "Matrix4.h"
 #include "Vector3.h"
@@ -10,35 +15,36 @@ namespace NCL {
 		Orthographic,
 		Perspective
 	};
-	enum class CameraState {FREE, TOPDOWN, GLOBAL1, GLOBAL2, THIRDPERSON};
+	enum class CameraState { FREE, TOPDOWN, GLOBAL1, GLOBAL2, THIRDPERSON };
 	class Camera {
 	public:
 		Camera(void) {
-			left	= 0;
-			right	= 0;
-			top		= 0;
-			bottom	= 0;
+			left = 0;
+			right = 0;
+			top = 0;
+			bottom = 0;
 
-			pitch		= 0.0f;
-			yaw			= 0.0f;
+			pitch = 0.0f;
+			yaw = 0.0f;
 
-			fov			= 45.0f;
-			nearPlane	= 1.0f;
-			farPlane	= 100.0f;
-			camType		= CameraType::Perspective;
+			fov = 45.0f;
+			nearPlane = 1.0f;
+			farPlane = 100.0f;
+			lockedOffset = Vector3(0, 0, 0);
+			camType = CameraType::Perspective;
 			currentState = CameraState::FREE;
 		};
 
 		Camera(float pitch, float yaw, const Vector3& position) : Camera() {
-			this->pitch		= pitch;
-			this->yaw		= yaw;
-			this->position	= position;
+			this->pitch = pitch;
+			this->yaw = yaw;
+			this->position = position;
 
-			this->fov		= 45.0f;
+			this->fov = 45.0f;
 			this->nearPlane = 1.0f;
-			this->farPlane	= 100.0f;
+			this->farPlane = 100.0f;
 
-			this->camType	= CameraType::Perspective;
+			this->camType = CameraType::Perspective;
 		}
 
 		~Camera(void) {};
@@ -61,7 +67,7 @@ namespace NCL {
 		void SetNearPlane(float val) {
 			nearPlane = val;
 		}
-		
+
 		void SetFarPlane(float val) {
 			farPlane = val;
 		}
@@ -105,7 +111,7 @@ namespace NCL {
 		float	yaw;
 		float	pitch;
 		Vector3 position;
-		Vector3 lockedOffset = Vector3(0, 0, 0);
+		Vector3 lockedOffset;
 
 		CameraState currentState;
 	};

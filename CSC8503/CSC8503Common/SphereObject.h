@@ -1,3 +1,8 @@
+/*			 Created By Rich Davison
+*			Edited By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			Sphere Object Definition		 */
 #pragma once
 #include "GameObject.h"
 namespace NCL {

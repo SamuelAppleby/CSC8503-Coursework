@@ -1,15 +1,17 @@
+/*			Created By Rich Davison
+ *			Edited By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			Transform Implementation		 */
 #include "Transform.h"
 
 using namespace NCL::CSC8503;
 
-Transform::Transform()
-{
-	scale	= Vector3(1, 1, 1);
+Transform::Transform() {
+	scale = Vector3(1, 1, 1);
 }
 
-Transform::~Transform()
-{
-
+Transform::~Transform() {
 }
 
 void Transform::UpdateMatrix() {

@@ -1,3 +1,8 @@
+/*			Created By Rich Davison
+ *			Edited By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			Navigation Grid Definition		 */
 #pragma once
 #include "NavigationMap.h"
 #include <string>
@@ -5,6 +10,7 @@
 
 namespace NCL {
 	namespace CSC8503 {
+		/* Define what type of character we'll come across */
 		const char WALL_NODE = 'x';
 		const char FLOOR_NODE = '.';
 		const char ICE_NODE = '-';

@@ -1,3 +1,7 @@
+/*         Created By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *		Pathfinding Enemy State Game Object Implementation	 */
 #include "PathFindingEnemyStateGameObject.h"
 #include <algorithm>
 #include "../../Common/Maths.h"
@@ -80,7 +84,5 @@ void PathFindingEnemyStateGameObject::FollowPath(float dt) {
 			if (path.size() == 0)		// Path completed
 				return;
 		}
-		GetPhysicsObject()->ApplyLinearImpulse(Vector3(std::clamp(travelDir.x, -speed, speed),
-			std::clamp(travelDir.y, -speed, speed), std::clamp(travelDir.z, -speed, speed)));
 	}
 }

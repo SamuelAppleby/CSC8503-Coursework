@@ -1,3 +1,8 @@
+/*			Created By Rich Davison
+ *			Edited By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			Game Tech Renderer Definition		 */
 #pragma once
 #include "../../Plugins/OpenGLRendering/OGLRenderer.h"
 #include "../../Plugins/OpenGLRendering/OGLShader.h"

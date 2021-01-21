@@ -1,3 +1,7 @@
+/*         Created By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *		Platform State Game Object Implementation	 */
 #include "PlatformStateGameObject.h"
 using namespace NCL;
 using namespace CSC8503;
@@ -12,7 +16,7 @@ PlatformStateGameObject::PlatformStateGameObject(Vector3 start, Vector3 end) {
 	name = "MovingFloor";
 	followRouteState = new State([&](float dt)->void {
 		this->MoveToLocation(dt);
-	});
+		});
 	stateMachine->AddState(followRouteState);
 	stateMachine->AddTransition(new StateTransition(idleState, followRouteState, [&]()->bool {
 		if ((this->start - this->end).Length() > 0.0f) {
@@ -20,18 +24,19 @@ PlatformStateGameObject::PlatformStateGameObject(Vector3 start, Vector3 end) {
 			return true;
 		}
 		return false;
-	}));
+		}));
 	stateMachine->AddTransition(new StateTransition(followRouteState, idleState, [&]()->bool {
 		if ((this->start - this->end).Length() == 0.0f) {
 			currentState == state::IDLE;
 			return true;
 		}
 		return false;
-	}));
+		}));
 	name = "PlatformAI";
 }
 
 void PlatformStateGameObject::MoveToLocation(float dt) {
+	/* Changes all directions based on on current location, done this way as we want linear velocity, not forces */
 	if (abs(start.x - end.x) > 0.0) {
 		if (abs(GetTransform().GetPosition().x - start.x) < 0.5)
 			speed.x = (start.x - end.x > 0) ? -5 : 5;

@@ -1,11 +1,26 @@
+/*			Created By Rich Davison
+ *			Edited By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			Physics System Definition		 */
 #pragma once
 #include "../CSC8503Common/GameWorld.h"
 #include <set>
 #include "SpringObject.h"
-
+#include "PhysicsObject.h"
+#include "GameObject.h"
+#include "CollisionDetection.h"
+#include "../../Common/Quaternion.h"
+#include "Constraint.h"
+#include "Debug.h"
+#include <functional>
+#include "SpringObject.h"
+#include "RotatingCubeObject.h"
+#include "LavaObject.h"
+#include "PickupObject.h"
 namespace NCL {
 	namespace CSC8503 {
-		class PhysicsSystem	{
+		class PhysicsSystem {
 		public:
 			PhysicsSystem(GameWorld& g);
 			~PhysicsSystem();
@@ -85,7 +100,7 @@ namespace NCL {
 			void UpdateCollisionList();
 			void UpdateObjectAABBs();
 
-			void ImpulseResolveCollision(GameObject& a , GameObject&b, CollisionDetection::ContactPoint& p) const;
+			void ImpulseResolveCollision(GameObject& a, GameObject& b, CollisionDetection::ContactPoint& p) const;
 			void SpringTowardsPoint(SpringObject* a) const;
 
 			GameWorld& gameWorld;
@@ -100,7 +115,7 @@ namespace NCL {
 			vector<GameObject*> staticObjects;
 			vector<GameObject*> dynamicObjects;
 			bool useBroadPhase;
-			int numCollisionFrames	= 5;
+			int numCollisionFrames = 5;
 			int constraintIterationCount = 10;
 
 			int basicCollisionsTested;

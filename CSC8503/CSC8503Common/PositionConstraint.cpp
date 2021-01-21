@@ -1,3 +1,8 @@
+/*			Created By Rich Davison
+ *			Edited By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			Position Constraint Implementation		 */
 #include "PositionConstraint.h"
 using namespace NCL;
 using namespace CSC8503;
@@ -25,6 +30,7 @@ void PositionConstraint::UpdateConstraint(float dt) {
 			// how much of their relative force is affecting the constraint
 			float velocityDot = Vector3::Dot(relativeVelocity, offsetDir);
 
+			/* Get our angular effects */
 			Vector3 inertiaA = Vector3::Cross(physA->GetInertiaTensor() * Vector3::Cross(relativePos, offsetDir), relativePos);
 			Vector3 inertiaB = Vector3::Cross(physB->GetInertiaTensor() * Vector3::Cross(-relativePos, offsetDir), -relativePos);
 			float angularEffect = Vector3::Dot(inertiaA + inertiaB, offsetDir);

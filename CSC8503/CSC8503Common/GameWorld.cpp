@@ -1,3 +1,8 @@
+/*			Created By Rich Davison
+ *			Edited By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			Game World Implementation		 */
 #include "GameWorld.h"
 #include "GameObject.h"
 #include "Constraint.h"
@@ -66,9 +71,9 @@ void GameWorld::UpdateWorld(float dt) {
 	if (shuffleConstraints) 
 		std::shuffle(constraints.begin(), constraints.end(), g);
 	for (auto& i : gameObjects) {
-		if (i->GetTimeAlive() > 20.0f)		// Objects living longer than 20s are destroyed
+		if (i->GetTimeAlive() > 40.0f)		// Objects living longer than 40s are destroyed
 			i->SetIsActive(false);
-		if (i->GetIsSafeForDeletion())
+		if (i->GetIsSafeForDeletion())		// Only when objects have been removed from any associated collision list, can we delete them
 			RemoveGameObject(i, true);
 	}
 }
@@ -76,7 +81,7 @@ void GameWorld::UpdateWorld(float dt) {
 void GameWorld::ShowFacing() {
 	for (auto& i : gameObjects) {
 		if(i->IsActive())
-			Debug::DrawAxisLines(i->GetTransform().GetMatrix(), 2.0f);
+			Debug::DrawAxisLines(i->GetTransform().GetMatrix(), 2.0f);		// Show the axes of all active game objects
 	}
 }
 
@@ -110,9 +115,7 @@ bool GameWorld::Raycast(Ray& r, RayCollision& closestCollision, GameObject* curr
 	return false;
 }
 
-/*
-Constraint Tutorial Stuff
-*/
+/* Constraint Tutorial Stuff */
 void GameWorld::AddConstraint(Constraint* c) {
 	constraints.emplace_back(c);
 }

@@ -1,3 +1,8 @@
+/*			Created By Rich Davison
+ *			Edited By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			Debug Implementation		 */
 #include "Debug.h"
 #include "../../Common/Matrix4.h"
 using namespace NCL;

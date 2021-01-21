@@ -1,3 +1,8 @@
+/*			  Created By Rich Davison
+*			Edited By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			State Machine Implementation		 */
 #include "StateMachine.h"
 using namespace NCL::CSC8503;
 StateMachine::StateMachine() {

@@ -1,3 +1,8 @@
+/*			  Created By Rich Davison
+*			Edited By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			State Transition Definition		 */
 #pragma once
 #include <functional>
 namespace NCL {

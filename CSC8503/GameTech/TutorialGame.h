@@ -1,3 +1,8 @@
+/*			Created By Rich Davison
+ *			Edited By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			Tutorial Game definition		 */
 #pragma once
 #include "GameTechRenderer.h"
 #include "../CSC8503Common/PhysicsSystem.h"
@@ -29,6 +34,8 @@
 #include "../CSC8503Common/Pushdownstate.h"
 #include "../CSC8503Common/PauseScreen.h"
 #include "../CSC8503Common/GlobalVariables.h"
+#include "../CSC8503Common/BehaviourTreeEnemy.h"
+
 namespace NCL {
 	namespace CSC8503 {
 		class PlayerObject;
@@ -38,7 +45,9 @@ namespace NCL {
 			TutorialGame();
 			~TutorialGame();
 
+			/* As our entire game is a pushdown state, we have our update method here */
 			PushdownResult OnUpdate(float dt, PushdownState** newState) override {
+				/* Rolling FPS calculations */
 				fpsTimer -= dt;
 				++framesPerSecond;
 				if (fpsTimer < 0.0f) {
@@ -48,12 +57,15 @@ namespace NCL {
 					fpsTimer = 1.0f;
 				}
 				renderer->DrawString("FPS:" + std::to_string(avgFps), Vector2(0, 5), Debug::WHITE, 15.0f);
+
 				currentLevel == 0 ? UpdateMenu(dt) : UpdateLevel(dt);
 				physics->ClearDeletedCollisions();
 				Debug::FlushRenderables(dt);
 				world->UpdateWorld(dt);
 				renderer->Update(dt);
 				renderer->Render();
+
+				/* Pushdown the pasuse state when activated */
 				if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::P)) {
 					if (currentLevel != 0) {
 						*newState = new PauseScreen();
@@ -62,6 +74,7 @@ namespace NCL {
 						return PushdownResult::Push;
 					}
 				}
+				/* Pop the current state if the user exits */
 				if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::ESCAPE) || timeOut > 5.0f) {
 					if (currentLevel != 0) {
 						renderer->DrawString("Returning to Menu", Vector2(25, 50), Debug::WHITE, 30.0f);
@@ -82,7 +95,7 @@ namespace NCL {
 			void UpdateLevel1(float dt);
 			void FireObjects();
 			void UpdateLevel2(float dt);
-			void EnemyRaycast(EnemyStateGameObject*);
+			void EnemyRaycast();
 
 		protected:
 			void InitialiseAssets();
@@ -139,6 +152,7 @@ namespace NCL {
 			OGLTexture* finishTex = nullptr;
 			OGLTexture* menuTex = nullptr;
 			OGLTexture* plainTex = nullptr;
+			OGLTexture* wallTex = nullptr;
 			OGLShader*	basicShader = nullptr;
 
 			//Coursework Meshes
@@ -168,6 +182,10 @@ namespace NCL {
 			CameraState camState;
 			vector<GameObject*> projectiles;
 			FinishType finish;
+
+			vector<BehaviourTreeEnemy*> behaviourEnemies;
+
+			GameObject* currentEnemy = nullptr;
 		};
 	}
 }

@@ -1,3 +1,8 @@
+/*			Created By Rich Davison
+ *			Edited By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			Navigation Map Definition		 */
 #pragma once
 #include "../../Common/Vector3.h"
 #include "NavigationPath.h"

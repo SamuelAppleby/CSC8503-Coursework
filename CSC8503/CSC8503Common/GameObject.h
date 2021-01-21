@@ -1,3 +1,8 @@
+/*			  Created By Rich Davison
+*			Edited By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			Game Object Definition		 */
 #pragma once
 #include <vector>
 #include "Transform.h"
@@ -52,11 +57,11 @@ namespace NCL {
 				return name;
 			}
 
-			virtual void OnCollisionBegin(GameObject* otherObject){}
-			
+			virtual void OnCollisionBegin(GameObject* otherObject) {}
+
 			virtual void OnCollisionEnd(GameObject* otherObject) {}
 
-			bool GetBroadphaseAABB(Vector3&outsize) const;
+			bool GetBroadphaseAABB(Vector3& outsize) const;
 
 			void UpdateBroadphaseAABB();
 
@@ -105,9 +110,9 @@ namespace NCL {
 		protected:
 			Transform			transform;
 
-			CollisionVolume*	boundingVolume;
-			PhysicsObject*		physicsObject;
-			RenderObject*		renderObject;
+			CollisionVolume* boundingVolume;
+			PhysicsObject* physicsObject;
+			RenderObject* renderObject;
 
 			bool isActive;
 			int	worldID;
@@ -118,7 +123,7 @@ namespace NCL {
 			float timeAlive;
 			float powerUpTimer;
 
-			bool safeForDeletion;
+			bool safeForDeletion;		// We can't just delete an object whenever we want, so we need this
 		};
 	}
 }

@@ -1,3 +1,7 @@
+/*		 Created By Samuel Buzz Appleby
+ *               21/01/2021
+ *                170348069
+ *			Powerup Object Definition		 */
 #pragma once
 #include "PlayerObject.h"
 #include "PickupObject.h"
@@ -8,14 +12,15 @@ namespace NCL {
 			PowerupObject() {
 				name = "Bonus";
 			}
+			/* If we collide with a player or AI, give them a speed boost */
 			void OnCollisionBegin(GameObject* otherObject) override {
-				if (EnemyStateGameObject* o = dynamic_cast<EnemyStateGameObject*>(otherObject)) {
-					o->SetPowerUpTimer(5.0f);
-					o->GetRenderObject()->SetColour(Vector4(10, 1, 0, 1));
+				if (dynamic_cast<EnemyStateGameObject*>(otherObject) || dynamic_cast<BehaviourTreeEnemy*>(otherObject)) {
+					otherObject->SetPowerUpTimer(5.0f);
+					otherObject->GetRenderObject()->SetColour(Vector4(10, 1, 0, 1));
 				}
-				if (PlayerObject* o = dynamic_cast<PlayerObject*>(otherObject)) {
-					o->SetPowerUpTimer(5.0f);
-					o->GetRenderObject()->SetColour(Vector4(0, 1, 10, 1));
+				else if (dynamic_cast<PlayerObject*>(otherObject)) {
+					otherObject->SetPowerUpTimer(5.0f);
+					otherObject->GetRenderObject()->SetColour(Vector4(0, 1, 10, 1));
 				}
 				isActive = false;
 			}
