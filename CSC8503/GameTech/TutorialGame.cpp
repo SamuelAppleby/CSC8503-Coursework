@@ -779,7 +779,7 @@ void TutorialGame::InitGameExamples(int level) {
 		break;
 	case 1:
 		/* Player */
-		//InitPlayer();
+		InitPlayer();
 
 		/* Moving state machine platforms*/
 		platforms.push_back((PlatformStateGameObject*)AddFloorToWorld(
@@ -823,7 +823,7 @@ void TutorialGame::InitGameExamples(int level) {
 		break;
 	case 2:
 		/* Player */
-		//InitPlayer();
+		InitPlayer();
 
 		/* Pathfinding enemy state machien; one will not take costs into account, the others will, both using A* */
 		int numEnemies = currentlySelected - 2;
