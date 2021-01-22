@@ -307,7 +307,7 @@ void TutorialGame::DrawDebugInfo() {
 /* Checks whether an enemy or the player has reached the finish, or score is 0 */
 void TutorialGame::CheckFinished(float dt) {
 	if (player && !inSelectionMode) {
-		if (player->GetScore() <= 0 || player->GetFinished()) {
+		if ((player->GetScore() <= 0 || player->GetFinished()) && finish == FinishType::INGAME) {
 			if (player->GetScore() <= 0)
 				finish = FinishType::TIMEOUT;
 			else if (player->GetFinished())
@@ -316,7 +316,7 @@ void TutorialGame::CheckFinished(float dt) {
 	}
 
 	for (auto& e : enemies) {
-		if (e->GetFinished())
+		if (e->GetFinished() && finish == FinishType::INGAME)
 			finish = FinishType::LOSE;		// If any of our pathfinding enemies have won
 	}
 
@@ -779,7 +779,7 @@ void TutorialGame::InitGameExamples(int level) {
 		break;
 	case 1:
 		/* Player */
-		InitPlayer();
+		//InitPlayer();
 
 		/* Moving state machine platforms*/
 		platforms.push_back((PlatformStateGameObject*)AddFloorToWorld(
@@ -790,22 +790,22 @@ void TutorialGame::InitGameExamples(int level) {
 			new PlatformStateGameObject(Vector3(-45, -20, -990), Vector3(-45, 20, -990)), Vector3(-45, -20, -990), { 10,1,10 }));
 
 		/* Bonus items */
-		AddPickupToWorld(new PowerupObject, Vector3(0, 4, -20));
-		AddPickupToWorld(new CoinObject, Vector3(-90, 4, -225));
-		AddPickupToWorld(new CoinObject, Vector3(90, 4, -225));
-		AddPickupToWorld(new CoinObject, Vector3(0, 4, -225));
+		AddPickupToWorld(new PowerupObject, Vector3(0, 3, -20));
+		AddPickupToWorld(new CoinObject, Vector3(-90, 3, -225));
+		AddPickupToWorld(new CoinObject, Vector3(90, 3, -225));
+		AddPickupToWorld(new CoinObject, Vector3(0, 3, -225));
 		AddPickupToWorld(new CoinObject, Vector3(0, 25, -355));
 
-		AddPickupToWorld(new CoinObject, Vector3(40, 4, -475))->GetTransform().SetOrientation(Matrix4::Rotation(-60, { 0, 1, 0 }));
-		AddPickupToWorld(new CoinObject, Vector3(0, 4, -515))->GetTransform().SetOrientation(Matrix4::Rotation(-110, { 0, 1, 0 }));;;
-		AddPickupToWorld(new CoinObject, Vector3(-40, 4, -555))->GetTransform().SetOrientation(Matrix4::Rotation(-60, { 0, 1, 0 }));
+		AddPickupToWorld(new CoinObject, Vector3(40, 3, -475))->GetTransform().SetOrientation(Matrix4::Rotation(-60, { 0, 1, 0 }));
+		AddPickupToWorld(new CoinObject, Vector3(0, 3, -515))->GetTransform().SetOrientation(Matrix4::Rotation(-110, { 0, 1, 0 }));;;
+		AddPickupToWorld(new CoinObject, Vector3(-40, 3, -555))->GetTransform().SetOrientation(Matrix4::Rotation(-60, { 0, 1, 0 }));
 
-		AddPickupToWorld(new CoinObject, Vector3(-90, 4, -645));
-		AddPickupToWorld(new CoinObject, Vector3(90, 4, -645));
-		AddPickupToWorld(new CoinObject, Vector3(-90, 4, -825));
-		AddPickupToWorld(new CoinObject, Vector3(90, 4, -825));
-		AddPickupToWorld(new CoinObject, Vector3(-30, 4, -900))->GetTransform().SetOrientation(Matrix4::Rotation(90, { 0, 1, 0 }));
-		AddPickupToWorld(new CoinObject, Vector3(-60, 4, -915));
+		AddPickupToWorld(new CoinObject, Vector3(-90, 3, -645));
+		AddPickupToWorld(new CoinObject, Vector3(90, 3, -645));
+		AddPickupToWorld(new CoinObject, Vector3(-90, 3, -825));
+		AddPickupToWorld(new CoinObject, Vector3(90, 3, -825));
+		AddPickupToWorld(new CoinObject, Vector3(-30, 3, -900))->GetTransform().SetOrientation(Matrix4::Rotation(90, { 0, 1, 0 }));
+		AddPickupToWorld(new CoinObject, Vector3(-60, 3, -915));
 		AddPickupToWorld(new PowerupObject, Vector3(-59, -13, -1055));
 		AddPickupToWorld(new CoinObject, Vector3(-61, -13, -1057));
 		AddPickupToWorld(new CoinObject, Vector3(-61, -13, -1053));
@@ -819,11 +819,11 @@ void TutorialGame::InitGameExamples(int level) {
 		enemies.push_back((PatrolEnemyStateGameObject*)AddEnemyToWorld(new PatrolEnemyStateGameObject(positions), positions[0]));
 
 		/* Behaviour tree enemy*/
-		behaviourEnemies.push_back((BehaviourTreeEnemy*)AddEnemyToWorld(new BehaviourTreeEnemy(Vector3(0, 5, 0)), Vector3(0, 5, 0)));
+		behaviourEnemies.push_back((BehaviourTreeEnemy*)AddEnemyToWorld(new BehaviourTreeEnemy(Vector3(0, 4, 0)), Vector3(0, 4, 0)));
 		break;
 	case 2:
 		/* Player */
-		InitPlayer();
+		//InitPlayer();
 
 		/* Pathfinding enemy state machien; one will not take costs into account, the others will, both using A* */
 		int numEnemies = currentlySelected - 2;
@@ -854,6 +854,7 @@ void TutorialGame::InitPlayer() {
 void TutorialGame::InitGameObstacles(int level) {
 	switch (level) {
 	case 1:
+		/* Spinning Bar */
 		/* Spinning Bar */
 		AddCubeToWorld(new RotatingCubeObject, Vector3(0, 3, -735), Vector3(1, 1, 100));
 

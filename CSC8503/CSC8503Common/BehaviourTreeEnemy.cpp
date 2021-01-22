@@ -17,9 +17,8 @@ BehaviourTreeEnemy::BehaviourTreeEnemy(Vector3 val) {
 		}
 		else if (state == Ongoing) {
 			idleTimer -= dt;
-			if (idleTimer <= 0.0f) {
+			if (idleTimer <= 0.0f) 
 				return Success;
-			}
 		}
 		return state;
 		});
@@ -64,10 +63,9 @@ BehaviourTreeEnemy::BehaviourTreeEnemy(Vector3 val) {
 				rayCast = false;
 				return Success;
 			}
-			else {
+			else 
 				searchTime > 2 * halfTime ? GetPhysicsObject()->SetAngularVelocity(Vector3(0, 0.5f, 0)) :
 					GetPhysicsObject()->SetAngularVelocity(Vector3(0, -0.5f, 0));
-			}
 		}
 		return state;
 		});
@@ -205,7 +203,7 @@ string BehaviourTreeEnemy::BehaviourToString() const {
 void BehaviourTreeEnemy::DisplayRoute() {
 	switch (currentBehaviour) {
 	case behaviour::MOVING:
-		Debug::DrawLine(GetTransform().GetPosition(), randomLocation, Debug::WHITE);
+		Debug::DrawLine(GetTransform().GetPosition(), randomLocation + Vector3(0, 3, 0), Debug::WHITE);
 		break;
 	case behaviour::CHASING:
 		if(foundObject)
@@ -213,5 +211,6 @@ void BehaviourTreeEnemy::DisplayRoute() {
 		break;
 	case behaviour::RETURN:
 		Debug::DrawLine(GetTransform().GetPosition(), startPos, Debug::WHITE);
+		break;
 	}
 }

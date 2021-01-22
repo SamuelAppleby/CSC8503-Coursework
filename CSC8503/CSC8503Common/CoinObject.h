@@ -13,7 +13,8 @@ namespace NCL {
 			}
 			/* If we collide with a player or enemy delete us */
 			void OnCollisionBegin(GameObject* otherObject) override {
-				if (dynamic_cast<PlayerObject*>(otherObject) || dynamic_cast<EnemyStateGameObject*>(otherObject))
+				if (dynamic_cast<PlayerObject*>(otherObject) || dynamic_cast<EnemyStateGameObject*>(otherObject) ||
+					dynamic_cast<BehaviourTreeEnemy*>(otherObject))
 					isActive = false;
 				if (dynamic_cast<PlayerObject*>(otherObject))
 					((PlayerObject*)otherObject)->BonusAcquired();		// Give the player some points

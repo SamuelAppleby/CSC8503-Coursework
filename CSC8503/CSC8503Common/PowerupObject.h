@@ -14,6 +14,9 @@ namespace NCL {
 			}
 			/* If we collide with a player or AI, give them a speed boost */
 			void OnCollisionBegin(GameObject* otherObject) override {
+				if (dynamic_cast<PlayerObject*>(otherObject) || dynamic_cast<EnemyStateGameObject*>(otherObject) ||
+					dynamic_cast<BehaviourTreeEnemy*>(otherObject))
+					isActive = false;
 				if (dynamic_cast<EnemyStateGameObject*>(otherObject) || dynamic_cast<BehaviourTreeEnemy*>(otherObject)) {
 					otherObject->SetPowerUpTimer(5.0f);
 					otherObject->GetRenderObject()->SetColour(Vector4(10, 1, 0, 1));
@@ -22,7 +25,6 @@ namespace NCL {
 					otherObject->SetPowerUpTimer(5.0f);
 					otherObject->GetRenderObject()->SetColour(Vector4(0, 1, 10, 1));
 				}
-				isActive = false;
 			}
 		};
 	}
